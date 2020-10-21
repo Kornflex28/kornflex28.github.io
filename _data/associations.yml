@@ -1,0 +1,15 @@
+# Associations
+# comment out the urls if you do not wish to display them
+
+- organization: Workaway
+  role: Volunteer
+  year: 2018
+  url: https://www.workaway.info/
+  summary: Volunteer farm work on two farms in Norway
+
+- organization: IMT Atlantique &mdash; Students Union
+  role: Communication Manager
+  year: 2017 &mdash; 2018
+  # url: 
+  summary: Participated in the choice and organization of various extra-curricular activities. I also carried out the communication of the various activities within the school (posters, trailers, emails, Facebook).
+

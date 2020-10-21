@@ -1,0 +1,46 @@
+# Degree
+- degree: Diplôme d'Ingénieur
+  uni: IMT Atlantique
+  year: 2016 &mdash; 2020
+  awards: 
+  summary: 
+  courses: 
+    - course: Mathematics 
+      uvs: 
+        - uv: Probabilities
+        - uv: Signal Processing
+        - uv: Image processing
+    - course: Computer science
+      uvs: 
+        - uv: Machine learning and Deep Learning
+        - uv: Java
+        - uv: Database Management
+        - uv: Linux
+        - uv: Datascience
+        - uv: Functional programming, Formal language
+    - course: Network / Telecommunications
+    - course: Electronics
+
+- degree: Diplôme d'Études Supérieures
+  uni: Institut Supérieur de l'Aéronautique et de l'Espace (ISAE Sup'Aero)
+  year: 2019 &mdash; 2020
+  # award: 
+  summary:
+  courses: 
+    - course: Space systems
+      uvs:
+        - uv: Optimization method applied to the spatial domain
+        - uv: Space environment and safety of space systems
+        - uv: Space systems and economic and regulatory environments
+
+    - course: Study of orbital systems
+      uvs:
+        - uv: Design, architecture and operations of orbital systems
+        - uv: Missions and performances for space applications
+
+    - course: IT, Telecommunications and Networks
+      uvs:
+        - uv: Security of computer systems and networks
+        - uv: Satellite communication for mobiles and aeronautics
+        - uv: Internet and multimedia services by satellite
+        - uv: Constellations for communication and navigation
