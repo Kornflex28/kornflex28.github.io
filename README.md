@@ -1,1 +1,1 @@
-# Resume template
+# Resume
