@@ -20,7 +20,7 @@
 
 // page header styles
 
-.page-header { padding: 1.5rem 0;
+.page-header { padding: 0.5rem 0;
 
   .avatar {
     width: 95px;
@@ -158,7 +158,7 @@
   color:#333;
 }
 .content-section {
-  margin: 0 0 3rem;
+  margin: 0 0 1rem;
   .resume-item { margin-bottom: 2rem; }
 
   .resume-item-title {
@@ -229,11 +229,15 @@
 
 // footer styles
 
+#scroller {
+  scroll-behavior: smooth;
+}
+
 .page-footer {
   border-top: 4px solid #333;
-  padding-top: 1.5rem;
+  padding-top: 0rem;
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 
   .footer-line {
     margin: 0;

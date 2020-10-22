@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html  id="scroller">
 
   {% include head.html %}
 
   <body class="theme-{% if site.resume_theme %}{{ site.resume_theme }}{% endif %}">
-
+    <a name="top"></a>
     <div class="wrapper" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="telephone" content="{{ site.resume_contact_telephone }}"/>
       <meta itemprop="address" content="{{ site.resume_contact_address }}"/>
@@ -244,11 +244,11 @@
       </section>
       <!-- end Print Social Links -->
       {% endif %}
-
+      
       <footer class="page-footer">
         <p class="footer-line"></p>
       </footer>
-
+      <div><a href="#top" class="contact-button no-print">Back to top</a></div>
     </div>
 
   </body>
