@@ -143,15 +143,20 @@
     font-size: 1.5rem;
     letter-spacing: -.05rem;
     line-height: 1;
-    // display: flex;
-
     
-    // img {
-    //   display: flex;
-    //   float: right;
-    //   width: 200px;
-    //   height: auto;
-    // }
+    a {
+      color: #333;
+      text-decoration: none;
+      border-bottom: 1px solid;
+
+      &:hover {
+        border-bottom: none;
+        color: #9c9c9c;
+      }
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   }
 
   .resume-item-details {
