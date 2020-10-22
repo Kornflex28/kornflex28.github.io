@@ -4,11 +4,11 @@
   logo: images/onera-logo.png
   position: Intern Researcher at the Optics and Associated Techniques Department (DOTA)
   duration: Apr, 2020 &mdash; Oct 2020
-  summary: Write about your core competencies in one or two sentences describing your position. If you held the position for a long time, it could be a longer section, including a couple bullet points	<ul class="resume-item-list"><li>A project you are proud of</li><li>Another awesome project</li><li>or a team or department you worked with</li></ul>
+  summary: <h4><i>Image processing &mdash; Radiative transfer &mdash; Remote Sensing &mdash; Python &mdash; DART &mdash; ENVI</i></h4>Research work on the estimation of biodiversity variables of a Mediterranean forest for two CNES and NASA space missions (HYPXIM and SBG) - CNES-TOSCA project
 
 # Vocalyx
 - company: CAPANOVI &mdash; Vocalyx
   logo: images/vocalyx-logo.png
-  position: Director of Digital Strategy
-  duration:  Jun, 2010 &mdash; Sept, 2013
-  summary: If your stint was shorter, feel free to be brief and just call out the most meaningful points of your role. Be concise, and be meaninful. The person reading just needs enough to want to talk to you more about your experience.
+  position: Software developer intern
+  duration:  Sept, 2018 &mdash; Mar, 2019
+  summary: <h4><i>Android and iOS mobile development &mdash; Web development &mdash; Jira &mdash; Bitbucket</i></h4>Development and maintenance of a mobile application for people with aphasia
