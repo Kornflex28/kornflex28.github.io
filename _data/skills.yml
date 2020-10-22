@@ -11,9 +11,14 @@
 
 # Design
 - skill: Design
-  subskill: Adobe Suite
+  subskill: Adobe Suite (Photshop, Illustrator, After Effects)
   description:
 
-# # Digital content development and creation
-# - skill: Digital content development and creation
+# Languages
+- skill: Languages
+  subskill: French (native), English (fluent), German (Intermediate), Japanese (Basic), Frenc Sign Language (Basic)
 #   description: Copy writing, graphic design, web design, front-end web development, print design
+
+# Soft Skills
+- skill: Soft skills
+  subskill: Versatility, Rigor
