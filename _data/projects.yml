@@ -6,25 +6,29 @@
   role: Project Team Member &mdash; Payload and Launchers
   duration: Oct, 2019 &mdash; Mar, 2020
   url: files/VLEO_constellation_sizing.pdf
-  description: <h4><i>Python &mdash; Matlab &mdash; satellite communications &mdash; Space mechanics</i></h4>Sizing of a very large satellite constellation (Ka and Ku band) of a few thousand satellites allowing permanent global coverage to offer broadband internet services.
-
+  description: Sizing of a very large satellite constellation (Ka and Ku band) of a few thousand satellites allowing permanent global coverage to offer broadband internet services.
+  keywords: Python &mdash; Matlab &mdash; satellite communications &mdash; Space mechanics
+  
 # Adversarial Images
 - project: Deep learning project &mdash; Adversarial Images
   role: Project manager
   duration: Apr, 2018 &mdash; Jun, 2018
   url: https://arxiv.org/abs/1312.6199
-  description: <h4><i>Python &mdash; Keras &mdash; Machine learning (MLP, CNN, RNN)</i></h4>Research project on adversarial images based on a scientific article.
+  description: Research project on adversarial images based on a scientific article.
+  keywords: Python &mdash; Keras &mdash; Machine learning (MLP, CNN, RNN)
 
 # Poppy
 - project: Realisation of new articulated robotic hands for the PoppyTorso robot interacting with a table
   role: Project manager
   duration: Jan, 2018 &mdash; June, 2018
   url: https://www.poppy-project.org/en/robots/poppy-torso/
-  description: <h4><i>Project management &mdash; Python &mdash; Robotics</i></h4>In cooperation with our client Génération Robots and the IHSEV laboratory of IMT Atlantique.
+  description: In cooperation with our client Génération Robots and the IHSEV laboratory of IMT Atlantique.
+  keywords: Project management &mdash; Python &mdash; Robotics
 
 # Caspule
 - project: Development of a video game with Unity
   role: Technical manager &mdash; graphic designer
   duration: Jan, 2017 &mdash; June, 2018
   # url:
-  description: <h4><i>Project management &mdash; Unity &mdash; C#</i></h4>Realisation of a complete game with an innovative gameplay with the development platform Unity.
+  description: Realisation of a complete game with an innovative gameplay with the development platform Unity.
+  keywords: Project management &mdash; Unity &mdash; C#

@@ -160,8 +160,17 @@
 }
 .content-section {
   margin: 0 0 1rem;
-  .resume-item { margin-bottom: 2rem; }
+  .resume-item { 
+    margin-bottom: 2rem;
+    summary {
+      list-style-type: none;
+    }
 
+    summary::-webkit-details-marker {
+      display: none; /* Chrome */
+    } 
+  }
+  
   .resume-item-title {
     @include sans_bold;
     margin: 0 0 .75rem;
@@ -188,9 +197,15 @@
     font-size: 1.125rem;
     margin: 0 0 .75rem;
     line-height: 1;
+    
 
     &.award-title {
       font-size: 1rem;
+    }
+
+    &.dates {
+      display: flex;
+      justify-content: space-between;
     }
   }
 
@@ -210,6 +225,8 @@
     }
   }
   .resume-item-list-collapse-header {
+
+
       a {
         text-decoration: none;
         border-bottom: 1px solid;

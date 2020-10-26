@@ -4,11 +4,13 @@
   logo: images/onera-logo.png
   position: Intern Researcher at the Optics and Associated Techniques Department (DOTA)
   duration: Apr, 2020 &mdash; Oct 2020
-  summary: <h4><i>Image processing &mdash; Radiative transfer &mdash; Remote Sensing &mdash; Python &mdash; DART &mdash; ENVI</i></h4>Research work on the estimation of biodiversity variables of a Mediterranean forest for two CNES and NASA space missions (HYPXIM and SBG) - CNES-TOSCA project
+  summary: Research work on the estimation of biodiversity variables of a Mediterranean forest for two CNES and NASA space missions (HYPXIM and SBG) - CNES-TOSCA project
+  keywords: Image processing &mdash; Radiative transfer &mdash; Remote Sensing &mdash; Python &mdash; DART &mdash; ENVI
 
 # Vocalyx
 - company: CAPANOVI &mdash; Vocalyx
   logo: images/vocalyx-logo.png
   position: Software developer intern
   duration:  Sept, 2018 &mdash; Mar, 2019
-  summary: <h4><i>Android and iOS mobile development &mdash; Web development &mdash; Jira &mdash; Bitbucket</i></h4>Development and maintenance of a mobile application for people with aphasia
+  summary: Development and maintenance of a mobile application for people with aphasia
+  keywords: Android and iOS mobile development &mdash; Web development &mdash; Jira &mdash; Bitbucket
