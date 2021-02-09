@@ -18,12 +18,12 @@ resume_contact_email:           "chauvet.louis@gmail.com.com"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       ""
-resume_contact_address:         ""
+resume_contact_address:         "Paris"
 
 resume_header_contact_info:     "• chauvet.louis@gmail.com •"
 display_header_contact_info:    "true"
 
-resume_header_intro: "<p>Newly graduated from IMT Atlantique, Grande École d'Ingénieurs in telecommunications, as well as from ISAE in remote sensing and image processing, I am looking for a first job in remote sensing, image processing and machine learning. Fluent in French and English.</p>"
+resume_header_intro: "<p>Newly graduated from IMT Atlantique, Grande École d'Ingénieurs in telecommunications, as well as from ISAE in remote sensing and image processing. Fluent in French and English.</p>"
 
 # use "yes" to display the email contact button,
 # "no" to display an "I'm not looking for work" message,
