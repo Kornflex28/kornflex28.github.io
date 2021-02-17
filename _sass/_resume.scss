@@ -1,64 +1,101 @@
-// Resume styles
-// ---------------------------------------/
-
-// util
-
-.section-header {
-  @include section_border;
-  margin-bottom: 1.5rem;
-  border-top: 4px solid ;
-  border-bottom: 2px solid ;
-
-  h2 {
-    @include sans;
-    font-weight: 900;
-    font-size: 1.75rem;
-    letter-spacing: -.05rem;
-    margin: 0;
+:root {
+    --dark-color:hsl(var(--hue), 100%, 9%);
+    --light-color:hsl(var(--hue), 95%, 98%);
+    --base:hsl(var(--hue), 95%, 50%);
+    --complimentary1:hsl(var(--hue-complimentary1), 95%, 50%);
+    --complimentary2:hsl(var(--hue-complimentary2), 95%, 50%);
+    --font-family:"Poppins", system-ui;
+    --bg-gradient:linear-gradient(to bottom, hsl(var(--hue), 95%, 99%), hsl(var(--hue), 95%, 84%));
   }
-}
 
-// page header styles
-
-.page-header { padding: 0.5rem 0;
+  #icon-gradient-color1 {
+    stop-color: var(--base);
+  }
+  #icon-gradient-color2 {
+    stop-color: var(--complimentary1);
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    max-width: 1920px;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    font-family: var(--font-family);
+    color: var(--dark-color);
+    background: var(--bg-gradient);
+  }
+  
+  .orb-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  strong {
+    font-weight: 600;
+  }
+  
+  .overlay {
+    width: 100%;
+    max-width: 50%;
+    max-height: auto;
+    // max-height: 640px;
+    padding: 4rem 6rem;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.375);
+    box-shadow: 0 0.75rem 2rem 0 rgba(0, 0, 0, 0.1);
+    border-radius: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+  
+  .overlay__inner {
+    max-width: 100%;
+    margin: 0 auto;
+  }
 
   .avatar {
-    width: 95px;
-    max-width: 100%;
+    max-width: 30%;
     overflow: hidden;
     @include border-radius(100px);
     margin: 0 auto;
     display: block;
   }
 
-  .header-name {
-    @include sans;
-    font-size: 3rem;
-    font-weight: 900;
-    text-align: center;
-    letter-spacing: -.15rem;
-    line-height: 1;
-    margin: 1rem 0 0;
-  }
-
   .header-contact-info {
-    @include sans;
     text-align: center;
+    margin-bottom: 1rem;
   }
   .header-contact-info p a {
     color: inherit;
   }
 
   .title-bar {
-    @include section_border;
-    margin-top: 2rem;
+    border-bottom: medium solid #000;
+    margin-bottom: 1rem;
     padding: .4rem 0;
     @include clearfix;
 
     .header-title {
       @include sans;
-      font-weight: 300;
-      font-size: 1.75rem;
+      font-weight: 900;
+      font-size: 2rem;
       line-height: 2rem;
       letter-spacing: -.05rem;
       text-align: left;
@@ -72,162 +109,153 @@
     }
   }
 
-  .executive-summary {
-    @include media_larger_than_mobile { font-size: 1.125rem; }
-  }
-}
+  .icon-links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    position: relative;
+    top: 4px;
+    text-align: center;
+    border-top: 2px thin solid #000;
+    padding-top: .4rem;
 
-.icon-links {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  position: relative;
-  top: 4px;
-  text-align: center;
-  border-top: 2px solid #c7c7c7;
-  padding-top: .4rem;
+    // -webkit-background-clip: content;
+    // -webkit-text-fill-color: transparent;
+    // -moz-background-clip: content;
+    // -moz-text-fill-color: transparent;
+  
+    @include media_larger_than_mobile {
+      float: right;
+      border-top: none;
+      padding-top: 0;
+    }
+  
+    .icon-link-item {
+      display: inline-block;
+      margin-left: 5px;
+      fill: linear-gradient(45deg, var(--base) 25%, var(--complimentary2));
 
-  @include media_larger_than_mobile {
-    float: right;
-    border-top: none;
-    padding-top: 0;
-  }
-
-  .icon-link-item {
-    display: inline-block;
-    margin-left: 5px;
-  }
-
-  .icon-link { display: inline-block;
-
-    &:hover .icon path {
-      fill: #333;
-      @include transition(all .2s ease);
+    }
+  
+    .icon-link { display: inline-block;
+  
+      &:hover .icon path {
+        fill: #333;
+        @include transition(all .2s ease);
+      }
+    }
+  
+    .icon {
+      height: 28px;
     }
   }
 
-  .icon {
-    height: 28px;
-  }
-}
+  .overlay__title {
+    font-size: 2.5rem;
+    line-height: 2.75rem;
+    font-weight: 1000;
+    letter-spacing: -0.025em;
+    margin: 0 auto;
+    text-align: center;
 
-.contact-button {
-  @include border-radius(3px);
-  background-color: #efefef;
-  text-decoration: none;
-  text-align: center;
-  display: block;
-  margin: 1.5rem auto;
-  width: 220px;
-  font-size: 1.375rem;
-  @include sans_light;
-  color: #333;
-  line-height: 55px;
-  @include transition(all .2s ease);
 
-  &:hover {
-    background-color: #333;
-    color: #fff;
-  }
-
-  &.not-looking { width: 400px; }
-}
-
-// resume content styles
-
-#experience {
-  color:#264653;
-}
-
-#education {
-  color:#2a9d8f;
-}
-
-#project {
-  color:#dfac2a;
-}
-
-#skill {
-  color:#E57010;
-}
-
-#association {
-  color:#d7431d;
-}
-
-#interests {
-  color:#333;
-}
-.content-section {
-  margin: 0 0 1rem;
-  .resume-item { 
-    margin-bottom: 2rem;
-    summary {
-      list-style-type: none;
-    }
-
-    summary::-webkit-details-marker {
-      display: none; /* Chrome */
-    } 
   }
   
-  .resume-item-title {
-    @include sans_bold;
-    margin: 0 0 .75rem;
-    font-size: 1.5rem;
-    letter-spacing: -.05rem;
-    line-height: 1;
-    
-    a {
-      color: #333;
-      text-decoration: none;
-      border-bottom: 1px solid;
+  .text-gradient {
+    background: linear-gradient(225deg, var(--base) 25%, var(--complimentary2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+  }
+  
+  .executive-summary {
+    font-size: 1rem;
+    line-height: 1.75rem;
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
 
-      &:hover {
-        border-bottom: none;
-        color: #9c9c9c;
+  .section-header {
+    border-bottom: medium solid;
+    border-image-slice: 1;
+    border-image-source:  linear-gradient(225deg, var(--base) 25%, var(--complimentary2));
+    margin-bottom: 1rem;
+
+  
+    h2 {
+      @include sans;
+      font-weight: 900;
+      font-size: 2rem;
+      letter-spacing: -.05rem;
+      margin: 0;
+    }
+  }
+
+  .content-section {
+    margin: 0 0 1rem;
+    .resume-item { 
+      margin-bottom: 1rem;
+      summary {
+        list-style-type: none;
       }
+  
+      summary::-webkit-details-marker {
+        display: none; /* Chrome */
+      } 
     }
-    a:hover {
-      text-decoration: underline;
-    }
-  }
-
-  .resume-item-details {
-    font-size: 1.125rem;
-    margin: 0 0 .75rem;
-    line-height: 1;
     
-
-    &.award-title {
-      font-size: 1rem;
-    }
-
-    &.dates {
-      display: flex;
-      justify-content: space-between;
-    }
-  }
-
-  .resume-item-details,
-  .resume-item-copy,
-
-  .resume-item-list {
-    a {
-      color: #333;
-      text-decoration: none;
-      border-bottom: 1px solid;
-
-      &:hover {
-        border-bottom: none;
-        color: #9c9c9c;
-      }
-    }
-  }
-  .resume-item-list-collapse-header {
-
-
+    .resume-item-title {
+    //   @include sans_bold;
+      margin: 0 0 .75rem;
+      font-size: 1.5rem;
+      letter-spacing: -.05rem;
+      line-height: 1;
+      
       a {
+        color: #000;
+        text-decoration: underline;
+        justify-content: left;
+  
+        &:hover {
+          color:var(--complimentary2);
+        }
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    }
+  
+    .resume-item-details {
+      font-size: 1.125rem;
+      margin: 0 0 .75rem;
+      line-height: 1;
+      
+  
+      &.award-title {
+        font-size: 1rem;
+      }
+  
+      &.dates {
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+  
+    // .resume-item-details,
+    .resume-item-copy {
+        margin-left:2em;
+
+    }
+    .skill-item {
+        font-weight: bold;
+        margin-left: 2em;
+    }
+  
+    .resume-item-list {
+      margin-left: 2em;
+      a {
+        color: #333;
         text-decoration: none;
         border-bottom: 1px solid;
   
@@ -236,74 +264,155 @@
           color: #9c9c9c;
         }
       }
-      &:hover {
+    }
+    .resume-item-list-collapse-header {
+  
         text-decoration: underline;
+        
+
+        a {
+          text-decoration: none;
+          border-bottom: 1px solid;
+    
+          &:hover {
+            border-bottom: none;
+            color: #9c9c9c;
+          }
+        }
+        &:hover {
+          color: var(--complimentary2);
+          text-decoration: underline;
+        }
+    }
+  
+  
+  }
+  
+  .overlay__btns {
+    width: 100%;
+    max-width: 30rem;
+    display: flex;
+  }
+  
+  .overlay__btn {
+    width: 20%;
+    height: 2.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.875rem;
+    // font-weight: 600;
+    color: var(--light-color);
+    background: var(--dark-color);
+    border: none;
+    border-radius: 0.5rem;
+    transition: transform 150ms ease;
+    outline-color: hsl(var(--hue), 95%, 50%);
+    margin: 0 auto;
+  
+    &:hover {
+      transform: scale(1.05);
+      cursor: pointer;
+    }
+  }
+  
+  .overlay__btn--transparent {
+    background: transparent;
+    color: #000;
+    border: 2px solid;
+    border-width: 1px;
+  }
+  
+  .overlay__btn-emoji {
+    margin-left: 0.375rem;
+  }
+  
+  a {
+    text-decoration: none;
+    color: var(--dark-color);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Not too many browser support this yet but it's good to add! */
+  @media (prefers-contrast: high) {
+    .orb-canvas {
+      display: none;
+    }
+  }
+  
+  @media only screen and (max-width: 1140px) {
+    .overlay {
+      padding: 8rem 4rem;
+    }
+  }
+  
+  @media only screen and (max-width: 840px) {
+    body {
+      padding: 1.5rem;
+    }
+  
+    .overlay {
+      padding: 4rem;
+      height: auto;
+    }
+  
+    .overlay__title {
+      font-size: 1.25rem;
+      line-height: 2rem;
+      margin-bottom: 1.5rem;
+    }
+  
+    .overlay__description {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+  }
+  
+  @media only screen and (max-width: 600px) {
+    .overlay {
+      padding: 1.5rem;
+    }
+  
+    .overlay__btns {
+      flex-wrap: wrap;
+    }
+  
+    .overlay__btn {
+      width: 100%;
+      font-size: 0.75rem;
+      margin-right: 0;
+  
+      &:first-child {
+        margin-bottom: 1rem;
       }
-  }
-
-
-  .resume-item-copy { margin: .75rem 0 0; }
-}
-
-// footer styles
-
-#scroller {
-  scroll-behavior: smooth;
-}
-
-.page-footer {
-  border-top: 4px solid #333;
-  padding-top: 0rem;
-  text-align: center;
-  margin-bottom: 1rem;
-
-  .footer-line {
-    margin: 0;
-    font-size: .875rem;
-    color: #999;
-
-    > a {
-      font-weight: 700;
-      color: #333;
     }
-  }
+    // footer styles
+
+    #scroller {
+        scroll-behavior: smooth;
+    }
+    
+    .page-footer {
+        border-top: 4px solid #333;
+        padding-top: 0rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    
+        .footer-line {
+        margin: 0;
+        font-size: .875rem;
+        color: #999;
+    
+        > a {
+            font-weight: 700;
+            color: #333;
+        }
+        }
+    }
 }
-
-.print-only { display: none !important }
-
-@media print {
-  .no-print { display: none !important }
-  .print-only { display: block !important }
-  body { font-size: 12px; line-height: 1rem; }
-  .page-header { padding: 1rem 0 .2rem;
-    .header-name {
-      @include sans_bold;
-      font-size: 2rem;
-      margin: 0 0 .2rem;
-    }
-  }
-  .section-header {
-    @include section_border_thin;
-    margin-bottom: 1rem;
-    h2 { font-size: 1.2rem; line-height: 1.5rem; }
-  }
-  .content-section {
-    margin: 0 0 1rem;
-    .resume-item { margin-bottom: 1rem; }
-    .resume-item-title {
-      font-size: 16px;
-      line-height: .7em;
-    }
-
-    .resume-item-details {
-      font-size: 12px;
-      margin: 0 0 .75rem;
-      line-height: .7em;
-      font-style:italic;
-
-      &.award-title {
-        font-size: 11px;
-      }
-    }
-  }
-}
+  
