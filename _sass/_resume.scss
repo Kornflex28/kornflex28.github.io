@@ -356,6 +356,7 @@
     }
   
     .overlay {
+      max-width: 100%;
       padding: 4rem;
       height: auto;
     }
@@ -376,6 +377,7 @@
   @media only screen and (max-width: 600px) {
     .overlay {
       padding: 1.5rem;
+      max-width: 100%;
     }
   
     .overlay__btns {
