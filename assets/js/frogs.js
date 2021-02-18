@@ -6,9 +6,12 @@ let PALETTE_EYES;
 
 
 function setup() {
-    windowSize = 700
+    windowSize = 1000,1000
     c = createCanvas(windowSize, windowSize);
+    // c = createCanvas(windowWidth, windowHeight);
     c.parent("frog");
+    c.style('width','')
+    c.style('height','')
     // c = createCanvas(windowSize, windowSize,SVG);
     rectMode(CENTER)
     angleMode(DEGREES)
@@ -27,7 +30,7 @@ function setup() {
     PALETTE_EYES = ['#062e63']
 }
 
-function mousePressed() {
+function mouseClicked() {
     clear()
     redraw()
 }
