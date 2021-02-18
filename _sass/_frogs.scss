@@ -1,0 +1,26 @@
+:root {
+  
+  .frogs-body {
+    max-width: 1920px;
+    min-height: 100vh;
+    display: grid;
+    place-items: start;
+    padding: 2rem;
+  }
+
+  .frog {
+    max-width: 100%;
+  }
+
+  .p5Canvas{
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  @media only screen and (max-width: 700px) {
+    
+  }
+  
+  
+  
+}
