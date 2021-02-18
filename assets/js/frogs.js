@@ -13,8 +13,6 @@ function setup() {
     c.parent("frog");
     c.style('width','')
     c.style('height','')
-    c.elt.width=windowSize;
-    c.elt.height=windowSize;
     // c = createCanvas(windowSize, windowSize,SVG);
     rectMode(CENTER)
     angleMode(DEGREES)
@@ -35,13 +33,15 @@ function setup() {
 
 function mouseClicked() {
     clear()
-    background(backgroundColor);
     redraw()
 }
 
 
 function draw() {
 
+    c.elt.width=windowSize;
+    c.elt.height=windowSize;
+    
     background(backgroundColor);
     push()
     translate(width / 2, height / 2)
@@ -127,17 +127,6 @@ function drawFrog(centerX, centerY, w, h) {
     strokeWeight(0)
     fill('#cae8d3')
     rect(0, 1.12 * h / 4, w, 0.88 * h / 2, 0, 0, w / 2)
-    
-    // Chin shadow
-    stroke(0, shadowAlpha)
-    strokeWeight(shadowWeight)
-    noFill()
-    arc(0, h / 8.5, 0.99*w, 1.01*w, 192, -12, OPEN)
-
-    // Chin
-    strokeWeight(0)
-    fill('#e3ffeb')
-    circle(0, h / 9, w)
 
     // Eyes
     strokeWeight(0)
@@ -151,6 +140,16 @@ function drawFrog(centerX, centerY, w, h) {
     // Right
     drawFrogEye(w / 2 - eyeRadius, -h / 2 + eyeRadius, eyeWidth, eyeHeight, -eyeAngle, frogBodyColor, frogEyesColor)
 
+    // Chin shadow
+    stroke(0, shadowAlpha)
+    strokeWeight(shadowWeight)
+    noFill()
+    arc(0, h / 8.5, 0.99*w, 1.01*w, 192, -12, OPEN)
+
+    // Chin
+    strokeWeight(0)
+    fill('#e3ffeb')
+    circle(0, h / 9, w)
 
     pop()
 
