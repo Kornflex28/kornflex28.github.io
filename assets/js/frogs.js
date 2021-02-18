@@ -8,6 +8,7 @@ let PALETTE_EYES;
 function setup() {
     windowSize = 700
     c = createCanvas(windowSize, windowSize);
+    c.parent("frog");
     // c = createCanvas(windowSize, windowSize,SVG);
     rectMode(CENTER)
     angleMode(DEGREES)
