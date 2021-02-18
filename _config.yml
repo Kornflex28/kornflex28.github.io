@@ -1,3 +1,7 @@
+include:
+ - _pages
+ - .htaccess
+
 # Site settings
 title: "Louis Chauvet"
 description: "Louis Chauvet - Resume"
