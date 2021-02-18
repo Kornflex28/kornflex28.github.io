@@ -6,19 +6,22 @@ let PALETTE_EYES;
 
 
 function setup() {
-    windowSize = 1000,1000
+    windowSize = 1000
     c = createCanvas(windowSize, windowSize);
+    console.log(c)
     // c = createCanvas(windowWidth, windowHeight);
     c.parent("frog");
     c.style('width','')
     c.style('height','')
+    c.elt.width=windowSize;
+    c.elt.height=windowSize;
     // c = createCanvas(windowSize, windowSize,SVG);
     rectMode(CENTER)
     angleMode(DEGREES)
     colorMode(HSL)
     noLoop()
     // frameRate(1)
-    backgroundColor = 220;
+    backgroundColor = color(0,0,100,1);
 
     PALETTE_FROG = [{ body: '#5fde82', leg: '#31a880' },
                     { body: '#fa3737', leg: '#cc4343' },
@@ -32,6 +35,7 @@ function setup() {
 
 function mouseClicked() {
     clear()
+    background(backgroundColor);
     redraw()
 }
 
