@@ -14,13 +14,13 @@ resume_name:                    "Louis Chauvet"
 resume_title:                   "Graduate Engineer in Signal and Image Processing"
 
 # used for the contact button in _layouts/resume.html
-resume_contact_email:           "chauvet.louis@gmail.com.com"
+resume_contact_email:           "louis@touchevisual.dev"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       ""
 resume_contact_address:         "Paris"
 
-resume_header_contact_info:     "• chauvet.louis@gmail.com •"
+resume_header_contact_info:     "• louis@touchevisual.dev •"
 display_header_contact_info:    "true"
 
 resume_header_intro: "<p>Newly graduated from IMT Atlantique, Grande École d'Ingénieurs in telecommunications, as well as from ISAE in remote sensing and image processing. Fluent in French and English.</p>"
