@@ -14,7 +14,7 @@ resume_name:                    "Louis Chauvet"
 resume_title:                   "Graduate Engineer in Signal and Image Processing"
 
 # used for the contact button in _layouts/resume.html
-resume_contact_email:           "louis@touchevisual.dev.com"
+resume_contact_email:           "louis@touchevisual.dev"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       ""
