@@ -3,8 +3,9 @@ const frogSketchInst = (sketch) => {
     let c;
 
     sketch.setup = () => {
-        windowSize = 1000
-        c = sketch.createCanvas(windowSize, windowSize);
+        windowWidth = 1000
+        windowHeight = 500
+        c = sketch.createCanvas(windowWidth, windowHeight);
         c.style('width', '')
         c.style('height', '')
         c.mouseClicked(sketch.redrawSketch)
@@ -18,8 +19,8 @@ const frogSketchInst = (sketch) => {
     }
 
     sketch.draw = () => {
-        c.elt.width = windowSize;
-        c.elt.height = windowSize;
+        c.elt.width = windowWidth;
+        c.elt.height = windowHeight;
 
         sketch.background(backgroundColor);
         sketch.push()
@@ -33,6 +34,19 @@ const frogSketchInst = (sketch) => {
         let frogCenterX = 0
         let frogCenterY = 0
         let [frogChar, frogChar64] = generateFrogChar(sketch)
+
+        // Name
+        // sketch.fill('#000000')
+        // sketch.textAlign('center')
+        // sketch.textSize(18)
+        // sketch.text('This is',0,-sketch.height/4-36)
+        // sketch.textSize(36)
+        // sketch.text(frogChar.name,0,-sketch.height/4)
+        sketch.select('.frog-name').html(`This is ${frogChar.name}`)
+
+        // Frog Code
+
+
         drawFrog(sketch, frogCenterX, frogCenterY, frogChar)
 
         sketch.pop()
@@ -45,6 +59,7 @@ const frogSketchInst = (sketch) => {
 }
 
 let frogCanvas = new p5(frogSketchInst, 'frog-sketch')
+
 
 function b64EncodeUnicode(str) {
     // first we use encodeURIComponent to get percent-encoded UTF-8,

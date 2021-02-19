@@ -1,11 +1,46 @@
+const FROG_ACCESSORIES = [
+    {
+        name: 'bowtie',
+        prob: 0.5,
+        draw: (sketch) => {
+            let params = {
+                factorWidth: sketch.random(0.5, 1),
+                factorHeight: sketch.random(0.5, 1)
+            }
+            return [drawBowTie, params]
+        },
+    },
+    {
+        name: 'necklace',
+        prob: 0.5,
+        draw: (sketch) => {
+            let params = {
+                nPearls: sketch.floor(sketch.random(3, 18)),
+            }
+            return [drawNecklace, params]
+        },
+    }
+]
+
 function generateFrogChar(sketch) {
     let frogWidth = sketch.random(sketch.width / 6, sketch.width / 3.7)
-    let frogHeight = sketch.random(sketch.height / 3.1, sketch.height / 3)
+    let frogHeight = sketch.random(sketch.width / 3.1, sketch.width / 3)
     let frogHue = sketch.random(360)
     let frogEyeRadius = 0.15 * frogWidth
     let frogEyeWidth = sketch.random(0.6, 1.5) * frogEyeRadius
     let frogEyeHeight = sketch.random(0.6, 1.5) * frogEyeRadius
     let frogEyeAngle = sketch.random(0, 60)
+
+    let frogAccessories = []
+    for (let acc of FROG_ACCESSORIES) {
+        if (sketch.random() <= acc.prob) {
+            frogAccessories.push(acc.draw(sketch))
+        }
+    };
+
+    let frogNameGenerator = NameGen.compile("(bl|b|t<v>|tl|p<v>(<v>|)|pl|fl|dl|d)<v>(<v>|)(b|bl|d|fl)(<V>|l|bl)");
+    let frogName = frogNameGenerator.toString()
+    frogName = frogName.charAt(0).toUpperCase() + frogName.slice(1);
 
     let char = {
         width: frogWidth,
@@ -15,11 +50,14 @@ function generateFrogChar(sketch) {
         eyeWidth: frogEyeWidth,
         eyeHeight: frogEyeHeight,
         eyeAngle: frogEyeAngle,
+        name: frogName,
+        accessories: frogAccessories
     }
     let char64 = b64EncodeUnicode(JSON.stringify(char))
 
     return [char, char64]
 }
+
 
 function drawFrog(sketch, centerX, centerY, frogChar) {
     console.log(frogChar)
@@ -33,6 +71,8 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
 
     sketch.push()
     sketch.translate(centerX, centerY)
+
+    ////// Frog //////
 
     // Frog shadow
     sketch.fill(0, shadowAlpha)
@@ -135,49 +175,47 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     sketch.point(-0.02 * frogChar.width, -frogChar.width / 2.2)
     sketch.point(0.02 * frogChar.width, -frogChar.width / 2.2)
 
-
-    // Bow tie
-    let bowTieProb = 0.5;
-    if (sketch.random() <= bowTieProb) {
-        let bowTieColor = sketch.color('#000000')
-        drawBowTie(sketch, 0, 0, frogChar.width, bowTieColor)
+    ////// Accesories //////
+    if (frogChar.accessories.length) {
+        for (let [accDraw, accParams] of frogChar.accessories) {
+            accDraw(sketch, 0, 0, frogChar, accParams)
+        }
     }
-
-    // Necklace
-    let necklaceTieProb = 0.5;
-    if (sketch.random() <= necklaceTieProb) {
-        let neckColor = sketch.color((180 + frogChar.hue) % 360, 80, 60)
-        drawNecklace(sketch, 0, frogChar.height / 9 - frogChar.width / 7, frogChar.width, neckColor)
-    }
-
 
     sketch.pop()
 
 
+
+    // 
 }
 
-function drawNecklace(sketch, centerX, centerY, width, color) {
+function drawNecklace(sketch, centerX, centerY, frogChar, params) {
+    let color = sketch.color((180 + frogChar.hue) % 360, 80, 60)
+    let width = frogChar.width
     sketch.push()
-    sketch.translate(centerX, centerY)
+    sketch.translate(centerX, centerY - frogChar.width / 31.5)
     sketch.noFill()
     sketch.stroke(color)
     sketch.strokeWeight(1)
     sketch.arc(0, 0, width, width / 2, 0, 180)
 
-    let nPearls = sketch.floor(sketch.random(14, 18));
-    let deltaAngle = 180 / nPearls;
-    for (let i = 0; i <= nPearls; i++) {
+    let deltaAngle = 180 / params.nPearls;
+    for (let i = 0; i <= params.nPearls; i++) {
         sketch.strokeWeight(12)
         sketch.stroke(color)
         sketch.point(width * sketch.cos(i * deltaAngle) / 2, (width / 2) * sketch.sin(i * deltaAngle) / 2)
         sketch.strokeWeight(4)
         sketch.stroke('#FFFFFF')
-        sketch.point(width * sketch.cos(i * deltaAngle) / 2.05, (width / 2) * sketch.sin(i * deltaAngle) / 2 - 4)
+        sketch.point(width * sketch.cos(i * deltaAngle) / 2.02, (width / 2) * sketch.sin(i * deltaAngle) / 2 - 4)
     }
     sketch.pop()
 }
 
-function drawBowTie(sketch, centerX, centerY, width, color) {
+function drawBowTie(sketch, centerX, centerY, frogChar, params) {
+    let color = sketch.color('#000000')
+    let width = frogChar.width * params.factorWidth
+    let height = frogChar.width * params.factorHeight
+
     sketch.push()
     sketch.translate(centerX, centerY)
     sketch.strokeWeight(0)
@@ -187,8 +225,8 @@ function drawBowTie(sketch, centerX, centerY, width, color) {
     sketch.beginShape()
     sketch.curveVertex(0, 0)
     sketch.curveVertex(0, 0)
-    sketch.curveVertex(width / 3, width / 6)
-    sketch.curveVertex(width / 3, -width / 6)
+    sketch.curveVertex(width / 3, height / 6)
+    sketch.curveVertex(width / 3, -height / 6)
     sketch.curveVertex(0, 0)
     sketch.curveVertex(0, 0)
     sketch.endShape()
@@ -197,14 +235,14 @@ function drawBowTie(sketch, centerX, centerY, width, color) {
     sketch.beginShape()
     sketch.curveVertex(0, 0)
     sketch.curveVertex(0, 0)
-    sketch.curveVertex(-width / 3, width / 6)
-    sketch.curveVertex(-width / 3, -width / 6)
+    sketch.curveVertex(-width / 3, height / 6)
+    sketch.curveVertex(-width / 3, -height / 6)
     sketch.curveVertex(0, 0)
     sketch.curveVertex(0, 0)
     sketch.endShape()
 
     // Center bow tie
-    sketch.ellipse(0, 0, width / 7, width / 11)
+    sketch.ellipse(0, 0, width / 7, height / 11)
 
 
 }

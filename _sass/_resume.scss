@@ -164,6 +164,7 @@
   .text-gradient {
     background: linear-gradient(225deg, var(--base) 25%, var(--complimentary2));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     -moz-background-clip: text;
     -moz-text-fill-color: transparent;

@@ -2,14 +2,32 @@
   
   .frogs-body {
     max-width: 1920px;
-    min-height: 100vh;
+    height: auto;
     display: grid;
-    place-items: start;
-    // padding: 2rem;
+    grid-auto-rows: fit-content(0em);
+    place-items: center;
+  }
+
+  .frog-name {
+    font-size: 2em;
+    margin: 0 auto;
+  }
+  .frog-name-overlay {
+    width:50%;
+    max-width: 100%;
+    max-height: auto;
+    padding: 1rem 1rem;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.375);
+    box-shadow: 0 0.75rem 2rem 0 rgba(0, 0, 0, 0.1);
+    border-radius: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.125);
   }
 
   .frog {
     max-width: 100%;
+    padding:0
   }
 
   .p5Canvas{
@@ -18,7 +36,14 @@
   }
   
   @media only screen and (max-width: 700px) {
-  
+
+    .frog-name-overlay {
+      width: 100%;
+    }
+    .frog-name {
+      font-size: 1em;
+      margin: 0 auto;
+    }
   }
   
   
