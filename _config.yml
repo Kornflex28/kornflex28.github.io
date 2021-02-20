@@ -55,7 +55,8 @@ resume_social_links:
   # resume_facebook_url:          ""
   resume_linkedin_url:          "https://www.linkedin.com/in/louisc20171023/"
   # resume_instagram_url:         ""
-  resume_website_url:           ""
+  # resume_website_url:           ""
+  resume_frogs_url:           "/frogs"
   # resume_medium_url:            ""
 resume_print_social_links:      true
 

@@ -56,7 +56,7 @@
     max-width: 50%;
     max-height: auto;
     // max-height: 640px;
-    padding: 4rem 6rem;
+    padding: 2rem 6rem;
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.375);
@@ -71,11 +71,49 @@
   }
 
   .avatar {
-    max-width: 30%;
+    // max-width: 30%;
     overflow: hidden;
     @include border-radius(100px);
     margin: 0 auto;
     display: block;
+
+    &:hover {
+      & ~ .letter {
+        margin-left: -0.5ch;
+      }
+      & ~ .letter--1 {
+        text-transform: lowercase;
+        transform: translate(4.9ch);
+      }
+      & ~ .letter--4 {
+        transform: translate(1.6ch);
+      }
+      & ~ .letter--5 {
+        transform: translate(2ch);
+      }
+      & ~ .letter--7 {
+        text-transform: lowercase;
+        transform: translate(-2.3ch);
+      }
+      & ~ .letter--8 {
+        transform: translate(-1.4ch);
+      }
+      & ~ .letter--9 {
+        transform: translate(3.8ch);
+      }
+      & ~ .letter--10 {
+        transform: translate(2.77ch);
+      }
+      & ~ .letter--11 {
+        transform: translate(0.7ch);
+      }
+      & ~ .letter--12 {
+        transform: translate(-0.4ch);
+      }
+      & ~ .letter--13 {
+        transform: translate(-4.8ch);
+      }
+    }
   }
 
   .header-contact-info {
@@ -151,15 +189,62 @@
   }
 
   .overlay__title {
+    width: max-content;
     font-size: 2.5rem;
     line-height: 2.75rem;
     font-weight: 1000;
     letter-spacing: -0.025em;
     margin: 0 auto;
     text-align: center;
-
-
   }
+
+  .letter {
+    position: absolute;
+    margin-left: -0.9ch;
+    transition: transform 330ms ease-in-out;
+    &--1 {
+      transform: translateX(-4.9ch);
+    }
+    &--2 {
+      transform: translateX(-4.3ch);
+    }
+    &--3 {
+      transform: translateX(-3.3ch);
+    }
+    &--4 {
+      transform: translateX(-2.3ch);
+    }
+    &--5 {
+      transform: translateX(-1.9ch);
+    }
+    // &--6 {
+    //   transform: translateX(-1ch);
+    // }
+    &--7 {
+      transform: translateX(-0.5ch);
+    }
+    &--8 {
+      transform: translateX(0.7ch);
+    }
+    &--9 {
+      transform: translateX(1.7ch);
+    }
+    &--10 {
+      transform: translateX(2.77ch);
+    }
+    &--11 {
+      transform: translateX(3.8ch);
+    }
+    &--12 {
+      transform: translateX(4.7ch);
+    }
+    &--13 {
+      transform: translateX(5.8ch);
+    }
+  }
+
+
+  
   
   .text-gradient {
     background: linear-gradient(225deg, var(--base) 25%, var(--complimentary2));
@@ -348,7 +433,7 @@
   @media only screen and (max-width: 1140px) {
     .overlay {
       max-width: 80%;
-      padding: 8rem 4rem;
+      padding:2rem 4rem;
     }
   }
   
@@ -364,9 +449,8 @@
     }
   
     .overlay__title {
-      font-size: 1.25rem;
+      font-size: 2rem;
       line-height: 2rem;
-      margin-bottom: 1.5rem;
     }
   
     .overlay__description {

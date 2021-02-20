@@ -27,17 +27,20 @@
 <div class="overlay">
     <!-- Overlay inner wrapper -->
     <div class="overlay__inner">
-        <header>
+        <header class="overlay__header">
             <!-- Title -->
             <!-- You can turn off the avatar in _config.yml by setting to false -->
-            {% if site.resume_avatar == 'true' %}
-            <img src="images/ID.jpg" alt="my photo" class="avatar no-print" itemprop="image">
-            {% endif %}
-            <h1 class="overlay__title">
-                {{ site.resume_name }}
-                <!-- <span class="text-gradient">generative</span> UI just like this? -->
+            <h1 class="overlay__title">{% if site.resume_avatar == 'true' %}
+                <img src="images/ID.jpg" alt="my photo" class="avatar no-print" itemprop="image">
+                {% endif %}
+                &nbsp;
+                {% assign letters = site.resume_name | split:"" %}
+                {%- for letter in letters-%}
+                <span class="letter letter--{{ forloop.index }}">{{ letter }}</span>
+                {%- endfor -%}
+                <!-- <br> -->
             </h1>
-
+         
             <!-- To display contact info here, change `display_header_contact_info` value in _config.yml to true -->
             {% if site.display_header_contact_info == 'true' %}
             <div class="header-contact-info">
