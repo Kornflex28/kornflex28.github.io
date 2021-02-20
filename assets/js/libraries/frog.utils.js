@@ -178,8 +178,8 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     // Nosetrils
     sketch.stroke(frogLegColor)
     sketch.strokeWeight(3)
-    sketch.point(-0.02 * frogChar.width, -frogChar.width / 2.2)
-    sketch.point(0.02 * frogChar.width, -frogChar.width / 2.2)
+    sketch.point(-0.1 * frogChar.width, -frogChar.width / 2.2)
+    sketch.point(0.1 * frogChar.width, -frogChar.width / 2.2)
 
     ////// Accesories //////
     if (frogChar.accessories.length) {
