@@ -4,11 +4,11 @@ const frogSketchInst = (sketch) => {
 
     sketch.setup = () => {
         windowWidth = 1000
-        windowHeight = 500
+        windowHeight = 1000
         c = sketch.createCanvas(windowWidth, windowHeight);
         c.style('width', '')
         c.style('height', '')
-        c.mouseClicked(sketch.redrawSketch)
+        // c.mouseClicked(sketch.redrawSketch)
 
         sketch.rectMode(sketch.CENTER)
         sketch.angleMode(sketch.DEGREES)
@@ -19,29 +19,18 @@ const frogSketchInst = (sketch) => {
     }
 
     sketch.draw = () => {
+        sketch.clear()
         c.elt.width = windowWidth;
         c.elt.height = windowHeight;
-
         sketch.background(backgroundColor);
         sketch.push()
         sketch.translate(sketch.width / 2, sketch.height / 2)
-
-        // Show canvas boundaries
-        // sketch.stroke(0,1)
-        // sketch.noFill()
-        // sketch.rect(0,0,sketch.width,sketch.height)
 
         let frogCenterX = 0
         let frogCenterY = 0
         let [frogChar, frogChar64] = generateFrogChar(sketch)
 
         // Name
-        // sketch.fill('#000000')
-        // sketch.textAlign('center')
-        // sketch.textSize(18)
-        // sketch.text('This is',0,-sketch.height/4-36)
-        // sketch.textSize(36)
-        // sketch.text(frogChar.name,0,-sketch.height/4)
         sketch.select('.frog-name').html(`This is ${frogChar.name}`)
 
         // Frog Code
@@ -59,7 +48,10 @@ const frogSketchInst = (sketch) => {
 }
 
 let frogCanvas = new p5(frogSketchInst, 'frog-sketch')
-
+init = () => {
+document.getElementById('btn-generate').onclick=function(){frogCanvas.redrawSketch()};
+}
+window.onload = init
 
 function b64EncodeUnicode(str) {
     // first we use encodeURIComponent to get percent-encoded UTF-8,
