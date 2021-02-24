@@ -1,6 +1,15 @@
 # Jobs
+
+# IPGP
+- company: IPGP &mdash; Paris Institute of Globe Physics
+  logo: images/ipgp-logo.svg
+  position: Scientific computing expert
+  duration: Mar, 2021 &mdash; Now
+  summary: Processing of raw data from space missions for production, validation, distribution of advanced data. Data analysis in support of scientific studies. (SWARM)
+  keywords: Signal processing &mdash; AI &mdash; Geomagnetism &mdash; Python &mdash; Matlab &mdash; Java
+
 # ONERA
-- company: ONERA The French Aerospace Lab
+- company: ONERA &mdash; The French Aerospace Lab
   logo: images/onera-logo.png
   position: Intern Researcher at the Optics and Associated Techniques Department (DOTA)
   duration: Apr, 2020 &mdash; Oct 2020
