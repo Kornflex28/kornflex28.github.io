@@ -1,48 +1,58 @@
 const frogSketchInst = (sketch) => {
     let backgroundColor;
     let c;
+    let frogName;
 
     sketch.setup = () => {
         windowWidth = 1000
-        windowHeight = 1000
+        windowHeight = 800
         c = sketch.createCanvas(windowWidth, windowHeight);
         c.style('width', '')
         c.style('height', '')
-        // c.mouseClicked(sketch.redrawSketch)
 
         sketch.rectMode(sketch.CENTER)
+        sketch.imageMode(sketch.CENTER)
         sketch.angleMode(sketch.DEGREES)
         sketch.colorMode(sketch.HSL)
         sketch.noLoop()
-        
         backgroundColor = sketch.color(0, 0, 100, 0);
+
     }
 
     sketch.draw = () => {
         sketch.clear()
         c.elt.width = windowWidth;
         c.elt.height = windowHeight;
+        c.class('canvas-frog');
         sketch.background(backgroundColor);
         sketch.push()
-        sketch.translate(sketch.width / 2, sketch.height / 2)
+        sketch.translate(sketch.width / 2, sketch.height / 1.75)
 
         let frogCenterX = 0
         let frogCenterY = 0
         let [frogChar, frogChar64] = generateFrogChar(sketch)
 
         // Name
-        sketch.select('.frog-name').html(`This is ${frogChar.name}`)
+        frogName = frogChar.name
+        sketch.select('.frog-name').html(`This is ${frogName}`)
+        // sketch.keyPressed = sketch.saveFrog;
 
         // Frog Code
 
 
         drawFrog(sketch, frogCenterX, frogCenterY, frogChar)
-
         sketch.pop()
+
+        sketch.select('#btn-save').style('display','flex')
     }
 
     sketch.redrawSketch = () => {
+        sketch.clear()
         sketch.redraw()
+    }
+
+    sketch.saveFrog = () => {
+            sketch.saveCanvas(`Frog_${frogName}`,'png')
     }
 
 }
@@ -50,6 +60,7 @@ const frogSketchInst = (sketch) => {
 let frogCanvas = new p5(frogSketchInst, 'frog-sketch')
 init = () => {
 document.getElementById('btn-generate').onclick=function(){frogCanvas.redrawSketch()};
+document.getElementById('btn-save').onclick=function(){frogCanvas.saveFrog()};
 }
 window.onload = init
 

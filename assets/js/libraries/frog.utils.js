@@ -75,7 +75,7 @@ function generateFrogChar(sketch) {
 function drawFrog(sketch, centerX, centerY, frogChar) {
     console.log(frogChar)
     let shadowAlpha = 0.2
-    let shadowWeight = 7
+    let shadowWeight = frogChar.width/50;
     let frogBodyColor = sketch.color(frogChar.hue, 100, 60)
     let frogLegColor = sketch.color(frogChar.hue, 60, 40)
     let frogEyesColor = sketch.color(frogChar.hue, 60, 15)
@@ -140,9 +140,65 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     sketch.rect(0, 1.12 * frogChar.height / 4, frogChar.width, 0.7 * frogChar.height / 2, 0.01 * frogChar.width, 0.01 * frogChar.width, frogChar.width / 2.5)
 
     // Base body
-    sketch.strokeWeight(0)
-    sketch.fill(frogBodyColor)
-    sketch.rect(0, 0, frogChar.width, frogChar.height, frogChar.width / 2, frogChar.width / 2)
+    texture = sketch.random()<=0.5;
+    baseBodyShape = sketch.createGraphics(sketch.width,sketch.height)
+    baseBodyShape.class('frog-sketch-utils')
+    baseBodyShape.rectMode(sketch.CENTER)
+    baseBodyShape.angleMode(sketch.DEGREES)
+    baseBodyShape.translate(baseBodyShape.width/2,baseBodyShape.height/2)
+    baseBodyShape.noFill()
+   
+    baseBodyShape.strokeWeight(0)
+    baseBodyShape.fill(frogBodyColor)
+    baseBodyShape.rect(0, 0, frogChar.width, frogChar.height, frogChar.width / 2, frogChar.width / 2)
+
+    baseBodyShape.fill(frogBodyColor)
+    baseBodyShape.push()
+    baseBodyShape.translate(-frogChar.width / 2 + frogChar.eyeRadius, -frogChar.height / 2 + frogChar.eyeRadius)
+    baseBodyShape.rotate(frogChar.eyeAngle)
+    baseBodyShape.ellipse(0,0, 2*frogChar.eyeWidth, 2*frogChar.eyeHeight)
+    baseBodyShape.pop()
+
+    baseBodyShape.push()
+    baseBodyShape.translate(frogChar.width / 2 - frogChar.eyeRadius, -frogChar.height / 2 + frogChar.eyeRadius)
+    baseBodyShape.rotate(-frogChar.eyeAngle)
+    baseBodyShape.ellipse(0,0, 2*frogChar.eyeWidth, 2*frogChar.eyeHeight)
+    baseBodyShape.pop()
+
+    if (!texture) {
+        sketch.image(baseBodyShape,0,0)
+        baseBodyShape.remove()
+    } else {
+
+        // Base body texture
+        baseBodyShapeTexture = sketch.createGraphics(sketch.width,sketch.height)
+        baseBodyShapeTexture.class('frog-sketch-utils')
+        baseBodyShapeTexture.rectMode(sketch.CENTER)
+        baseBodyShapeTexture.angleMode(sketch.DEGREES)
+        baseBodyShapeTexture.translate(baseBodyShape.width/2,baseBodyShape.height/2)
+        
+        baseBodyShapeTexture.strokeWeight(0)
+        baseBodyShapeTexture.fill(frogBodyColor)
+        baseBodyShapeTexture.rect(0,0,baseBodyShape.width,baseBodyShape.height)
+        let step=sketch.random(baseBodyShapeTexture.width/50,baseBodyShapeTexture.width/30)
+        baseBodyShapeTexture.push()
+        baseBodyShapeTexture.stroke(0,20)
+        baseBodyShapeTexture.strokeWeight(5)
+        baseBodyShapeTexture.rotate(sketch.random([0,90]))
+        baseBodyShapeTexture.translate(-baseBodyShape.width/2,-baseBodyShape.height/2)
+        for (let i = 0;i<1.17*baseBodyShapeTexture.width/step;i++) {
+            baseBodyShapeTexture.line(i*step,0,0,i*step)
+        }
+        baseBodyShapeTexture.pop()
+
+        
+        baseBody = baseBodyShapeTexture.get()
+        baseBody.mask(baseBodyShape.get())
+        sketch.image(baseBody,0,0)
+        baseBodyShape.remove()
+        baseBodyShapeTexture.remove()
+
+    }
 
     // Down body
     sketch.strokeWeight(0)
@@ -168,16 +224,12 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     sketch.circle(0, frogChar.height / 9, frogChar.width)
 
     // Top chin
-    // sketch.noFill()
     sketch.fill(frogDownColor)
-    // sketch.stroke(frogDownColor)
-    // sketch.strokeWeight(3)
     sketch.arc(0, -frogChar.width / 4, frogChar.eyeWidth, frogChar.eyeHeight / 2, 0, 180, sketch.CHORD)
-    // sketch.line(-frogChar.eyeWidth/2,-frogChar.width/4,frogChar.eyeWidth/2,-frogChar.width/4)
 
     // Nosetrils
     sketch.stroke(frogLegColor)
-    sketch.strokeWeight(3)
+    sketch.strokeWeight(frogChar.width/80)
     sketch.point(-0.1 * frogChar.width, -frogChar.width / 2.2)
     sketch.point(0.1 * frogChar.width, -frogChar.width / 2.2)
 
@@ -190,7 +242,7 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     drawTopHat(sketch,0,0,frogChar,[])
 
     sketch.pop()
-
+    return sketch
 
 
     // 
@@ -261,7 +313,7 @@ function drawTopHat(sketch,centerX,centerY,frogChar,params) {
     sketch.translate(centerX,centerY)
     sketch.rotate(params.hatAngle)
     // Shadow
-    sketch.stroke(0, 0.2)
+    sketch.noStroke()
     sketch.fill(0, 0.2);
     sketch.ellipse(0,-frogChar.height/2.1,hatWidth,hatWidth/3)
 
@@ -297,8 +349,10 @@ function drawFrogEye(sketch, centerX, centerY, eyeWidth, eyeHeight, eyeAngle, fr
     sketch.push()
     sketch.translate(centerX, centerY)
     sketch.rotate(eyeAngle)
-    sketch.fill(frogBodyColor)
-    sketch.ellipse(0, 0, 2 * eyeWidth, 2 * eyeHeight)
+    // sketch.stroke(0,0.2)
+    // sketch.strokeWeight(3)
+    // sketch.fill(frogBodyColor)
+    // sketch.ellipse(0, 0, 2 * eyeWidth, 2 * eyeHeight)
     sketch.fill('#FFFFFF')
     sketch.ellipse(0, 0, 1.3 * eyeWidth, 1.3 * eyeHeight)
     sketch.fill(frogEyesColor)
