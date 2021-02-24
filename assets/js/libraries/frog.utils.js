@@ -73,7 +73,7 @@ function generateFrogChar(sketch) {
 
 
 function drawFrog(sketch, centerX, centerY, frogChar) {
-    console.log(frogChar)
+    // console.log(frogChar)
     let shadowAlpha = 0.2
     let shadowWeight = frogChar.width/50;
     let frogBodyColor = sketch.color(frogChar.hue, 100, 60)
