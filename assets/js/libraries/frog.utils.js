@@ -1,12 +1,12 @@
 const FROG_ACCESSORIES = [
     {
         name: 'glasses',
-        prob: .5,
+        prob: .3,
         draw: (sketch) => {
             let params = {
-                glassesWidthFactor: sketch.random(0.9,1.5),
+                glassesWidthFactor: sketch.random(0.9, 1.5),
                 glassesCenterXFactor: -sketch.random(0.2, 0.3),
-                glassesCenterYFactor: -sketch.random(0,0.15)
+                glassesCenterYFactor: -sketch.random(0, 0.15)
             }
             let emptyFun = (sketch, x, y, frogChar, accParams) => { return }
             return [emptyFun, params]
@@ -61,6 +61,16 @@ const FROG_TEXTURES = [
                 step: sketch.random(sketch.width / 50, sketch.width / 30)
             }
             return [textureLines, params]
+        },
+    },
+    {
+        name: 'crosses',
+        draw: (sketch) => {
+            let params = {
+                crossesAngle: sketch.random(0,180),
+                step: sketch.random(sketch.width / 50, sketch.width / 30)
+            }
+            return [textureCrosses, params]
         },
     },
 ]
@@ -209,6 +219,12 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     sketch.fill(frogDownColor)
     sketch.rect(0, 1.12 * frogChar.height / 4, frogChar.width, 0.88 * frogChar.height / 2, 0, 0, frogChar.width / 2)
 
+    // Nosetrils
+    sketch.stroke(frogLegColor)
+    sketch.strokeWeight(frogChar.width / 80)
+    sketch.point(-0.1 * frogChar.width, -frogChar.width / 2.2)
+    sketch.point(0.1 * frogChar.width, -frogChar.width / 2.2)
+
     // Eyes
     sketch.strokeWeight(0)
     // Left
@@ -231,11 +247,6 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
     sketch.fill(frogDownColor)
     sketch.arc(0, -frogChar.width / 4, frogChar.eyeWidth, frogChar.eyeHeight / 2, 0, 180, sketch.CHORD)
 
-    // Nosetrils
-    sketch.stroke(frogLegColor)
-    sketch.strokeWeight(frogChar.width / 80)
-    sketch.point(-0.1 * frogChar.width, -frogChar.width / 2.2)
-    sketch.point(0.1 * frogChar.width, -frogChar.width / 2.2)
 
     ////// Accesories //////
     if (frogChar.accessories.length) {
@@ -269,6 +280,40 @@ function textureLines(sketch, centerX, centerY, frogChar, baseBodyShape, params)
     baseBodyShapeTexture.translate(-baseBodyShape.width / 2, -baseBodyShape.height / 2)
     for (let i = 0; i < 1.17 * baseBodyShapeTexture.width / params.step; i++) {
         baseBodyShapeTexture.line(i * params.step, 0, 0, i * params.step)
+    }
+    baseBodyShapeTexture.pop()
+
+
+    baseBody = baseBodyShapeTexture.get()
+    baseBody.mask(baseBodyShape.get())
+    sketch.image(baseBody, 0, 0)
+    baseBodyShape.remove()
+    baseBodyShapeTexture.remove()
+}
+
+
+function textureCrosses(sketch, centerX, centerY, frogChar, baseBodyShape, params) {
+    // Base body texture
+    baseBodyShapeTexture = sketch.createGraphics(sketch.width, sketch.height)
+    baseBodyShapeTexture.class('frog-sketch-utils')
+    baseBodyShapeTexture.rectMode(sketch.CENTER)
+    baseBodyShapeTexture.angleMode(sketch.DEGREES)
+    baseBodyShapeTexture.translate(centerX, centerY)
+
+    baseBodyShapeTexture.strokeWeight(0)
+    baseBodyShapeTexture.fill(sketch.color(frogChar.hue, 100, 60))
+    baseBodyShapeTexture.rect(0, 0, baseBodyShape.width, baseBodyShape.height)
+    baseBodyShapeTexture.push()
+    baseBodyShapeTexture.stroke(0, 10)
+    baseBodyShapeTexture.strokeWeight(3)
+    baseBodyShapeTexture.rotate(params.crossesAngle)
+    baseBodyShapeTexture.translate(-baseBodyShape.width / 2, -baseBodyShape.height / 2)
+    let lineLength = baseBodyShapeTexture.width / (6 * params.step)
+    for (let i = 0; i < baseBodyShapeTexture.width / params.step; i++) {
+        for (let j = 0; j < baseBodyShapeTexture.width / params.step; j++) {
+            baseBodyShapeTexture.line(i * params.step-lineLength, j * params.step, i * params.step+lineLength, j * params.step)
+            baseBodyShapeTexture.line(i * params.step, j * params.step-lineLength, i * params.step, j * params.step+lineLength)
+        }
     }
     baseBodyShapeTexture.pop()
 
@@ -384,7 +429,7 @@ function drawFrogEye(sketch, centerX, centerY, frogChar, frogBodyColor, frogEyes
 
     sketch.push()
     sketch.translate(centerX, centerY)
-    sketch.rotate(-Math.sign(centerX)*frogChar.eyeAngle)
+    sketch.rotate(-Math.sign(centerX) * frogChar.eyeAngle)
     sketch.fill('#FFFFFF')
     sketch.ellipse(0, 0, 1.3 * frogChar.eyeWidth, 1.3 * frogChar.eyeHeight)
     sketch.fill(frogEyesColor)
@@ -399,7 +444,7 @@ function drawFrogEye(sketch, centerX, centerY, frogChar, frogBodyColor, frogEyes
         let glassesCenterX = glassesParams.glassesCenterXFactor * centerX
         let glassesCenterY = glassesParams.glassesCenterYFactor * centerY
 
-        sketch.rotate(Math.sign(centerX)*frogChar.eyeAngle)
+        sketch.rotate(Math.sign(centerX) * frogChar.eyeAngle)
         sketch.fill(0, 0.1)
         sketch.stroke(0, 1)
         sketch.strokeWeight(3)
