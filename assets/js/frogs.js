@@ -35,7 +35,7 @@ const frogSketchInst = (sketch) => {
         // Name
         frogName = frogChar.name
         sketch.select('.frog-name').html(`This is ${frogName}`)
-        // sketch.keyPressed = sketch.saveFrog;
+        // sketch.keyPressed = sketch.redrawSketch;
 
         // Frog Code
 
