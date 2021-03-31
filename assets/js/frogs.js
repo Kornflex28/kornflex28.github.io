@@ -53,7 +53,7 @@ const frogSketchInst = (sketch) => {
     }
 
     sketch.saveFrog = () => {
-            sketch.saveCanvas(`Frog_${frogName}`,'png')
+            sketch.saveCanvas(`${frogName}`,'png')
     }
 
 }
