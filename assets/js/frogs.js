@@ -25,12 +25,11 @@ const frogSketchInst = (sketch) => {
         c.elt.height = windowHeight;
         c.class('canvas-frog');
         sketch.background(backgroundColor);
-        sketch.push()
-        sketch.translate(sketch.width / 2, sketch.height / 1.75)
 
         let frogCenterX = 0
         let frogCenterY = 0
         let [frogChar, frogChar64] = generateFrogChar(sketch)
+
 
         // Name
         frogName = frogChar.name
@@ -39,6 +38,8 @@ const frogSketchInst = (sketch) => {
 
         // Frog Code
 
+        sketch.push()
+        sketch.translate(sketch.width / 2, sketch.height-frogChar.height/2)
 
         drawFrog(sketch, frogCenterX, frogCenterY, frogChar)
         sketch.pop()

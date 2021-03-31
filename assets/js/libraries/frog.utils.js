@@ -1,11 +1,11 @@
 const FROG_ACCESSORIES = [
     {
         name: 'glasses',
-        prob: .3,
+        prob: 0.4,
         draw: (sketch) => {
             let params = {
                 glassesWidthFactor: sketch.random(0.9, 1.5),
-                glassesCenterXFactor: -sketch.random(0.2, 0.3),
+                glassesCenterXFactor: -sketch.random(0.2, 0.4),
                 glassesCenterYFactor: -sketch.random(0, 0.15)
             }
             let emptyFun = (sketch, x, y, frogChar, accParams) => { return }
