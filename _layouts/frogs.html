@@ -24,6 +24,7 @@
     <!-- <script src="../assets/js/libraries/p5.sound.min.js"></script> -->
     <script src="../assets/js/libraries/frog.utils.js"></script>
     <script src="../assets/js/libraries/frog.namegen.js"></script>
+    <script src="../assets/js/libraries/ntc.js"></script>
     <script src="../assets/js/frogs.js"></script>
     <script src="assets/js/orbs.js" type="module"></script>
 
@@ -31,15 +32,20 @@
 
 <!-- Canvas -->
 <canvas class="orb-canvas"></canvas>
+
 <body class="frogs-body">
     <div class="frog-overlay">
         <div class="frog-overlay--name">
             <p class="frog-name"></p>
             <button class="overlay__btn--frog" id="btn-generate">Generate<br>a new frog</button>
         </div>
-    <div id="frog-sketch" class="frog"></div>
-    <button class="overlay__btn--frog" id="btn-save" style="display: none;">Keep this frog</button>
-</div>
+        <div id="frog-sketch" class="frog"></div>
+        <button class="overlay__btn--frog" id="btn-save" style="display: none;">Keep this frog</button>
+        <div class="frog-desc">
+            <h1 class="frog-desc-title"></h1>
+            <div class="frog-desc-text"></div>
+        </div>
+    </div>
 
 
 </body>
