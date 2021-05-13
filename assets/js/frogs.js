@@ -57,7 +57,6 @@ const frogSketchInst = (sketch) => {
                 } else {
                     frogAccDesc+=', ';
                 }
-                console.log(id_acc,acc[0])
             }
         }
         sketch.select('.frog-desc-title').html(`Who is ${frogName} ?`)
