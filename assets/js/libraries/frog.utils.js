@@ -13,7 +13,7 @@ const FROG_ACCESSORIES = [
         }
     },
     {
-        name: 'bowtie',
+        name: 'bow tie',
         prob: .5,
         draw: (sketch) => {
             let params = {
@@ -35,7 +35,7 @@ const FROG_ACCESSORIES = [
         },
     },
     {
-        name: 'tophat',
+        name: 'top hat',
         prob: .5,
         draw: (sketch) => {
             let params = {
@@ -115,7 +115,7 @@ function generateFrogChar(sketch) {
 
 
 function drawFrog(sketch, centerX, centerY, frogChar) {
-    console.log(frogChar)
+    // console.log(frogChar)
     let shadowAlpha = 0.2
     let shadowWeight = frogChar.width / 50;
     let frogBodyColor = sketch.color(frogChar.hue, 100, 60)

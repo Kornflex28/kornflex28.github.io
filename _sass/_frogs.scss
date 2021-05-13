@@ -35,6 +35,11 @@
     margin:0 auto;
   }
 
+  .frog-desc-text {
+    font-size: 1.25em;
+    text-align: justify;
+  }
+
   .overlay__btn {
     &--frog {
       display: flex;
@@ -99,6 +104,11 @@
     }
     .frog-name {
       font-size: 1.25em;
+    }
+
+    .frog-desc-text {
+      font-size: 1em;
+      text-align: justify;
     }
 
     .overlay__btn {
