@@ -60,7 +60,7 @@ const frogSketchInst = (sketch) => {
             }
         }
         sketch.select('.frog-desc-title').html(`Who is ${frogName} ?`)
-        sketch.select('.frog-desc-text').html(`<b ${charStyle}>${frogName}</b> is a generative frog. It has been autonomously created using <a href="https://p5js.org" style="display:inline; text-decoration-line: underline;" target="_blank">p5.js</a> Javascript library.<br><br>`
+        sketch.select('.frog-desc-text').html(`<b ${charStyle}>${frogName}</b> is a generative frog. It has been procedurally generated using <a href="https://p5js.org" style="display:inline; text-decoration-line: underline;" target="_blank">p5.js</a> Javascript library.<br><br>`
             +`<b ${charStyle}>${frogName}</b> is around <b ${charStyle}>${Math.round(frogChar.width)} px</b> wide, <b ${charStyle}>${Math.round(frogChar.height)} px</b> tall and its skin is <b ${charStyle}>${frogColorMatch[1]}</b>.<br>`
             +`${frogAccDesc}`)
         // sketch.keyPressed = sketch.redrawSketch;
