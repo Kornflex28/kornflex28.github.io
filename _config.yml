@@ -4,7 +4,7 @@ include:
 
 # Site settings
 title: "Louis Chauvet"
-description: "Louis Chauvet - Scientific computing expert at Paris Institute of Globe Physics"
+description: "Louis Chauvet - Research engineer at Paris Institute of Globe Physics"
 
 # Build settings
 markdown: kramdown
@@ -15,7 +15,7 @@ sass:
 # Resume settings
 resume_avatar:                  "true"
 resume_name:                    "Louis Chauvet"
-resume_title:                   "Scientific computing expert at Paris Institute of Globe Physics"
+resume_title:                   "Research engineer at Paris Institute of Globe Physics"
 
 # used for the contact button in _layouts/resume.html
 resume_contact_email:           "louis@touchevisual.dev"
