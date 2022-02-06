@@ -15,11 +15,11 @@
     <meta name="description"
         content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="../css/resume.css">
     <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
     <link rel="icon" type="image/x-icon" href="/favicon.png" />
-    <script src="assets/js/orbs.js" type="module"></script>
-    <script src="assets/js/resume.js" type="module"></script>
+    <script src="../assets/js/orbs.js" type="module"></script>
+    <script src="../assets/js/resume.js" type="module"></script>
 </head>
 
 <!-- Canvas -->
@@ -32,7 +32,7 @@
             <!-- Title -->
             <!-- You can turn off the avatar in _config.yml by setting to false -->
             <h1 class="overlay__title">{% if site.resume_avatar == 'true' %}
-                <img src="images/ID.jpg" alt="my photo" class="avatar no-print" itemprop="image">
+                <img src="images/ID.png" alt="my photo" class="avatar no-print" itemprop="image">
                 {% endif %}
                 &nbsp;
                 {% assign letters = site.resume_name | split:"" %}
