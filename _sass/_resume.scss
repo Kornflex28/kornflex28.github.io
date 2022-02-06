@@ -71,7 +71,7 @@
   }
 
   .avatar {
-    // max-width: 30%;
+    width: 30%;
     overflow: hidden;
     @include border-radius(100px);
     margin: 0 auto;
@@ -192,7 +192,7 @@
   }
 
   .overlay__title {
-    width: max-content;
+    width: fit-content;
     font-size: 2.5rem;
     line-height: 2.75rem;
     font-weight: 1000;
