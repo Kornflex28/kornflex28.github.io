@@ -1,0 +1,381 @@
+// Shared look: palette, type, links and buttons.
+// Palette loosely inspired by Paul Grimault's flat painted colours.
+
+:root {
+  --paper: #f3ebdd;
+  --paper-deep: #e8dcc6;
+  --ink: #2b2a33;
+  --ink-soft: #57545f;
+  --ochre: #c98b3c;
+  --brick: #a4513b;
+  --red: #a4513b;
+  --blue: #6c8ca6;
+  --blue-pale: #c9d3da;
+  --cream: #f7f1e6;
+  --cream-deep: #e4dccd;
+  --terracotta: #c9845f;
+  --terracotta-deep: #a8603f;
+  --rose: #c97b8a;
+  --slate: #5f6672;
+  --green: #7d9e6e;
+  --gold: #d8ad45;
+  --blue-deep: #44609a;
+  --sand: #ead6b0;
+  --hedge: #5f8a4f;
+  --hedge-deep: #456b3c;
+  --hedge-light: #719c5b;
+  --hedge-sage: #5f8f68;
+  --hedge-olive: #6c8545;
+  --arch: #7b6a74;
+  --cloud: #edf0f5;
+  --cloud-warm: #f5f1ea;
+  --cloud-bright: #f8f9fb;
+  --sky: #bccbe6;
+  --sky-low: #d5dbe6;
+  --sky-end: 40rem;
+  --shade-light: #fffaf0;
+  --shade-dark: #2b2a33;
+  --shade-strength: 1;
+  --lamp: #eee6d2;
+  --lamp-light: #ffd27a;
+  --lamp-glow: 0;
+  --window-glow: 0;
+  --paper-texture: .18;
+  --grain-blend: multiply;
+  --grain-opacity: .36;
+  --night: #263673;
+  --night-ink: #f3ebdd;
+  --night-light: #34468a;
+  --line: #2b2a33;
+  --window: #2b2a33;
+  --window-dark: #2b2a33;
+  color-scheme: light;
+
+  --font: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --measure: 44rem;
+}
+
+// Night: the whole tower goes dark and its windows light up.
+// Only when the visitor turns it on with the toggle (theme.js): the site opens by day.
+@mixin night {
+  --paper: #10152e;
+  --paper-deep: #1b2147;
+  --ink: #f1e9da;
+  --ink-soft: #c3bdd0;
+  --ochre: #e0a24f;
+  --brick: #ee9a7e;
+  --red: #8c4038;
+  --blue: #4e67a8;
+  --blue-pale: #222c5e;
+  --cream: #3a4785;
+  --cream-deep: #303d7a;
+  --terracotta: #7b4d4a;
+  --terracotta-deep: #5e3a3a;
+  --rose: #8f5f86;
+  --slate: #8a93a8;
+  --green: #4f6b5a;
+  --gold: #b48a3a;
+  --blue-deep: #34497f;
+  --sand: #4a4f7d;
+  --hedge: #2e4a3c;
+  --hedge-deep: #223a2f;
+  --hedge-light: #3a5a45;
+  --hedge-sage: #2c4c48;
+  --hedge-olive: #3a4a30;
+  --arch: #0b1030;
+  --cloud: #161c42;
+  --cloud-warm: #1d1c42;
+  --cloud-bright: #1a2250;
+  // a near-black sky above a faint indigo glow along the horizon, behind the castle
+  --sky: #04061a;
+  --sky-low: #1e2352;
+  --sky-end: 32rem;
+  --shade-light: #aab8ff;
+  --shade-dark: #02030c;
+  --shade-strength: .8;
+  --lamp: #ffd98a;
+  --lamp-glow: 1;
+  --window-glow: .85;
+  --paper-texture: .09;
+  --grain-blend: screen;
+  --grain-opacity: .17;
+  --night: #0b1030;
+  --night-light: #1b2455;
+  --line: #0a0e24;
+  --window: #e0a24f;
+  --window-dark: #161c40;
+  color-scheme: dark;
+}
+
+:root[data-theme="night"] {
+  @include night;
+}
+
+// A hazy sky at the top of the page, lighter along the castle's horizon, fading into the paper
+body {
+  min-height: 100vh;   // so short pages are painted down to the bottom of the screen
+  margin: 0;
+  background: var(--paper) linear-gradient(var(--sky), var(--sky-low) 17rem, var(--paper) var(--sky-end)) no-repeat;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+// A fainter painted texture on the page itself, like the drawings' gouache on paper: a fine
+// brushed mottle and broad uneven patches. It scrolls with the page, under everything.
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7 .35' numOctaves='3' stitchTiles='stitch' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 1 0 0 0 -.35' result='fine'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='2' stitchTiles='stitch' seed='5' result='b'/%3E%3CfeColorMatrix in='b' values='0 0 0 0 .4 0 0 0 0 .36 0 0 0 0 .3 1.2 0 0 0 -.4' result='broad'/%3E%3CfeMerge%3E%3CfeMergeNode in='broad'/%3E%3CfeMergeNode in='fine'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  mix-blend-mode: var(--grain-blend);
+  opacity: var(--paper-texture);
+}
+
+// Film grain over the whole page, for the worn look of an old, unrestored print
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .38 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  mix-blend-mode: var(--grain-blend);
+  opacity: var(--grain-opacity);
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ochre);
+  text-decoration-thickness: 2px;
+  text-underline-offset: .2em;
+
+  &:hover {
+    color: var(--brick);
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+
+// Flat colours for the inline drawings (CSS variables don't work in SVG attributes)
+.c-paper-deep { fill: var(--paper-deep); }
+.c-ink { fill: var(--ink); }
+.c-window { fill: var(--window); }
+.c-window-dark { fill: var(--window-dark); }
+.c-moon { fill: #f7f1e6; }
+.c-ochre { fill: var(--ochre); }
+.c-red { fill: var(--red); }
+.c-blue { fill: var(--blue); }
+.c-pale { fill: var(--blue-pale); }
+.c-night-light { fill: var(--night-light); }
+.c-cream { fill: var(--cream); }
+.c-cream-deep { fill: var(--cream-deep); }
+.c-terracotta { fill: var(--terracotta); }
+.c-terracotta-deep { fill: var(--terracotta-deep); }
+.c-rose { fill: var(--rose); }
+.c-slate { fill: var(--slate); }
+.c-green { fill: var(--green); }
+.c-gold { fill: var(--gold); }
+.c-blue-deep { fill: var(--blue-deep); }
+.c-sand { fill: var(--sand); }
+.c-hedge { fill: var(--hedge); }
+.c-hedge-deep { fill: var(--hedge-deep); }
+.c-hedge-light { fill: var(--hedge-light); }
+.c-hedge-sage { fill: var(--hedge-sage); }
+.c-hedge-olive { fill: var(--hedge-olive); }
+.c-arch { fill: var(--arch); }
+
+// Volume on the drawings (skyline.js): shaded copies of the rounded pieces, lit from the
+// upper left, and the shadow each roof casts on its tower
+.shade-light { stop-color: var(--shade-light); }
+.shade-dark { stop-color: var(--shade-dark); }
+
+.shade {
+  opacity: var(--shade-strength);
+}
+
+.eave {
+  fill: var(--shade-dark);
+  opacity: calc(.24 * var(--shade-strength));
+}
+
+// Faint clouds, in a few whites just off the sky's
+.cloud {
+  fill: var(--cloud);
+
+  &.warm { fill: var(--cloud-warm); }
+  &.bright { fill: var(--cloud-bright); }
+}
+
+// Each cloud drifts slowly to and fro, pennants flutter, and now and then a bird crosses the
+// sky beating its wings (skyline.js)
+@keyframes drift {
+  to { transform: translateX(var(--drift)); }
+}
+
+@keyframes flutter {
+  from { transform: skewY(-4deg); }
+  to { transform: skewY(7deg) scaleX(.88); }
+}
+
+@keyframes fly {
+  from { transform: translateX(-3%); }
+  to { transform: translateX(101%); }
+}
+
+@keyframes fly-back {
+  from { transform: translateX(101%); }
+  to { transform: translateX(-3%); }
+}
+
+@keyframes bob {
+  to { transform: translateY(.6rem); }
+}
+
+@keyframes flap {
+  to { transform: scaleY(.35); }
+}
+
+// Thin mortar lines on stone walls
+.joint {
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: .3;
+}
+
+.outline {
+  stroke: var(--line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+
+  &.thin { stroke-width: 1.5; }
+}
+
+// The shadow a turret casts on the column and the turrets behind it (skyline.js)
+.skyline .cast {
+  opacity: calc(.2 * var(--shade-strength));
+
+  * {
+    fill: var(--shade-dark);
+    stroke: none;
+  }
+}
+
+// The station's street lamp, plain glass by day and lit at night, and the faint light of
+// the windows at night
+.lamp { fill: var(--lamp); }
+.glow { stop-color: var(--lamp-light); }
+.lamp-glow { opacity: var(--lamp-glow); }
+.window-glow { opacity: var(--window-glow); }
+.window-glow.is-off { display: none; }
+
+// Buttons are drawn like a turret: a domed roof rising to a point and a needle, over a body
+// with rounded feet (_includes/button-shape.html), stretched to the button's size
+.button {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  padding: 1.3rem 1.5rem .55rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 150ms ease;
+
+  &:hover {
+    color: var(--paper);
+  }
+}
+
+.button-shape {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    transition: fill 150ms ease;
+  }
+
+  .body {
+    fill: transparent;
+  }
+}
+
+.button:hover .button-shape .body {
+  fill: var(--ink);
+}
+
+// Text for screen readers only
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// Day / night switch
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: currentColor;
+  }
+
+  .icon-sun { display: none; }
+
+  &[aria-pressed="true"] {
+    .icon-sun { display: block; }
+    .icon-moon { display: none; }
+  }
+
+  &:hover {
+    color: var(--brick);
+    border-color: var(--brick);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

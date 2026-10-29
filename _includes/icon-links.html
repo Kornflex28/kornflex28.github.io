@@ -34,6 +34,11 @@
   <li class="icon-link-item"><a href="{{ site.resume_social_links.resume_linkedin_url }}" class="icon-link" itemprop="sameAs" target="_blank">{% include icons/icon-linkedin.html %}</a></li>
   {% endif %}
 
+  <!-- ORCID link -->
+  {% if site.resume_social_links.resume_orcid_url %}
+  <li class="icon-link-item"><a href="{{ site.resume_social_links.resume_orcid_url }}" class="icon-link" itemprop="sameAs" target="_blank">{% include icons/icon-orcid.html %}</a></li>
+  {% endif %}
+
   <!-- Instagram link -->
   {% if site.resume_social_links.resume_instagram_url %}
   <li class="icon-link-item"><a href="{{ site.resume_social_links.resume_instagram_url }}" class="icon-link" itemprop="sameAs" target="_blank">{% include icons/icon-instagram.html %}</a></li>

@@ -1,134 +1,59 @@
-:root {
-  
-  .frogs-body {
-    max-width: 1920px;
-    height: auto;
-    display: grid;
-    grid-auto-rows: fit-content(0em);
-    place-items: center;
+// Generative frogs page, in the same paper-and-ink look as the resume
+
+.tower {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.frog-head {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+
+  a {
+    flex-basis: 100%;
   }
 
-  .frog-name {
-    // width: 50%;
-    font-size: 2em;
-    margin: auto auto;
-  }
-  .frog-overlay {
-    width:50%;
-    max-width: 100%;
-    max-height: auto;
-    padding: 1rem 1rem;
-    display: grid;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.375);
-    box-shadow: 0 0.75rem 2rem 0 rgba(0, 0, 0, 0.1);
-    border-radius: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.125);
-
-    &--name {
-      display: flex;
-    }
-  }
-
-  .frog {
-    text-align: center;
-    margin:0 auto;
-  }
-
-  .frog-desc-text {
-    font-size: 1.25em;
-    text-align: justify;
-  }
-
-  .overlay__btn {
-    &--frog {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #000;
-      background: transparent;
-      border: 1px solid;
-      border-radius: 0.5rem;
-      transition: transform 150ms ease;
-
-      &#btn-generate {
-      width: 30%;
-      height: 30%;
-      margin-right: 1em;
-      font-size: 1rem;
-      }
-
-      &#btn-save {
-        width: auto;
-        height: 100%;
-        padding: 0.5em 1em;
-        margin: 0 auto;
-        font-size: 1.25rem;
-      }
-
-      &:hover {
-        transform: scale(1.05);
-        cursor: pointer;
-      }
+  .theme-toggle {
+    position: absolute;
+    top: -.5rem;
+    right: 0;
   }
 }
 
+.frog-name {
+  margin: 0;
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+}
 
-  .canvas-frog{
-    width: 75%;
-    max-width: 1000px;
-  }
-  
-  @media only screen and (max-width: 1000px) {
+.frog {
+  margin: 1.5rem 0 1rem;
+  text-align: center;
+}
 
-    .frog-overlay {
-      width: 75%;
-    }
+// The p5 canvas is 1000x800; let it scale to the column
+.canvas-frog {
+  width: 100%;
+  height: auto;
+}
 
-    .canvas-frog{
-      width: 100%;
-      max-width: 100%;
-      max-height: 100%;
-    }
-  }
+#btn-save {
+  margin: 0 auto 2rem;
+}
 
-  @media only screen and (max-width: 700px) {
-    .canvas-frog{
-      width: 100%;
-      max-width: 100%;
-      max-height: 100%;
-    }
+.frog-made {
+  margin: .25rem 0 0;
+  color: var(--ink-soft);
+  font-size: .875rem;
+}
 
-    .frog-overlay {
-      width: 100%;
-    }
-    .frog-name {
-      font-size: 1.25em;
-    }
-
-    .frog-desc-text {
-      font-size: 1em;
-      text-align: justify;
-    }
-
-    .overlay__btn {
-      &--frog {
-        &#btn-generate {
-        font-size: 0.875rem;
-        }
-  
-        &#btn-save {
-          font-size: 1rem;
-        }
-  
-        &:hover {
-          transform: scale(1.05);
-          cursor: pointer;
-        }
-    }
-  }
-  }
-  
-  
-  
+.frog-desc-title {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
 }

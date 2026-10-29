@@ -1,8 +1,7 @@
 ---
 ---
 
-// "Reset" styles and SCSS reusable components
+// "Reset" styles, shared look, then the page itself
 @use "normalize";
-
+@use "theme";
 @use "frogs-styles";
-@use "resume-styles";

@@ -1,0 +1,21 @@
+{% assign job = include.job %}
+<article class="entry" itemscope itemprop="worksFor" itemtype="https://schema.org/Organization">
+    <h3 class="entry-title" itemprop="name">{% if job.url %}<a href="{{ job.url }}" itemprop="url"
+            target="_blank">{{ job.company }}</a>{% else %}{{ job.company }}{% endif %}</h3>
+    {% for role in job.roles %}
+    <div class="role">
+        <div class="role-head">
+            <h4 class="role-title">{{ role.position }}</h4>
+            <span class="dates">{{ role.duration }}</span>
+        </div>
+        <p>{{ role.summary }}</p>
+        {% if role.highlights %}
+        <ul>
+            {% for highlight in role.highlights %}
+            <li>{{ highlight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+</article>

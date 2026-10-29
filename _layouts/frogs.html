@@ -6,37 +6,41 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" href="../css/frogs.css">
     {% seo %}
-    <link rel="icon" type="image/x-icon" href="/favicon.png" />
+{% include favicons.html %}
+    <script src="../assets/js/theme.js"></script>
     <script src="../assets/js/libraries/p5.min.js"></script>
     <script src="../assets/js/libraries/frog.utils.js"></script>
     <script src="../assets/js/libraries/frog.namegen.js"></script>
     <script src="../assets/js/libraries/ntc.js"></script>
     <script src="../assets/js/frogs.js"></script>
-    <script src="../assets/js/orbs.js" type="module"></script>
 
 </head>
 
-<!-- Canvas -->
-<canvas class="orb-canvas"></canvas>
-
-<body class="frogs-body">
-    <div class="frog-overlay">
-        <div class="frog-overlay--name">
-            <p class="frog-name"></p>
-            <button class="overlay__btn--frog" id="btn-generate">Generate<br>a new frog</button>
-        </div>
+<body>
+    <div class="tower frog-page">
+        <header class="frog-head">
+            <a href="/">Back to the tower</a>
+            {% include theme-toggle.html %}
+            <div>
+                <h1 class="frog-name"></h1>
+                <p class="frog-made">A frog generator made in <time datetime="2021-02">February 2021</time>.</p>
+            </div>
+            <button class="button" id="btn-generate">{% include button-shape.html %}Generate a new frog</button>
+        </header>
         <div id="frog-sketch" class="frog"></div>
-        <button class="overlay__btn--frog" id="btn-save" style="display: none;">Keep this frog</button>
-        <div class="frog-desc">
-            <h1 class="frog-desc-title"></h1>
+        <button class="button" id="btn-save" style="display: none;">{% include button-shape.html %}Keep this frog</button>
+        <section class="frog-desc">
+            <h2 class="frog-desc-title"></h2>
             <div class="frog-desc-text"></div>
-        </div>
+        </section>
     </div>
-
-
 </body>
+
+</html>
