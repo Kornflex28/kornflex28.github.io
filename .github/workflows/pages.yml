@@ -29,6 +29,20 @@ jobs:
       - run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+      # A new castle for link previews at each publication: a headless Chrome photographs
+      # the card page, and the picture replaces the card kept in the repository. If anything
+      # fails, that card stays.
+      - name: Draw the link preview card
+        continue-on-error: true
+        run: |
+          python3 -m http.server 8000 --directory _site > /dev/null 2>&1 &
+          sleep 1
+          google-chrome --headless=new --hide-scrollbars --window-size=1200,630 \
+            --virtual-time-budget=8000 --screenshot="$RUNNER_TEMP/card.png" http://localhost:8000/card.html
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow
+          "$RUNNER_TEMP/venv/bin/python" -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').save(sys.argv[2], quality=88)" \
+            "$RUNNER_TEMP/card.png" _site/images/social-card.jpg
       - uses: actions/upload-pages-artifact@v4
 
   deploy:
