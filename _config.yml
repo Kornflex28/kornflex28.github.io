@@ -3,11 +3,17 @@ include:
  - .htaccess
 
 # Site settings
+url: "https://touchevisual.dev"
+lang: en
 title: "Louis Chauvet"
 description: "Louis Chauvet - Research engineer at Paris Institute of Globe Physics"
+tagline: "Research engineer at Paris Institute of Globe Physics"
 
 # Build settings
 markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
 sass:
   sass_dir: _sass
   style: compressed
