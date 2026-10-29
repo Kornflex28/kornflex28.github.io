@@ -9,18 +9,6 @@ The resume is drawn as a tower in the painted style of *Le Roi et l'Oiseau*: a c
 random on every visit (or again from its ID, `?castle=<ID>`), an elevator riding down the floors,
 a day and night theme, and a name whose letters fly off into its anagram.
 
-## Structure
-
-- `_data/*.yml`: resume content (experience, publications, education, skills...)
-- `_config.yml`: site settings and which resume sections are shown
-- `_layouts/`: `resume.html` (home page) and `frogs.html` (`/frogs`, a p5.js generative frog toy)
-- `assets/js/`: `skyline.js` (the castle), `elevator.js`, `anagram.js` (the name), `theme.js` (day and night)
-- `_sass/`, `css/`: styles
-- `404.html`: the page for missing addresses
-- `card.html`: the link preview picture, redrawn with a new castle at each deployment into
-  `images/social-card.jpg`
-- `files/`: PDFs linked from the resume
-
 ## Run locally
 
 Needs Ruby 3.x (on Windows, RubyInstaller with DevKit).
