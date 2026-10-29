@@ -2,3 +2,10 @@ _site
 .sass-cache
 .DS_Store
 _vendor
+
+# Jekyll caches
+.jekyll-cache/
+.jekyll-metadata
+
+# Windows
+Thumbs.db
