@@ -43,7 +43,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow
           "$RUNNER_TEMP/venv/bin/python" -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').save(sys.argv[2], quality=88)" \
             "$RUNNER_TEMP/card.png" _site/images/social-card.jpg
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
 
   deploy:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
