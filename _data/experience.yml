@@ -1,25 +1,50 @@
-# Jobs
+# Jobs, most recent first. Each job lists its roles, most recent first.
+# Jobs marked earlier are folded under "Earlier experience".
 
 # IPGP
 - company: IPGP &mdash; Paris Institute of Globe Physics
+  url: https://www.ipgp.fr/en/
   logo: images/ipgp-logo.svg
-  position: Research engineer
-  duration: Mar, 2021 &mdash; Now
-  summary: Processing of raw data from space missions for production, validation, distribution of advanced data. Data analysis in support of scientific studies. (SWARM)
-  keywords: Signal processing &mdash; AI &mdash; Geomagnetism &mdash; Python &mdash; Matlab &mdash; Java
+  roles:
+    - position: Head of Space Magnetometry Data Processing &mdash; Research Engineer (permanent)
+      duration: Dec, 2024 &mdash; Now
+      summary: Lead of the Payload Data Ground Segment of ESA's <a href="https://nanomagsat.fr/" target="_blank">NanoMagSat</a> Scout mission (three nanosatellites), while overseeing Swarm data production.
+      highlights:
+        - Processing chains and End-to-End simulations for every instrument, with the Open Cosmos-led consortium
+        - Ground segment planning, budget and ESA documentation; management of a team of research engineers
 
-# ONERA
-- company: ONERA &mdash; The French Aerospace Lab
+    - position: Technical Lead, Space Data Processing
+      duration: Oct, 2022 &mdash; Nov, 2024
+      summary: Technical lead for all space data processing of the Geomagnetism team.
+      highlights:
+        - Four Swarm Level-2 products (geomagnetic field models) developed and delivered to ESA, with OPGC and NOAA
+        - Contribution to geomagnetic field models (DGRF 2020 / IGRF-14 candidate, DIFI daily variations); hiring and training of research engineers
+
+    - position: Scientific Computing Expert &mdash; Swarm ASM data
+      duration: Mar, 2021 &mdash; Sep, 2022
+      summary: Owner of the Level-1B and Level-2 data of the Absolute Scalar Magnetometer (CEA-Leti, CNES) on board the three satellites of ESA's <a href="https://earth.esa.int/eogateway/missions/swarm" target="_blank">Swarm</a> mission.
+      highlights:
+        - Three production and validation chains, with bimonthly deliveries and reports to ESA
+        - Data quality tools presented at ESA Swarm Data Quality Workshops
+
+# ONERA / CESBIO
+- company: ONERA &mdash; The French Aerospace Lab &amp; CESBIO
+  earlier: true
+  url: https://www.onera.fr/en
   logo: images/onera-logo.png
-  position: Intern Researcher at the Optics and Associated Techniques Department (DOTA)
-  duration: Apr, 2020 &mdash; Oct 2020
-  summary: Research work on the estimation of biodiversity variables of a Mediterranean forest for two CNES and NASA space missions (HYPXIM and SBG) - CNES-TOSCA project
-  keywords: Image processing &mdash; Radiative transfer &mdash; Remote Sensing &mdash; Python &mdash; DART &mdash; ENVI
+  roles:
+    - position: End-of-study Research Intern, Optics Department (DOTA), Toulouse
+      duration: Apr, 2020 &mdash; Oct, 2020
+      summary: Estimated tree biophysical and biochemical properties (leaf pigments, leaf area index, water content) of a Californian woodland savanna from airborne hyperspectral images, to assess the future HYPXIM (CNES) and SBG (NASA) missions at 8 m and 30 m resolution (<a href="files/2020 _CESBIO_ONERA_CHAUVET_Louis.pdf" target="_blank">report</a>).
+      highlights:
+        - Image classification, 3D radiative transfer simulations (DART) and look-up-table inversion
+        - CNES HyperMED project, with UC Davis (CSTARS)
 
 # Vocalyx
 - company: CAPANOVI &mdash; Vocalyx
+  earlier: true
   logo: images/vocalyx-logo.png
-  position: Software developer intern
-  duration:  Sept, 2018 &mdash; Mar, 2019
-  summary: Development and maintenance of a mobile application for people with aphasia
-  keywords: Android and iOS mobile development &mdash; Web development &mdash; Jira &mdash; Bitbucket
+  roles:
+    - position: Software Developer Intern
+      duration: Sept, 2018 &mdash; Mar, 2019
+      summary: Development and maintenance of an Android and iOS app for people with aphasia.

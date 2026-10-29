@@ -1,0 +1,138 @@
+# Publications and talks, most recent year first.
+# Sources: ORCID 0000-0002-1467-9136 and Google Scholar.
+
+- year: 2026
+  type: Article
+  authors: Beggan C. D. et al.
+  title: "International Geomagnetic Reference Field: the fourteenth generation"
+  venue: Earth, Planets and Space, 78, 127
+  url: https://doi.org/10.1186/s40623-025-02360-0
+
+- year: 2026
+  type: Article
+  authors: Beggan C. D. et al.
+  title: Evaluation of candidate models for the 14th generation International Geomagnetic Reference Field
+  venue: Earth, Planets and Space, 78, 126
+  url: https://doi.org/10.1186/s40623-026-02382-2
+
+- year: 2026
+  type: Article
+  authors: Jenner M., Coïsson P., Hulot G., Chauvet L. et al.
+  title: On the peculiar properties of extremely low frequency lightning generated whistlers detected at low Earth orbit altitudes close to the magnetic equator
+  venue: Geophysical Research Letters, 53, e2025GL121525
+  url: https://doi.org/10.1029/2025GL121525
+
+- year: 2026
+  type: Article
+  authors: Yang Y., Zeren Z., Hulot G. et al.
+  title: Second generation of CSES global geomagnetic field model (CGGM-2) and associated candidate models for IGRF-14
+  venue: Earth, Planets and Space, 78, 33
+  url: https://doi.org/10.1186/s40623-025-02361-z
+
+- year: 2026
+  type: Article
+  authors: Hulot G., Chauvet L., Deborde R. et al.
+  title: A DGRF 2020 candidate model only based on Swarm ASM experimental vector mode data improved through a dedicated post-calibration strategy
+  venue: Earth, Planets and Space, 78, 24
+  url: https://doi.org/10.1186/s40623-025-02343-1
+
+- year: 2025
+  type: Article
+  authors: Coïsson P., Chauvet L., Jenner M. et al.
+  title: Global occurrences of whistlers detected in the Extremely Low Frequencies during Absolute Scalar Magnetometer burst mode acquisition campaigns of the Swarm mission
+  venue: Journal of Space Weather and Space Climate, 15, 58
+  url: https://doi.org/10.1051/swsc/2025048
+
+- year: 2025
+  type: Article
+  authors: Chulliat A., Chauvet L., Hulot G. et al.
+  title: Climatological models of non-polar geomagnetic daily variations using the DIFI methodology with Swarm and CHAMP satellite data
+  venue: Journal of Space Weather and Space Climate, 15, 46
+  url: https://doi.org/10.1051/swsc/2025041
+
+- year: 2025
+  type: Article
+  authors: Emsley A. J., Beggan C., Callow A. et al.
+  title: "Swarm absolute scalar magnetometer burst mode: observed ELF signals and their origins"
+  venue: Journal of Space Weather and Space Climate, 15, 37
+  url: https://doi.org/10.1051/swsc/2025028
+
+- year: 2025
+  type: Dataset
+  authors: Hulot G., Chauvet L., Deborde R.
+  title: Swarm Alpha ASM-V data, version 06XX
+  venue: IPGP Research Collection
+  url: https://doi.org/10.18715/IPGP.2025.M7OIC39M
+
+- year: 2025
+  type: Dataset
+  authors: Hulot G., Chauvet L., Deborde R.
+  title: Swarm Bravo ASM-V data, version 06XX
+  venue: IPGP Research Collection
+  url: https://doi.org/10.18715/IPGP.2025.M7OK4RFM
+
+- year: 2025
+  type: Conference
+  authors: Jenner M. et al.
+  title: The peculiar propagation of equatorial Extremely Low Frequency whistlers
+  venue: AGU Fall Meeting, SA51B-1127
+
+- year: 2025
+  type: Conference
+  authors: Hulot G. et al.
+  title: A DGRF 2020 candidate model only based on Swarm ASM experimental vector mode data
+  venue: EGU General Assembly, EGU25-9887
+  url: https://doi.org/10.5194/egusphere-egu25-9887
+
+- year: 2025
+  type: Conference
+  authors: Hulot G. et al.
+  title: The upcoming ESA Scout NanoMagSat mission, a nanosatellite constellation to further improve geomagnetic field and ionospheric environment monitoring and modeling
+  venue: EGU General Assembly, EGU25-9287
+  url: https://doi.org/10.5194/egusphere-egu25-9287
+
+- year: 2025
+  type: Conference
+  authors: Jenner M. et al.
+  title: Ray tracing of the equatorial Extremely Low Frequency whistlers detected by the Swarm mission
+  venue: EGU General Assembly, EGU25-7098
+  url: https://doi.org/10.5194/egusphere-egu25-7098
+
+- year: 2024
+  type: Article
+  authors: Jenner M., Coïsson P., Hulot G. et al.
+  title: "Total Root Electron Content: a new metric for the ionosphere below low Earth orbiting satellites"
+  venue: Geophysical Research Letters, 51(15), e2024GL110559
+  url: https://doi.org/10.1029/2024GL110559
+
+- year: 2023
+  type: Conference
+  authors: Hulot G. et al.
+  title: Ten years of operation of Swarm's absolute magnetometers, lessons learnt and prospect for the NanoMagSat nanosatellite constellation project
+  venue: EGU General Assembly, EGU23-5709
+  url: https://doi.org/10.5194/egusphere-egu23-5709
+
+- year: 2023
+  type: Conference
+  authors: Coïsson P. et al.
+  title: "Swarm Absolute Scalar Magnetometer burst mode: from instrument validation to routine observation of intense lightning activity"
+  venue: EGU General Assembly, EGU23-5167
+  url: https://doi.org/10.5194/egusphere-egu23-5167
+
+- year: 2022
+  type: Conference
+  authors: Coïsson P. et al.
+  title: Lightning-generated whistlers detected simultaneously by Swarm satellites in the ELF
+  venue: AGU Fall Meeting, AE16A-02
+
+- year: 2022
+  type: Conference
+  authors: Hulot G. et al.
+  title: Swarm ASM burst-mode L1b data and the L2 whistler product they allow to derive
+  venue: ESA Living Planet Symposium
+
+- year: 2021
+  type: Conference
+  authors: Coïsson P. et al.
+  title: Analysis of remarkable whistler events in the ELF recorded by Swarm satellites
+  venue: AGU Fall Meeting, AE22A-06

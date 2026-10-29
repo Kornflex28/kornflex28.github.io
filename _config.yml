@@ -19,9 +19,8 @@ sass:
   sourcemap: development
 
 # Resume settings
-resume_avatar:                  "true"
 resume_name:                    "Louis Chauvet"
-resume_title:                   "Research engineer at Paris Institute of Globe Physics"
+resume_title:                   "Research Engineer &mdash; Head of Space Magnetometry Data Processing at IPGP"
 
 # used for the contact button in _layouts/resume.html
 resume_contact_email:           "louis@touchevisual.dev"
@@ -30,25 +29,14 @@ resume_contact_email:           "louis@touchevisual.dev"
 resume_contact_telephone:       ""
 resume_contact_address:         "Paris"
 
-resume_header_contact_info:     "• louis@touchevisual.dev •"
-display_header_contact_info:    "true"
-
-resume_header_intro: "<p>Engineer graduated from IMT Atlantique, Grande École d'Ingénieurs in telecommunications, as well as from ISAE in remote sensing and image processing.</p>"
-
-# use "yes" to display the email contact button,
-# "no" to display an "I'm not looking for work" message,
-# or remove the resume_looking_for_work option entirely
-# to leave blank
-resume_looking_for_work:        "yes"
+resume_header_intro: "<p>Research engineer in scientific computing at the <a href='https://www.ipgp.fr/en/' target='_blank'>Paris Institute of Globe Physics (IPGP)</a>, where I lead the processing of data from ESA magnetometry missions: the <a href='https://earth.esa.int/eogateway/missions/swarm' target='_blank'><b>Swarm</b></a> constellation in operation, and the ground segment of the upcoming <a href='https://nanomagsat.fr/' target='_blank'><b>NanoMagSat</b></a> mission. Graduate engineer from IMT Atlantique (signal processing, space telecommunications) and ISAE-Supaero.</p>"
 
 # Decide which sections to use
 # comment out to hide
 resume_section_experience:      true
+resume_section_publications:    true
 resume_section_education:       true
-resume_section_projects:        true
 resume_section_skills:          true
-resume_section_recognition:     false
-resume_section_links:           false
 resume_section_associations:    true
 resume_section_interests:       true
 
@@ -60,14 +48,11 @@ resume_social_links:
   # resume_dribbble_url:          ""
   # resume_facebook_url:          ""
   resume_linkedin_url:          "https://www.linkedin.com/in/louisc20171023/"
+  resume_orcid_url:             "https://orcid.org/0000-0002-1467-9136"
   # resume_instagram_url:         ""
   # resume_website_url:           ""
   resume_frogs_url:           "/frogs"
   # resume_medium_url:            ""
-resume_print_social_links:      true
-
-# Design settings
-resume_theme:                   default
 
 # Note: when editing locally, remember to restart
 # your Jekyll server when you edit this file. Changes

@@ -1,24 +1,12 @@
 # Skills
-# Computing
-- skill: Computing
-  subskill: Python, Matlab, ENVI, SQL, TensorFlow, Keras, Java, C#
-  description:
+- skill: Space data
+  subskill: Mission data processing (Level-0 to Level-2), ground segment, End-to-End simulation, data quality control
 
-# 3D Modelisation
-- skill: 3D Modelisation
-  subskill: DART, Blender
-  description:
+- skill: Scientific computing
+  subskill: Signal processing, geomagnetic field modelling (spherical harmonics, inverse problems), Python, Matlab, Java, Shell, Git
 
-# Design
-- skill: Design
-  subskill: Adobe Suite (Photshop, Illustrator, After Effects)
-  description:
+- skill: Leadership
+  subskill: Project management with ESA and industrial partners, team supervision and training
 
-# Languages
 - skill: Languages
-  subskill: French (native), English (fluent), German (Intermediate), Japanese (Basic), French Sign Language (Basic)
-#   description: Copy writing, graphic design, web design, front-end web development, print design
-
-# Soft Skills
-- skill: Soft skills
-  subskill: Versatility, Rigor
+  subskill: French (native), English (fluent), German (intermediate), Japanese (basic), French Sign Language (basic)
