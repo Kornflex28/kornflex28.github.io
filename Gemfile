@@ -1,7 +1,11 @@
 source "https://rubygems.org"
 
-gem 'github-pages'
-# this gem provides regeneration support improvements on Windows
-gem 'wdm', '>= 0.1.0' if Gem.win_platform?
-gem "rexml", ">= 3.2.5"
-gem "kramdown", ">= 2.3.1"
+gem "jekyll", "~> 4.4"
+
+group :jekyll_plugins do
+  gem "jekyll-seo-tag"
+  gem "jekyll-sitemap"
+end
+
+# Needed by `jekyll serve` on Ruby 3+
+gem "webrick"
