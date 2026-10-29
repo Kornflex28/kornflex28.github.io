@@ -1,0 +1,62 @@
+---
+permalink: /card.html
+sitemap: false
+---
+<!DOCTYPE html>
+
+<!-- The picture shown when a link to the site is shared (1200 x 630): a castle drawn at random
+     each time. The deployment photographs this page into images/social-card.jpg (see
+     .github/workflows/pages.yml); the copy in the repository is the one used until then. -->
+<html lang="{{ site.lang }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex">
+    <title>Link preview card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ '/css/resume.css' | relative_url }}">
+    <style>
+        html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+        body { background: var(--paper) linear-gradient(var(--sky), var(--sky-low) 280px, var(--paper) 630px) no-repeat; }
+        .card { position: relative; width: 1200px; height: 630px; }
+        .card .castle { position: absolute; top: 0; left: 0; width: 1200px; overflow: hidden; }
+        .card .skyline, .card .clouds, .card .pennants { width: 1200px !important; margin: 0 !important; left: 0 !important; }
+        .card .castle-id, .card .bird { display: none; }
+        .rail { position: absolute; width: 2px; background: var(--ink); }
+        .cab { position: absolute; z-index: 3; }
+        .cab svg { display: block; width: 100%; height: auto; }
+        .text { position: absolute; top: 372px; right: 96px; left: 96px; }
+        .text h1 { margin: 0; font-size: 76px; line-height: 1.1; letter-spacing: -.01em; }
+        .text p { margin: 14px 0 0; font-size: 28px; color: var(--ink-soft); }
+        .text .url { margin-top: 26px; font-size: 24px; font-weight: 700; color: var(--brick); }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="castle"><svg class="skyline" viewBox="0 0 952 270" aria-hidden="true"></svg></div>
+        <span class="rail"></span>
+        <span class="cab">{% include icons/icon-elevator.html %}</span>
+        <div class="text">
+            <h1>{{ site.resume_name }}</h1>
+            <p>{{ site.resume_title }}</p>
+            <p class="url">{{ site.url | remove: "https://" }}</p>
+        </div>
+    </div>
+    <script src="{{ '/assets/js/skyline.js' | relative_url }}"></script>
+    <script>
+        // the cabin docked in the pavilion, and its rail from the pulley down to the ground
+        const svg = document.querySelector(".skyline"), box = svg.getBoundingClientRect();
+        const unit = box.width / svg.viewBox.baseVal.width, x = box.width * svg.dataset.dockX;
+        const cab = document.querySelector(".cab"), rail = document.querySelector(".rail");
+        cab.style.width = `${25.6 * unit}px`;
+        cab.style.left = `${x - 12.8 * unit}px`;
+        cab.style.top = `${box.height * svg.dataset.dock - cab.offsetHeight}px`;
+        rail.style.left = `${x - 1}px`;
+        rail.style.top = `${box.height * svg.dataset.pulley}px`;
+        rail.style.height = `${box.height * (1 - svg.dataset.pulley)}px`;
+    </script>
+</body>
+
+</html>

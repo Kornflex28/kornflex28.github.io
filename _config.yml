@@ -8,6 +8,19 @@ title: "Louis Chauvet"
 description: "Louis Chauvet - Research engineer at Paris Institute of Globe Physics"
 tagline: "Research engineer at Paris Institute of Globe Physics"
 
+# Link previews (jekyll-seo-tag): the castle card, shown large
+twitter:
+  card: summary_large_image
+defaults:
+  - scope:
+      path: ""
+    values:
+      image:
+        path: /images/social-card.jpg
+        width: 1200
+        height: 630
+        alt: "Louis Chauvet, in front of a castle of turrets and terraces"
+
 # Build settings
 markdown: kramdown
 plugins:
