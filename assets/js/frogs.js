@@ -10,6 +10,8 @@ const frogSketchInst = (sketch) => {
         windowWidth = 1000
         windowHeight = 800
         c = sketch.createCanvas(windowWidth, windowHeight);
+        // Fixed 1000x800 backing store, whatever the screen's pixel ratio
+        sketch.pixelDensity(1)
         c.style('width', '')
         c.style('height', '')
 
@@ -24,8 +26,6 @@ const frogSketchInst = (sketch) => {
 
     sketch.draw = () => {
         sketch.clear()
-        c.elt.width = windowWidth;
-        c.elt.height = windowHeight;
         c.class('canvas-frog');
         sketch.background(backgroundColor);
 

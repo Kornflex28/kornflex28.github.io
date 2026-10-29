@@ -183,7 +183,6 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
 
     // Base body
     baseBodyShape = sketch.createGraphics(sketch.width, sketch.height)
-    baseBodyShape.class('frog-sketch-utils')
     baseBodyShape.rectMode(sketch.CENTER)
     baseBodyShape.angleMode(sketch.DEGREES)
     baseBodyShape.translate(baseBodyShape.width / 2, baseBodyShape.height / 2)
@@ -265,7 +264,6 @@ function drawFrog(sketch, centerX, centerY, frogChar) {
 function textureLines(sketch, centerX, centerY, frogChar, baseBodyShape, params) {
     // Base body texture
     baseBodyShapeTexture = sketch.createGraphics(sketch.width, sketch.height)
-    baseBodyShapeTexture.class('frog-sketch-utils')
     baseBodyShapeTexture.rectMode(sketch.CENTER)
     baseBodyShapeTexture.angleMode(sketch.DEGREES)
     baseBodyShapeTexture.translate(centerX, centerY)
@@ -295,7 +293,6 @@ function textureLines(sketch, centerX, centerY, frogChar, baseBodyShape, params)
 function textureCrosses(sketch, centerX, centerY, frogChar, baseBodyShape, params) {
     // Base body texture
     baseBodyShapeTexture = sketch.createGraphics(sketch.width, sketch.height)
-    baseBodyShapeTexture.class('frog-sketch-utils')
     baseBodyShapeTexture.rectMode(sketch.CENTER)
     baseBodyShapeTexture.angleMode(sketch.DEGREES)
     baseBodyShapeTexture.translate(centerX, centerY)
@@ -359,22 +356,18 @@ function drawBowTie(sketch, centerX, centerY, frogChar, params) {
 
     // Right bow tie
     sketch.beginShape()
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(width / 3, height / 6)
-    sketch.curveVertex(width / 3, -height / 6)
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(0, 0)
+    sketch.splineVertex(0, 0)
+    sketch.splineVertex(width / 3, height / 6)
+    sketch.splineVertex(width / 3, -height / 6)
+    sketch.splineVertex(0, 0)
     sketch.endShape()
 
     // Left bow tie
     sketch.beginShape()
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(-width / 3, height / 6)
-    sketch.curveVertex(-width / 3, -height / 6)
-    sketch.curveVertex(0, 0)
-    sketch.curveVertex(0, 0)
+    sketch.splineVertex(0, 0)
+    sketch.splineVertex(-width / 3, height / 6)
+    sketch.splineVertex(-width / 3, -height / 6)
+    sketch.splineVertex(0, 0)
     sketch.endShape()
 
     // Center bow tie
@@ -399,18 +392,16 @@ function drawTopHat(sketch, centerX, centerY, frogChar, params) {
     sketch.strokeWeight(3)
     sketch.fill(sketch.color(params.hatHue, 100, 60));
     sketch.beginShape()
-    sketch.curveVertex(hatWidth / 2, -frogChar.height / 2.1)
-    sketch.curveVertex(hatWidth / 2, -frogChar.height / 2.1)
-    sketch.curveVertex(0, -frogChar.height / 2.15)
-    sketch.curveVertex(-hatWidth / 2, -frogChar.height / 2.1)
-    sketch.curveVertex(-hatWidth / 1.7, -frogChar.height / 2)
-    sketch.curveVertex(-hatWidth / 2.1, -frogChar.height / 1.9)
-    sketch.curveVertex(-hatWidth / 2, -frogChar.height / 1.5)
-    sketch.curveVertex(hatWidth / 2, -frogChar.height / 1.5)
-    sketch.curveVertex(hatWidth / 2.1, -frogChar.height / 1.9)
-    sketch.curveVertex(hatWidth / 1.7, -frogChar.height / 2)
-    sketch.curveVertex(hatWidth / 2, -frogChar.height / 2.1)
-    sketch.curveVertex(hatWidth / 2, -frogChar.height / 2.1)
+    sketch.splineVertex(hatWidth / 2, -frogChar.height / 2.1)
+    sketch.splineVertex(0, -frogChar.height / 2.15)
+    sketch.splineVertex(-hatWidth / 2, -frogChar.height / 2.1)
+    sketch.splineVertex(-hatWidth / 1.7, -frogChar.height / 2)
+    sketch.splineVertex(-hatWidth / 2.1, -frogChar.height / 1.9)
+    sketch.splineVertex(-hatWidth / 2, -frogChar.height / 1.5)
+    sketch.splineVertex(hatWidth / 2, -frogChar.height / 1.5)
+    sketch.splineVertex(hatWidth / 2.1, -frogChar.height / 1.9)
+    sketch.splineVertex(hatWidth / 1.7, -frogChar.height / 2)
+    sketch.splineVertex(hatWidth / 2, -frogChar.height / 2.1)
 
     sketch.endShape()
 
