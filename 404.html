@@ -1,0 +1,39 @@
+---
+permalink: /404.html
+title: Floor not found
+sitemap: false
+---
+<!DOCTYPE html>
+
+<html lang="{{ site.lang }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- absolute paths: this page is served for any missing address -->
+    <link rel="stylesheet" href="/css/lost.css">
+    {% seo %}
+{% include favicons.html %}
+    <script src="/assets/js/theme.js"></script>
+</head>
+
+<body>
+    <!-- A missing page: the elevator stuck between two floors -->
+    <main class="lost">
+        {% include theme-toggle.html %}
+        <div class="lost-shaft" aria-hidden="true">
+            <span class="lost-cabin">{% include icons/icon-elevator.html %}</span>
+        </div>
+        <h1>This floor doesn't exist</h1>
+        <p>The elevator stopped between two floors. Let's take you back up.</p>
+        <a href="/" class="button">{% include button-shape.html %}Back to the tower</a>
+    </main>
+</body>
+
+</html>

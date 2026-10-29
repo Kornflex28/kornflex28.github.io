@@ -1,0 +1,82 @@
+// The page for missing addresses: the elevator stuck between two floors, jolting now and
+// then, and a way back up.
+
+.lost {
+  position: relative;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
+  text-align: center;
+
+  .theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+  }
+
+  h1 {
+    margin: 1.5rem 0 .5rem;
+    font-size: clamp(1.75rem, 6vw, 2.25rem);
+  }
+
+  p {
+    margin: 0 0 2rem;
+    color: var(--ink-soft);
+  }
+}
+
+// The shaft, from the top of the screen down past two landings, with the cabin hanging
+// between them
+.lost-shaft {
+  position: relative;
+  width: 2rem;
+  height: 22rem;
+  margin: 0 auto;
+
+  // the shaft
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 1px);
+    width: 2px;
+    background: var(--ink);
+  }
+
+  // the two landings it stopped between
+  &::after {
+    content: "";
+    position: absolute;
+    top: 5rem;
+    left: calc(50% - .35rem);
+    box-sizing: border-box;
+    width: .7rem;
+    height: .7rem;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow: 0 14rem 0 -2px var(--paper), 0 14rem 0 0 var(--ink);
+  }
+}
+
+.lost-cabin {
+  position: absolute;
+  z-index: 1;
+  top: 10.5rem;
+  left: calc(50% - 1rem);
+  width: 2rem;
+  animation: stuck 3.2s ease-in-out infinite;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+@keyframes stuck {
+  0%, 70%, 100% { transform: translateY(0); }
+  78% { transform: translateY(-.35rem); }
+  86% { transform: translateY(.1rem); }
+}
