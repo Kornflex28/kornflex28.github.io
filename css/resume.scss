@@ -1,9 +1,7 @@
 ---
 ---
 
-// // "Reset" styles and SCSS reusable components
-@import "normalize";
-@import "mixins";
-@import "variables";
+// "Reset" styles and SCSS reusable components
+@use "normalize";
 
-@import "resume";
+@use "resume-styles";
