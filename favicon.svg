@@ -1,0 +1,7 @@
+<!-- The site's icon: a small round bird in flat colours (original drawing) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <path fill="#44609a" d="M7 15 L1 11.5 L2 21.5 Z" />
+  <circle fill="#6c8ca6" cx="16" cy="17" r="11" />
+  <path fill="#d8ad45" d="M25.5 11.5 L31 14 L25.5 16.5 Z" />
+  <circle fill="#2b2a33" cx="21" cy="12.8" r="1.9" />
+</svg>
