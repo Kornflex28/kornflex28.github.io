@@ -36,6 +36,8 @@
   --shade-light: #fffaf0;
   --shade-dark: #2b2a33;
   --shade-strength: 1;
+  --light: #fff8ee;
+  --sun: #fff1d0;
   --lamp: #eee6d2;
   --lamp-light: #ffd27a;
   --lamp-glow: 0;
@@ -93,6 +95,8 @@
   --shade-light: #aab8ff;
   --shade-dark: #02030c;
   --shade-strength: .8;
+  --light: #ffffff;
+  --sun: #efe7cf;
   --lamp: #ffd98a;
   --lamp-glow: 1;
   --window-glow: .85;
@@ -109,6 +113,28 @@
 
 :root[data-theme="night"] {
   @include night;
+}
+
+// The time of day of each castle (skyline.js sets data-moment): the sky's colours, the light
+// on the drawing and the sun's; at dusk the first windows and the lamp light up. By day only:
+// at night the castle keeps its moonlight.
+:root:not([data-theme="night"]) {
+  &[data-moment="dawn"] { --sky: #b6bedc; --sky-low: #efd3c6; --light: #fcece6; --sun: #fcd3b6; }
+  &[data-moment="morning"] { --sky: #b4c8e6; --sky-low: #e1e6ed; --light: #fffcf5; --sun: #ffefbf; }
+  &[data-moment="noon"] { --sky: #a6c2ea; --sky-low: #dbe5f0; --light: #ffffff; --sun: #fffbe3; }
+  &[data-moment="afternoon"] { --sky: #bccbe6; --sky-low: #d5dbe6; --light: #fff8ee; --sun: #ffebb5; }
+  &[data-moment="golden"] { --sky: #c2c6df; --sky-low: #f0d6aa; --light: #fbe9cf; --sun: #fbd894; }
+
+  &[data-moment="dusk"] {
+    --sky: #8e8eb7;
+    --sky-low: #edb39c;
+    --light: #f2d6cf;
+    --sun: #f6a97e;
+    --window: #d99a48;
+    --window-glow: .5;
+    --lamp: #ffd98a;
+    --lamp-glow: .7;
+  }
 }
 
 // A hazy sky at the top of the page, lighter along the castle's horizon, fading into the paper
@@ -210,6 +236,39 @@ a {
   opacity: var(--shade-strength);
 }
 
+// The light of the moment, multiplied into the drawing's paint, and the sun (or the moon)
+.daylight { flood-color: var(--light); }
+.sun-disc { fill: var(--sun); }
+.sun-light { stop-color: var(--sun); }
+
+// By night, the moon in its phase instead of the sun, with a smaller halo
+.moon-lit { fill: var(--sun); }
+
+.moon-dark {
+  fill: var(--sun);
+  opacity: .12;
+}
+
+.sun-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.moon-lit,
+.moon-dark {
+  display: none;
+}
+
+:root[data-theme="night"] {
+  .sun-disc { display: none; }
+  .moon-lit, .moon-dark { display: inline; }
+
+  .sun-halo {
+    transform: scale(.5);
+    opacity: .8;
+  }
+}
+
 .eave {
   fill: var(--shade-dark);
   opacity: calc(.24 * var(--shade-strength));
@@ -224,7 +283,8 @@ a {
 }
 
 // Each cloud drifts slowly to and fro, pennants flutter, and now and then a bird crosses the
-// sky beating its wings (skyline.js)
+// sky beating its wings; by night stars twinkle, a star shoots now and then, and at dusk and
+// by night fireflies wander (skyline.js)
 @keyframes drift {
   to { transform: translateX(var(--drift)); }
 }
@@ -252,6 +312,28 @@ a {
   to { transform: scaleY(.35); }
 }
 
+@keyframes twinkle {
+  to { opacity: .25; }
+}
+
+@keyframes shoot {
+  from { opacity: 0; transform: rotate(18deg) translateX(0); }
+  15% { opacity: 1; }
+  to { opacity: 0; transform: rotate(18deg) translateX(9rem); }
+}
+
+@keyframes wander {
+  to { transform: translate(var(--dx), var(--dy)); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  15% { opacity: 1; }
+  40% { opacity: .3; }
+  55% { opacity: .95; }
+  80% { opacity: 0; }
+}
+
 // Thin mortar lines on stone walls
 .joint {
   stroke: var(--line);
@@ -265,6 +347,7 @@ a {
   stroke-linejoin: round;
 
   &.thin { stroke-width: 1.5; }
+  &.fine { stroke-width: 1; }
 }
 
 // The shadow a turret casts on the column and the turrets behind it (skyline.js)

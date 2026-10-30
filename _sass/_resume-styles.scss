@@ -56,6 +56,38 @@
     will-change: transform;
     animation: drift ease-in-out infinite alternate;
   }
+
+  // the sun keeps still
+  > .sun {
+    animation: none;
+  }
+
+  // the stars, by night only, across the whole sky
+  > .stars {
+    display: none;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: none;
+    fill: #fff6dc;
+  }
+}
+
+:root[data-theme="night"] .clouds > .stars {
+  display: block;
+}
+
+.stars .twinkle {
+  animation: twinkle ease-in-out infinite alternate;
+}
+
+// a shooting star, now and then by night
+.shooting-star {
+  position: absolute;
+  width: 4rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #fff6dc);
+  animation: shoot 1.1s ease-in forwards;
 }
 
 .pennants {
@@ -65,9 +97,27 @@
     position: absolute;
     height: auto;
     overflow: visible;
+  }
+
+  .pennant {
     transform-origin: left center;
     animation: flutter ease-in-out infinite alternate;
   }
+}
+
+// fireflies, at dusk and by night: drifting slowly about, glowing on and off
+.firefly {
+  display: none;
+  animation: wander ease-in-out infinite alternate, blink ease-in-out infinite;
+}
+
+:root[data-theme="night"] .firefly,
+:root[data-moment="dusk"] .firefly {
+  display: block;
+}
+
+.firefly-core {
+  fill: #fff4c2;
 }
 
 .bird {
@@ -141,16 +191,20 @@
   color: var(--ink-soft);
   font-size: .75rem;
 
+  // underlined in dots, a quiet hint that it can be edited; as wide as the longest ID, so
+  // nothing in the row moves from one castle to the next
   input {
+    width: 7.5ch;
     padding: 0;
     border: 0;
-    border-bottom: 1px dotted transparent;
+    border-bottom: 1px dotted var(--ink-soft);
     background: transparent;
     color: inherit;
     font: inherit;
 
     &:hover {
-      border-bottom-color: var(--ink-soft);
+      border-bottom-color: var(--ink);
+      color: var(--ink);
     }
 
     &:focus {
@@ -162,6 +216,25 @@
     &[aria-invalid="true"] {
       color: var(--brick);
     }
+  }
+}
+
+// The bell pull (skyline.js): a rope hanging from the drawing's foot to a red tassel, moved
+// by a little physics. The pointer keeps its usual look over it.
+.castle-cord {
+  align-self: flex-start;
+  margin: -.25rem .35rem 0 0;
+  padding: 0 .3rem;
+  border: 0;
+  background: none;
+  cursor: default;
+  touch-action: none;
+
+  svg {
+    display: block;
+    width: 18px;
+    height: 46px;
+    overflow: visible;
   }
 }
 

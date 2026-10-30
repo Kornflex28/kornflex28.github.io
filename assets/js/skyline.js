@@ -53,6 +53,32 @@
     const STEPS = ["c-cream", "c-cream", "c-sand", "c-rose", "c-terracotta"];
     const FLAGS = ["c-red", "c-red", "c-gold", "c-blue-deep"];
 
+    // A fictive time of day for each castle, taken from its seed apart from the drawing's own
+    // draws (so a castle stays the same): which side the light comes from (-1 left, 0 above,
+    // 1 right), which way and how far shadows fall, and where the sun stands (x, y, radius).
+    // The sky's and the light's colours come with it in the CSS ([data-moment], _theme.scss).
+    const MOMENTS = [
+        { name: "dawn", side: -1, shadow: [11, 3], sun: [170, 160, 20] },
+        { name: "morning", side: -1, shadow: [7, 4], sun: [150, 70, 15] },
+        { name: "noon", side: 0, shadow: [2, 6], sun: [660, 30, 13] },
+        { name: "afternoon", side: 1, shadow: [-7, 4], sun: [760, 80, 15] },
+        { name: "golden", side: 1, shadow: [-10, 3], sun: [830, 175, 19] },
+        { name: "dusk", side: 1, shadow: [-12, 2.5], sun: [885, 210, 22] },
+    ];
+    const momentOf = (seed) => MOMENTS[(Math.imul(seed, 2654435761) >>> 0) % MOMENTS.length];
+
+    // The moon's phase, taken from the seed the same way: the lit share of its disc, and the
+    // side lit (1 right, waxing; -1 left, waning)
+    const PHASES = [[0.25, 1], [0.5, 1], [0.75, 1], [1, 1], [0.75, -1], [0.5, -1], [0.25, -1]];
+    const phaseOf = (seed) => PHASES[(Math.imul(seed ^ 0x5bd1e995, 0x27d4eb2d) >>> 0) % PHASES.length];
+    // The lit part of a moon of radius r at (x, y): down the limb on the lit side, and back up
+    // the terminator, an ellipse that narrows as the quarters come and widens as it fills,
+    // never quite straight
+    const moonLit = (x, y, r, [lit, side]) => {
+        const rx = r * Math.max(0.22, Math.abs(1 - 2 * lit)), limb = side > 0 ? 1 : 0, back = (lit < 0.5) === (side > 0) ? 0 : 1;
+        return `M${f(x)} ${f(y - r)} A${f(r)} ${f(r)} 0 0 ${limb} ${f(x)} ${f(y + r)} A${f(rx)} ${f(r)} 0 0 ${back} ${f(x)} ${f(y - r)} Z`;
+    };
+
     // Space already used, as boxes {x0, y0, x1, y1}
     const used = [];
     const box = (x0, y0, x1, y1) => ({ x0, y0, x1, y1 });
@@ -82,8 +108,8 @@
     // A window; at night some are lit, their light spilling softly on the wall around them
     // (.window-glow), and the others stay dark. glow is the spill's radius, small enough to
     // stay on the wall.
-    const window_ = (cx, y, glow = 6) => {
-        const w = 4, h = 8, r = w / 2;
+    const window_ = (cx, y, glow = 6, w = 4, h = 8) => {
+        const r = w / 2;
         const lit = chance(0.45);
         add(`<ellipse class="window-glow${lit ? "" : " is-off"}" cx="${f(cx)}" cy="${f(y + h / 2)}" rx="${f(glow)}" ry="${f(glow * 1.5)}" fill="url(#window-light)" />`);
         add(`<path class="${lit ? "c-window" : "c-window-dark"}" d="M${f(cx - r)} ${f(y + h)} V${f(y + r)} A${f(r)} ${f(r)} 0 0 1 ${f(cx + r)} ${f(y + r)} V${f(y + h)} Z" />`);
@@ -97,7 +123,8 @@
 
     // Volume: a piece marked data-shade gets a shaded copy laid over it once drawn (see the
     // end): "cyl" for towers and cones, "sphere" for domes and balls, "wall" for flat walls
-    // in the shadow of what tops them, "lit" for hedges lit from above.
+    // in the shadow of what tops them, "lit" for hedges lit from above, "face" for what stands
+    // on the column, lit as the column itself is.
 
     // The shadow a roof casts across the top of its tower, curved like the tower's face
     const eave = (x, top, w) => add(`<path class="eave" d="M${f(x + 1)} ${f(top)} H${f(x + w - 1)} V${f(top + 5)} Q${f(x + w / 2)} ${f(top + 9)} ${f(x + 1)} ${f(top + 5)} Z" />`);
@@ -128,13 +155,25 @@
         add(`<path class="c-arch outline thin" d="M${f(cx - r)} ${f(base)} V${f(base - h + r)} A${f(r)} ${f(r)} 0 0 1 ${f(cx + r)} ${f(base - h + r)} V${f(base)} Z" />`);
     };
 
+    // The column the face's flights climb round (set by each drawing), and the side its
+    // shadows fall to: -1 left, 1 right
+    let drum = null, shadowSide = 1;
+
     // A thin flight of stairs seen from the side, with a sloping underside, climbing from its
-    // foot (x, y) towards dir
-    const flight = (x, y, steps, sw, sh, dir, colour) => {
+    // foot (x, y) towards dir. On the column (round), its steps follow the drum: evenly spaced
+    // in angle, so they narrow towards its edges as they turn away; it takes the column's own
+    // light, and casts a faint shadow on it.
+    const flight = (x, y, steps, sw, sh, dir, colour, round = false) => {
+        const end = x + dir * sw * steps;
+        const turn = (v) => Math.asin(Math.max(-1, Math.min(1, (v - drum.cx) / drum.r)));
+        const at = (k) => (round
+            ? drum.cx + drum.r * Math.sin(turn(x) + (turn(end) - turn(x)) * k / steps)
+            : x + (end - x) * k / steps);
         let d = `M${f(x)} ${f(y)}`;
-        for (let i = 0; i < steps; i++) d += ` v${f(-sh)} h${f(dir * sw)}`;
-        d += ` v${f(sh + 4)} L${f(x + dir * sw)} ${f(y + 4)} L${f(x)} ${f(y + 4)} Z`;
-        add(`<path class="${colour} outline thin" d="${d}" />`);
+        for (let i = 0; i < steps; i++) d += ` V${f(y - sh * (i + 1))} H${f(at(i + 1))}`;
+        d += ` V${f(y - sh * (steps - 1) + 4)} L${f(at(1))} ${f(y + 4)} L${f(x)} ${f(y + 4)} Z`;
+        if (round) add(`<path class="eave" transform="translate(${2 * shadowSide} 2.5)" d="${d}" />`);
+        add(`<path class="${colour} outline thin"${round ? ' data-shade="face"' : ""} d="${d}" />`);
     };
 
     // A grand staircase seen from the front, coming down the terrace wall from its top to the
@@ -157,7 +196,7 @@
     };
 
     // A ledge jutting from the column, its top at y
-    const ledge = (x0, x1, y, colour) => add(`<rect class="${colour} outline thin" x="${f(x0)}" y="${f(y)}" width="${f(x1 - x0)}" height="3" />`);
+    const ledge = (x0, x1, y, colour) => add(`<rect class="${colour} outline thin" data-shade="face" x="${f(x0)}" y="${f(y)}" width="${f(x1 - x0)}" height="3" />`);
 
     // Trimmed shrubs, their foot at base, each in one of a few close greens
     const GREENS = ["c-hedge", "c-hedge", "c-hedge-light", "c-hedge-sage", "c-hedge-olive"];
@@ -242,12 +281,12 @@
     // The elevator's top station, centred on cx: a pavilion whose arched opening has its sill
     // on the terrace floor, so the cabin stands in it, with the pulley under the arch
     const PAVILION = 24;                                // half its width
-    const PULLEY = 46;                                  // its pulley's height above the floor
+    const PULLEY = 46, PULLEY_R = 2.5;                  // its pulley's height above the floor, its radius
     const pavilion = (cx, base) => {
         const x0 = cx - PAVILION, w = 2 * PAVILION, top = base - 60, r = 16, spring = base - 34;
         add(`<path class="${pick(WALLS)} outline" data-shade="cyl" fill-rule="evenodd" d="M${x0} ${base} V${top} H${x0 + w} V${base} Z M${cx - r} ${base} V${spring} A${r} ${r} 0 0 1 ${cx + r} ${spring} V${base} Z" />`);
         eave(x0, top, w);
-        add(`<circle class="c-gold outline thin" cx="${cx}" cy="${base - PULLEY}" r="2.5" />`);
+        add(`<circle class="c-gold outline thin" cx="${cx}" cy="${base - PULLEY}" r="${PULLEY_R}" />`);
         const domed = chance(0.3), roof = w * rand(0.8, 1.2);
         if (domed) onion(x0, top, w, pick(DOMES));
         else cone(x0, top, w, roof, pick(ROOFS), 10);
@@ -349,6 +388,8 @@
     // Draws the castle of a seed in place of the current drawing
     const draw = (seed) => {
         state = seed | 0;
+        const moment = momentOf(seed);
+        document.documentElement.dataset.moment = moment.name;
         parts.length = 0;
         used.length = 0;
         tips.length = 0;
@@ -363,7 +404,7 @@
         use(box(colX - 4, 0, colX + colW + 4, tTop));       // the column
 
         // a few faint clouds, each drifting slowly to and fro (.clouds)
-        const sky = [];
+        const sky = [], gardens = [];                   // gardens: the shrubs' boxes, for the fireflies
         for (let i = 0, n = int(3, 6); i < n; i++) sky.push(cloud(rand(10, W - 170), rand(30, 150), rand(90, 160)));
 
         // the elevator's station on the terrace, and the groove its shaft runs down in the wall
@@ -399,6 +440,9 @@
         // Escher-like flights on the face of the column: one climbs from the terrace to a ledge
         // with a door; sometimes a second one climbs back from that ledge to a higher ledge and
         // door. Everything stays within the column's face.
+        let faceTop = tTop;                                 // top of the flights on the column's face
+        drum = { cx: colX + colW / 2, r: colW / 2 };
+        shadowSide = Math.sign(moment.shadow[0]) || 1;
         on(FACE, () => {
             if (!chance(0.75)) return;
             const dir = chance(0.5) ? 1 : -1;
@@ -407,7 +451,7 @@
             const start = dir > 0 ? colX + margin : colX + colW - margin;
             const top1 = { x: start + dir * n1 * sw, y: tTop - n1 * sh };
             const colour = pick(STEPS);
-            flight(start, tTop, n1, sw, sh, dir, colour);
+            flight(start, tTop, n1, sw, sh, dir, colour, true);
             const l1 = [top1.x, top1.x + dir * ledgeW].sort((a, b) => a - b);
             ledge(l1[0], l1[1], top1.y, colour);
             let highest = top1.y - 14;
@@ -415,7 +459,7 @@
                 // the second flight starts on the inner end of the first ledge, the door on its outer end
                 const n2 = n1 - 2, colour2 = pick(STEPS);
                 const top2 = { x: top1.x - dir * n2 * sw, y: top1.y - n2 * sh };
-                flight(top1.x, top1.y, n2, sw, sh, -dir, colour2);
+                flight(top1.x, top1.y, n2, sw, sh, -dir, colour2, true);
                 const l2 = [top2.x, top2.x - dir * ledgeW].sort((a, b) => a - b);
                 ledge(l2[0], l2[1], top2.y, colour2);
                 door((l2[0] + l2[1]) / 2, top2.y);
@@ -423,6 +467,48 @@
             }
             door(top1.x + dir * (ledgeW - 5), top1.y);
             use(box(colX - 2, highest - 4, colX + colW + 2, tTop));
+            faceTop = highest;
+        });
+
+        // A few touches on the column, after the palace's great tower: now and then a cornice
+        // curving round it over its shadow, a few tall windows above the face's flights, and
+        // sometimes a balcony with its door. Drawn from a draw of its own, so the rest of each
+        // castle stays the one its seed has always given.
+        on(COLUMN, () => {
+            const kept = state;
+            state = (seed ^ 0x2545f491) | 0;
+            const cx = colX + colW / 2, sag = colW * 0.07;
+            // a band round the column, its edges curving down as seen from a little above
+            const band = (y, h, x0 = colX, x1 = colX + colW) => {
+                const mid = (x0 + x1) / 2, dip = 2 * sag * (x1 - x0) / colW;
+                return `M${f(x0)} ${f(y)} Q${f(mid)} ${f(y + dip)} ${f(x1)} ${f(y)} V${f(y + h)} Q${f(mid)} ${f(y + h + dip)} ${f(x0)} ${f(y + h)} Z`;
+            };
+            const cornice = chance(0.3) ? faceTop - int(45, 80) : null;
+            if (cornice !== null) {
+                add(`<path class="eave" d="${band(cornice + 3, 4)}" />`);
+                add(`<path class="c-cream outline thin" data-shade="cyl" d="${band(cornice, 3)}" />`);
+            }
+            // below and above the cornice: windows, or once a balcony, well above the terrace
+            let balcony = chance(0.55);
+            const bounds = cornice === null ? [faceTop, -20] : [faceTop, cornice, -20];
+            for (let i = 0; i + 1 < bounds.length; i++) {
+                const low = bounds[i] - 4, high = bounds[i + 1] + 10, room = low - high;
+                if (room < 22) continue;
+                if (balcony && room >= 30 && high > 10 && low < tTop - 60) {
+                    balcony = false;
+                    const floor = low - 4, bw = colW * 0.3;
+                    door(cx, floor, 8, 15);
+                    add(`<path class="c-cream outline thin" d="M${f(cx - bw * 0.7)} ${f(floor + 3)} Q${f(cx)} ${f(floor + 13)} ${f(cx + bw * 0.7)} ${f(floor + 3)} Z" />`);
+                    add(`<path class="c-cream outline thin" data-shade="cyl" d="${band(floor, 3, cx - bw, cx + bw)}" />`);
+                    add('<g class="outline fine">');
+                    for (let px = cx - bw + 1.5; px < cx + bw - 1; px += 2.6) add(`<line x1="${f(px)}" y1="${f(floor - 6)}" x2="${f(px)}" y2="${f(floor + sag * 0.6)}" />`);
+                    add('</g>');
+                    add(`<path class="outline thin" fill="none" d="M${f(cx - bw)} ${f(floor - 6)} Q${f(cx)} ${f(floor - 6 + 2 * sag * 0.6)} ${f(cx + bw)} ${f(floor - 6)}" />`);
+                    continue;
+                }
+                if (chance(0.6)) window_(cx, high + (room - 12) / 2, Math.min(8, colW / 2 - 1), 5, 12);
+            }
+            state = kept;
         });
 
         // an arcade on the terrace, beside the column
@@ -469,7 +555,7 @@
                     const x = rand(tx0 + 6, tx1 - 6 - shrub.w);
                     if (opening && x + shrub.w > opening[0] - 3 && x < opening[1] + 3) continue;
                     if (!isFree(box(x - 3, tTop - shrub.h, x + shrub.w + 3, tTop))) continue;
-                    use(shrub.draw(x));
+                    gardens.push(use(shrub.draw(x)));
                     break;
                 }
             }
@@ -508,7 +594,7 @@
                         for (let tries = 0; tries < 30; tries++) {
                             const x = rand(foot + 8, W - 20 - shrub.w);
                             if (!room(x, shrub.w, shrub.h)) continue;
-                            use(shrub.draw(x));
+                            gardens.push(use(shrub.draw(x)));
                             break;
                         }
                     }
@@ -626,24 +712,43 @@
         on(GROUND, () => add(`<line class="outline" x1="0" y1="${H - 1}" x2="${W}" y2="${H - 1}" />`));
 
         // Draw back to front, with a painted texture multiplied into the flat colours, like
-        // gouache on paper: a fine mottle, and broad uneven patches as left by a brush. The
-        // arithmetic product keeps see-through edges from being greyed by the texture.
+        // gouache on paper: a fine mottle, and broad uneven patches as left by a brush; then the
+        // colour of the moment's light (.daylight). The arithmetic products keep see-through
+        // edges from being greyed by the texture.
         const drawing = parts.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((p) => p[2]).join("");
         svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        // for elevator.js: the terrace floor, the pulley's foot and the shaft's place
         svg.dataset.dock = (tTop / H).toFixed(4);
-        svg.dataset.pulley = ((tTop - PULLEY + 2.5) / H).toFixed(4);   // the pulley's foot
-        svg.dataset.dockX = (DOCK / W).toFixed(4);           // the terrace floor, for elevator.js
-        // the shading laid over rounded pieces, sized to each piece and lit from the upper left
+        svg.dataset.pulley = ((tTop - PULLEY + PULLEY_R) / H).toFixed(4);
+        svg.dataset.dockX = (DOCK / W).toFixed(4);
+        // the shading laid over rounded pieces, sized to each piece and lit from the moment's side
         const stops = (list) => list.map(([at, tone, alpha]) => `<stop offset="${at}" class="shade-${tone}" stop-opacity="${alpha}" />`).join("");
+        const cylinder = stops([[0, "dark", 0.22], [0.28, "light", 0.3], [0.5, "light", 0], [0.52, "dark", 0], [1, "dark", 0.42]]);
         const shading = `
-            <linearGradient id="cyl">${stops([[0, "dark", 0.22], [0.28, "light", 0.3], [0.5, "light", 0], [0.52, "dark", 0], [1, "dark", 0.42]])}</linearGradient>
-            <radialGradient id="sphere" cx="0.36" cy="0.3" r="0.8">${stops([[0, "light", 0.4], [0.45, "light", 0], [0.5, "dark", 0], [1, "dark", 0.4]])}</radialGradient>
+            <linearGradient id="cyl"${moment.side > 0 ? ' x1="1" x2="0"' : ""}>${cylinder}</linearGradient>
+            <linearGradient id="face" gradientUnits="userSpaceOnUse" y1="0" y2="0" x1="${moment.side > 0 ? colX + colW : colX}" x2="${moment.side > 0 ? colX : colX + colW}">${cylinder}</linearGradient>
+            <radialGradient id="sphere" cx="${0.5 + 0.14 * moment.side}" cy="0.3" r="0.8">${stops([[0, "light", 0.4], [0.45, "light", 0], [0.5, "dark", 0], [1, "dark", 0.4]])}</radialGradient>
             <linearGradient id="wall" x2="0" y2="1">${stops([[0, "dark", 0.32], [0.22, "dark", 0], [0.7, "dark", 0], [1, "dark", 0.14]])}</linearGradient>
+            <radialGradient id="firefly-glow"><stop offset="0" class="glow" stop-opacity="0.9" /><stop offset="0.35" class="glow" stop-opacity="0.35" /><stop offset="1" class="glow" stop-opacity="0" /></radialGradient>
             <radialGradient id="glow"><stop offset="0" class="glow" stop-opacity="0.7" /><stop offset="0.25" class="glow" stop-opacity="0.35" /><stop offset="1" class="glow" stop-opacity="0" /></radialGradient>
             <radialGradient id="window-light"><stop offset="0" class="glow" stop-opacity="0.85" /><stop offset="0.5" class="glow" stop-opacity="0.45" /><stop offset="1" class="glow" stop-opacity="0" /></radialGradient>
             <linearGradient id="lit" x2="0" y2="1">${stops([[0, "light", 0.32], [0.45, "light", 0], [0.5, "dark", 0], [1, "dark", 0.3]])}</linearGradient>`;
         const pct = (v, of) => `${(100 * v / of).toFixed(2)}%`;
-        clouds.innerHTML = sky.map((c) => {
+        // the sun where the moment puts it, with a soft halo; by night, the moon in its phase,
+        // the rest of its disc faintly seen
+        const [sx, sy, sr] = moment.sun;
+        const sun = `<svg class="sun" viewBox="${sx - 3 * sr} ${sy - 3 * sr} ${6 * sr} ${6 * sr}" style="left: ${pct(sx - 3 * sr, W)}; top: ${pct(sy - 3 * sr, H)}; width: ${pct(6 * sr, W)}">`
+            + '<defs><radialGradient id="sun-halo"><stop offset="0.3" class="sun-light" stop-opacity="0.55" /><stop offset="1" class="sun-light" stop-opacity="0" /></radialGradient></defs>'
+            + `<circle class="sun-halo" cx="${sx}" cy="${sy}" r="${3 * sr}" fill="url(#sun-halo)" /><circle class="sun-disc" filter="url(#gouache)" cx="${sx}" cy="${sy}" r="${sr}" />`
+            + `<circle class="moon-dark" cx="${sx}" cy="${sy}" r="${sr}" /><path class="moon-lit" filter="url(#gouache)" d="${moonLit(sx, sy, sr, phaseOf(seed))}" /></svg>`;
+        // by night, stars across the upper sky, a few of them twinkling (.stars)
+        const stars = Array.from({ length: 34 }, () => {
+            const twinkle = Math.random() < 0.4
+                ? ` class="twinkle" style="animation-duration: ${(2 + Math.random() * 4).toFixed(1)}s; animation-delay: -${(Math.random() * 6).toFixed(1)}s"`
+                : "";
+            return `<circle${twinkle} cx="${f(Math.random() * W)}" cy="${f(Math.random() * H * 0.55)}" r="${f(0.5 + Math.random() * 0.7)}" />`;
+        }).join("");
+        clouds.innerHTML = `<svg class="stars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${stars}</svg>` + sun + sky.map((c) => {
             const drift = (Math.random() < 0.5 ? -1 : 1) * (25 + Math.random() * 35);
             return `<svg viewBox="${f(c.x)} ${f(c.y)} ${f(c.w)} ${f(c.h)}" style="left: ${pct(c.x, W)}; top: ${pct(c.y, H)}; width: ${pct(c.w, W)}; --drift: ${drift.toFixed(0)}%; animation-duration: ${(45 + Math.random() * 45).toFixed(0)}s; animation-delay: -${(Math.random() * 90).toFixed(0)}s"><g class="cloud ${c.tone}" filter="url(#gouache)">${c.shapes}</g></svg>`;
         }).join("");
@@ -652,7 +757,14 @@
         const highest = tips.filter((t) => t.y > 8).sort((a, b) => a.y - b.y).slice(0, 8);
         const flown = [];
         for (let k = Math.min(int(2, 4), highest.length); k > 0; k--) flown.push(highest.splice(int(0, highest.length - 1), 1)[0]);
-        pennants.innerHTML = flown.map((t) => `<svg viewBox="0 0 14 7" style="left: ${pct(t.x, W)}; top: ${pct(t.y, H)}; width: ${pct(14, W)}; animation-duration: ${(1.4 + Math.random()).toFixed(2)}s; animation-delay: -${(Math.random() * 2).toFixed(2)}s"><path class="${pick(FLAGS)} outline thin" filter="url(#gouache)" d="M0.5 0.5 L13 3.2 L0.5 6 Z" /></svg>`).join("");
+        pennants.innerHTML = flown.map((t) => `<svg class="pennant" viewBox="0 0 14 7" style="left: ${pct(t.x, W)}; top: ${pct(t.y, H)}; width: ${pct(14, W)}; animation-duration: ${(1.4 + Math.random()).toFixed(2)}s; animation-delay: -${(Math.random() * 2).toFixed(2)}s"><path class="${pick(FLAGS)} outline thin" filter="url(#gouache)" d="M0.5 0.5 L13 3.2 L0.5 6 Z" /></svg>`).join("")
+            // at dusk and by night, a few fireflies over the gardens, drifting and glowing (.firefly)
+            + gardens.sort(() => Math.random() - 0.5).slice(0, 4).map((g) => {
+                const x = g.x0 + Math.random() * (g.x1 - g.x0), y = g.y0 - 4 - Math.random() * 12;
+                const drift = (n) => `${((Math.random() - 0.5) * n).toFixed(0)}`;
+                return `<svg class="firefly" viewBox="-6 -6 12 12" style="left: ${pct(x - 6, W)}; top: ${pct(y - 6, H)}; width: ${pct(12, W)}; --dx: ${drift(260)}%; --dy: ${drift(160)}%; animation-duration: ${(5 + Math.random() * 5).toFixed(1)}s, ${(6 + Math.random() * 5).toFixed(1)}s; animation-delay: -${(Math.random() * 8).toFixed(1)}s, -${(Math.random() * 10).toFixed(1)}s">`
+                    + '<circle r="6" fill="url(#firefly-glow)" /><circle class="firefly-core" r="0.9" /></svg>';
+            }).join("");
         svg.innerHTML = `<defs>${shading}<filter id="gouache" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency="0.7 0.35" numOctaves="3" seed="${seed % 1000}" result="fine" />
             <feColorMatrix in="fine" type="saturate" values="0" result="fineGrey" />
@@ -671,7 +783,9 @@
                 <feFuncA type="linear" slope="0" intercept="1" />
             </feComponentTransfer>
             <feBlend in="mottle" in2="patches" mode="multiply" result="paint" />
-            <feComposite in="SourceGraphic" in2="paint" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" />
+            <feComposite in="SourceGraphic" in2="paint" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="painted" />
+            <feFlood class="daylight" result="light" />
+            <feComposite in="painted" in2="light" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" />
             </filter></defs><g filter="url(#gouache)">${drawing}</g>`;
 
         // Freehand lines: every straight segment is redrawn as a slightly bowed curve, as if drawn
@@ -738,8 +852,9 @@
             el.after(shade);
         });
 
-        // Cast shadows: each turret throws its shadow down and to the right, onto the column and
-        // the turrets behind it only, through a mask made of everything drawn behind it so far
+        // Cast shadows: each turret throws its shadow away from the light, long when the sun is
+        // low, onto the column and the turrets behind it only, through a mask made of
+        // everything drawn behind it so far
         const defs = svg.querySelector("defs");
         const behind = ["castle-column"];
         svg.querySelectorAll("[data-turret]").forEach((turret, k) => {
@@ -751,7 +866,7 @@
             shadow.removeAttribute("id");
             shadow.removeAttribute("data-turret");
             shadow.setAttribute("class", "cast");
-            shadow.setAttribute("transform", "translate(6 4)");
+            shadow.setAttribute("transform", `translate(${moment.shadow[0]} ${moment.shadow[1]})`);
             cast.append(shadow);
             turret.before(cast);
             behind.push(turret.id);
@@ -760,36 +875,43 @@
         svg.dispatchEvent(new Event("castle-drawn", { bubbles: true }));
     };
 
-    // The castle's ID under the drawing, editable: each valid ID typed draws its castle at
-    // once, and the address follows. Beside it, a button draws a new castle and another
-    // copies a link to this one, to share it.
-    // The clouds' layer, behind the drawing
+    // The layers laid over the drawing: the clouds' behind it, the pennants' over it
     const clouds = document.createElement("div");
     clouds.className = "clouds";
     clouds.setAttribute("aria-hidden", "true");
     svg.before(clouds);
-    // and the pennants', over it
     const pennants = document.createElement("div");
     pennants.className = "pennants";
     pennants.setAttribute("aria-hidden", "true");
     svg.after(pennants);
 
+    // The castle's ID under the drawing, editable (each valid ID typed draws its castle at
+    // once, and the address follows), after a bell pull hanging from the drawing that draws a
+    // new castle when pulled, and before a button that copies a link to this castle
+
     const ID = /^[0-9a-z]{1,7}$/;
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     const icon = (d) => `<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="${d}" /></svg>`;
     const ICONS = {
-        anew: "M13.5 8 A5.5 5.5 0 1 1 11.9 4.1 M12.4 1.4 L12 4.4 L9 4.1",
         copy: "M6 6 H12.5 V12.5 H6 Z M3.5 10 V3.5 H10",
         done: "M3 8.5 L6.5 12 L13 4.5",
     };
     const tag = document.createElement("p");
     tag.className = "castle-id";
-    tag.innerHTML = '<label>Castle <input type="text" maxlength="7" spellcheck="false" autocomplete="off" title="Type another ID to draw its castle" aria-label="Castle ID, type another to draw its castle"></label>'
-        + `<button type="button" class="castle-tool" data-tool="anew" title="Draw a new castle" aria-label="Draw a new castle">${icon(ICONS.anew)}</button>`
+    tag.innerHTML = '<button type="button" class="castle-cord" title="Pull: a new castle" aria-label="Draw a new castle">'
+        + '<svg viewBox="0 0 18 46" aria-hidden="true" focusable="false"><g filter="url(#gouache)">'
+        + '<path class="rope outline thin" fill="none" d="M9 0 V26" />'
+        + '<g class="tassel" transform="translate(9 26)">'
+        + '<path class="c-gold outline thin" d="M-2.8 0 Q0 -2.3 2.8 0 V4 H-2.8 Z" />'
+        + '<path class="c-red outline thin" d="M-2.8 4 H2.8 L5.1 15 Q0 17.8 -5.1 15 Z" />'
+        + '<path class="outline fine" fill="none" d="M-2.8 15.5 V18.3 M0 16.3 V19 M2.8 15.5 V18.3" />'
+        + '</g></g></svg></button>'
+        + '<label for="castle-id">castle id</label>'
+        + '<input id="castle-id" type="text" maxlength="7" spellcheck="false" autocomplete="off" title="Type another ID to draw its castle" aria-label="Castle ID, type another to draw its castle">'
         + `<button type="button" class="castle-tool" data-tool="copy" title="Copy a link to this castle" aria-label="Copy a link to this castle">${icon(ICONS.copy)}</button>`
         + '<span class="visually-hidden" role="status"></span>';
     const input = tag.querySelector("input");
     const status = tag.querySelector('[role="status"]');
-    const fit = () => { input.style.width = `${Math.max(1, input.value.length) + 0.5}ch`; };
     const randomId = () => (Math.floor(Math.random() * 2 ** 32) >>> 0).toString(36);
 
     let current = "";
@@ -802,16 +924,143 @@
     input.addEventListener("focus", () => setTimeout(() => input.select()));
     input.addEventListener("input", () => {
         const id = input.value.trim().toLowerCase();
-        fit();
         input.setAttribute("aria-invalid", String(!ID.test(id)));
         if (!ID.test(id)) return;
         show(id);
         history.replaceState(null, "", `?castle=${id}${location.hash}`);
     });
 
-    tag.querySelector('[data-tool="anew"]').addEventListener("click", () => {
+    // The bell pull: a rope of a few links hanging from the drawing's foot, simulated (Verlet
+    // integration) so it bends and swings like a real one, pulled down by gravity, its tassel
+    // heavier than the rope, stirred by a light, shifting breeze and by the pointer brushing
+    // through it. Pulled by its tassel, the rope follows the hand, bending, and beyond its length
+    // stretches, ever harder, then springs back. Pulled far enough, or simply clicked (or
+    // tapped), it rings for a new castle.
+    const cord = tag.querySelector(".castle-cord");
+    const rope = cord.querySelector(".rope"), tassel = cord.querySelector(".tassel");
+    const ring = () => {
         input.value = randomId();
         input.dispatchEvent(new Event("input"));
+    };
+    const LINKS = 8, LENGTH = 26, ANCHOR = { x: 9, y: 0 };        // pixels, in the cord's picture
+    const knots = Array.from({ length: LINKS + 1 }, (_, i) => {
+        const y = ANCHOR.y + LENGTH * i / LINKS;
+        return { x: ANCHOR.x, y, px: ANCHOR.x, py: y };
+    });
+    const tip = knots[LINKS];
+    let stretch = 1, spring = 0, grip = null, dragged = false, passing = null, time = 0, last = 0;
+    // how easily each knot moves: the anchor not at all, the tassel heavy, and while held, not at all
+    const give = (i) => (i === 0 || (grip && i === LINKS) ? 0 : i === LINKS ? 0.35 : 1);
+
+    const step = (dt) => {
+        const breeze = 60 * Math.sin(0.7 * time) + 25 * Math.sin(1.9 * time + 1);
+        const keep = Math.pow(0.3, dt);                     // the air takes 70% of the speed each second
+        knots.forEach((k, i) => {
+            if (!give(i)) return;
+            const vx = (k.x - k.px) * keep, vy = (k.y - k.py) * keep;
+            k.px = k.x;
+            k.py = k.y;
+            k.x += vx + breeze * dt * dt;
+            k.y += vy + 850 * dt * dt;
+        });
+        // the rope's length: a stiff, bouncy spring, stretched only by a pull
+        if (!grip) {
+            spring += (-260 * (stretch - 1) - 9 * spring) * dt;
+            stretch += spring * dt;
+        }
+        const link = LENGTH * stretch / LINKS;
+        for (let pass = 0; pass < 12; pass++) {
+            for (let i = 0; i < LINKS; i++) {
+                const a = knots[i], b = knots[i + 1], ga = give(i), gb = give(i + 1);
+                if (!ga && !gb) continue;
+                const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy) || 1e-6;
+                const share = (length - link) / length / (ga + gb);
+                a.x += dx * share * ga;
+                a.y += dy * share * ga;
+                b.x -= dx * share * gb;
+                b.y -= dy * share * gb;
+            }
+        }
+    };
+    // the rope as a smooth curve through its knots, and the tassel hanging along its last link
+    const paint = () => {
+        let d = `M${f(knots[0].x)} ${f(knots[0].y)}`;
+        for (let i = 1; i < LINKS; i++) {
+            const a = knots[i], b = knots[i + 1];
+            d += ` Q${f(a.x)} ${f(a.y)} ${f((a.x + b.x) / 2)} ${f((a.y + b.y) / 2)}`;
+        }
+        d += ` L${f(tip.x)} ${f(tip.y)}`;
+        rope.setAttribute("d", d);
+        const turn = -Math.atan2(tip.x - knots[LINKS - 1].x, tip.y - knots[LINKS - 1].y) * 180 / Math.PI;
+        tassel.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(turn)})`);
+    };
+    const tick = (now) => {
+        const dt = Math.min(1 / 30, (now - last) / 1000 || 1 / 60);
+        last = now;
+        time += dt;
+        if (inView) {
+            step(dt);
+            paint();
+        }
+        requestAnimationFrame(tick);
+    };
+    if (!reducedMotion.matches) requestAnimationFrame(tick);
+
+    // where the pointer is, in the cord's picture
+    const local = (event) => {
+        const r = cord.querySelector("svg").getBoundingClientRect();
+        return { x: event.clientX - r.left, y: event.clientY - r.top };
+    };
+
+    // brushed by the pointer: the knots it passes through are carried along a little
+    addEventListener("pointermove", (event) => {
+        const was = passing;
+        passing = local(event);
+        if (grip || !was || event.pointerType === "touch") return;
+        knots.forEach((k, i) => {
+            if (!give(i) || Math.hypot(k.x - passing.x, k.y - passing.y) > 7) return;
+            k.px -= Math.max(-1.2, Math.min(1.2, (passing.x - was.x) * 0.2));
+            k.py -= Math.max(-1.2, Math.min(1.2, (passing.y - was.y) * 0.2));
+        });
+    }, { passive: true });
+
+    // pulled by the tassel: it follows the pointer, the rope stretching less and less beyond
+    // its length
+    cord.addEventListener("pointerdown", (event) => {
+        if (reducedMotion.matches) return;
+        const at = local(event);
+        grip = { x: tip.x - at.x, y: tip.y - at.y, from: at };
+        dragged = false;
+        cord.setPointerCapture(event.pointerId);
+    });
+    cord.addEventListener("pointermove", (event) => {
+        if (!grip) return;
+        const at = local(event);
+        if (Math.hypot(at.x - grip.from.x, at.y - grip.from.y) > 4) dragged = true;
+        const tx = at.x + grip.x - ANCHOR.x, ty = at.y + grip.y - ANCHOR.y, reach = Math.hypot(tx, ty) || 1e-6;
+        stretch = 1 + 0.45 * (1 - Math.exp(-Math.max(0, reach - LENGTH) / LENGTH));
+        spring = 0;
+        const held = Math.min(reach, LENGTH * stretch);
+        tip.x = tip.px = ANCHOR.x + tx / reach * held;
+        tip.y = tip.py = ANCHOR.y + ty / reach * held;
+    });
+    const release = () => {
+        if (!grip) return;
+        grip = null;
+        if (dragged && stretch > 1.15) ring();
+    };
+    cord.addEventListener("pointerup", release);
+    cord.addEventListener("pointercancel", release);
+    // a click, a tap or the keyboard: a short tug, and the bell rings
+    cord.addEventListener("click", () => {
+        if (dragged) {
+            dragged = false;
+            return;
+        }
+        spring += 6;
+        tip.py -= 3;
+        tip.px -= (Math.random() - 0.5) * 3;
+        ring();
     });
 
     const copy = tag.querySelector('[data-tool="copy"]');
@@ -839,7 +1088,6 @@
     svg.after(tag);
 
     // At night, now and then a window lights up or goes dark, while the castle is in view
-    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     let inView = true;
     new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; }).observe(svg);
     const flicker = () => {
@@ -873,8 +1121,22 @@
     };
     setTimeout(flyBird, 3000 + Math.random() * 4000);
 
+    // By night, now and then a shooting star
+    const shoot = () => {
+        const night = getComputedStyle(document.documentElement).colorScheme === "dark";
+        if (inView && night && !document.hidden && !reducedMotion.matches) {
+            const star = document.createElement("span");
+            star.className = "shooting-star";
+            star.style.left = `${(10 + Math.random() * 70).toFixed(1)}%`;
+            star.style.top = `${(4 + Math.random() * 22).toFixed(1)}%`;
+            star.addEventListener("animationend", () => star.remove());
+            clouds.append(star);
+        }
+        setTimeout(shoot, 15000 + Math.random() * 25000);
+    };
+    setTimeout(shoot, 5000 + Math.random() * 8000);
+
     const asked = (new URLSearchParams(location.search).get("castle") || "").toLowerCase();
     input.value = ID.test(asked) ? asked : randomId();
-    fit();
     show(input.value);
 })();
