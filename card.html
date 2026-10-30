@@ -10,12 +10,13 @@ sitemap: false
 <html lang="{{ site.lang }}">
 
 <head>
+    <!-- asset addresses carry the build time, so browsers never keep a stale copy -->
     <meta charset="utf-8">
     <meta name="robots" content="noindex">
     <title>Link preview card</title>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ '/css/resume.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/css/resume.css' | relative_url }}?v={{ site.time | date: '%s' }}">
     <style>
         html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
         body { background: var(--paper) linear-gradient(var(--sky), var(--sky-low) 280px, var(--paper) 630px) no-repeat; }
@@ -44,7 +45,7 @@ sitemap: false
             <p class="url">{{ site.url | remove: "https://" }}</p>
         </div>
     </div>
-    <script src="{{ '/assets/js/skyline.js' | relative_url }}"></script>
+    <script src="{{ '/assets/js/skyline.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
     <script>
         // the cabin docked in the pavilion, and its rail from the pulley down to the ground
         const svg = document.querySelector(".skyline"), box = svg.getBoundingClientRect();

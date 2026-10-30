@@ -8,6 +8,7 @@ sitemap: false
 <html lang="{{ site.lang }}">
 
 <head>
+    <!-- asset addresses carry the build time, so browsers never keep a stale copy -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -17,10 +18,10 @@ sitemap: false
         rel="stylesheet">
 
     <!-- absolute paths: this page is served for any missing address -->
-    <link rel="stylesheet" href="/css/lost.css">
+    <link rel="stylesheet" href="/css/lost.css?v={{ site.time | date: '%s' }}">
     {% seo %}
 {% include favicons.html %}
-    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/theme.js?v={{ site.time | date: '%s' }}"></script>
 </head>
 
 <body>

@@ -3,6 +3,7 @@
 <html lang="{{ site.lang }}">
 
 <head>
+    <!-- asset addresses carry the build time, so browsers never keep a stale copy -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -11,13 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="../css/resume.css">
+    <link rel="stylesheet" href="../css/resume.css?v={{ site.time | date: '%s' }}">
     {% seo %}
 {% include favicons.html %}
-    <script src="../assets/js/theme.js"></script>
-    <script src="../assets/js/skyline.js" defer></script>
-    <script src="../assets/js/elevator.js" defer></script>
-    <script src="../assets/js/anagram.js" defer></script>
+    <script src="../assets/js/theme.js?v={{ site.time | date: '%s' }}"></script>
+    <script src="../assets/js/skyline.js?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="../assets/js/elevator.js?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="../assets/js/anagram.js?v={{ site.time | date: '%s' }}" defer></script>
 </head>
 
 <body>
