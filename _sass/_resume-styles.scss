@@ -628,9 +628,11 @@ main .floor {
   display: none;
 }
 
+// it lets the pointer through to the page, but on its landings
 .elevator.is-ready {
   display: block;
   position: fixed;
+  pointer-events: none;
   top: 0;
   bottom: 0;
   left: calc(var(--dock-x, 1.25rem) - var(--shaft-x));
@@ -685,6 +687,7 @@ main .floor {
     display: flex;
     align-items: center;
     gap: .5rem;
+    pointer-events: auto;
     color: var(--ink-soft);
     font-size: .875rem;
     text-decoration: none;
@@ -713,6 +716,7 @@ main .floor {
     display: block;
     width: 100%;
     height: auto;
+    overflow: visible;
   }
 }
 

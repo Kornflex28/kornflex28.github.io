@@ -368,6 +368,14 @@ a {
 .window-glow { opacity: var(--window-glow); }
 .window-glow.is-off { display: none; }
 
+// the elevator cabin's porthole, faintly lit at night
+.porthole-glow { opacity: 0; }
+
+:root[data-theme="night"] {
+  .porthole-glow { opacity: .65; }
+  .porthole { fill: #e9cd8c; }
+}
+
 // Buttons are drawn like a turret: a domed roof rising to a point and a needle, over a body
 // with rounded feet (_includes/button-shape.html), stretched to the button's size
 .button {
