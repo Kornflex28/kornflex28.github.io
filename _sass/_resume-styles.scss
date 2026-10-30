@@ -785,3 +785,28 @@ main .floor {
     top: min(0px, 45vh - 37.5cqw);
   }
 }
+
+// Tablets: the page fills the screen, its type a little larger so lines keep a comfortable
+// length; on the wider ones, the castle is shown whole, from edge to edge
+@media (min-width: 700px) and (max-width: 1199.98px) {
+  html {
+    font-size: clamp(100%, 1.75vw, 125%);
+  }
+
+  .tower {
+    max-width: none;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199.98px) and (min-height: 501px) {
+  .skyline {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .clouds,
+  .pennants {
+    left: 0;
+    width: 100%;
+  }
+}
