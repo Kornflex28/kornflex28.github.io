@@ -279,10 +279,13 @@
   letter-spacing: -.01em;
 }
 
+// the letters let the pointer through: only the name's own box counts for hovering, however
+// far they fly
 .letter {
   position: relative;
   display: inline-block;
   white-space: pre;
+  pointer-events: none;
 
   // a capital's small letter, or the i without its dot, shown once the letter has flown
   .twin {

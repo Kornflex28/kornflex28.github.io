@@ -1,8 +1,9 @@
 // The name's anagram: hovering over the name, or tapping it, sends its letters flying off
 // like a flock of birds, wings beating, one after another, to land spelling "touche.visual",
-// the dot of the i flying off on its own to become the full stop; leaving it, or tapping
-// again, brings them home. Every flight takes new paths, and twin letters draw lots for their
-// spots. Positions are measured in the page's own font, so the flight fits any screen.
+// the dot of the i flying off on its own to become the full stop. Each flight goes to its end
+// and the letters stay where they land; hovering or tapping again brings them home. Every
+// flight takes new paths, and twin letters draw lots for their spots. Positions are measured
+// in the page's own font, so the flight fits any screen.
 (() => {
     const name = document.querySelector(".name");
     if (!name) return;
@@ -175,24 +176,22 @@
         Promise.all(flights.map((anim) => anim.finished)).then(() => name.classList.remove("is-flying"), () => {});
     };
 
-    const fly = (away) => {
-        if (away === flown) return;
-        flown = away;
-        // changing its mind in mid-flight, the flock turns back the way it came
-        if (flights.some((anim) => anim.playState === "running")) {
-            flights.forEach((anim) => anim.reverse());
-            return;
-        }
+    // To the anagram or back home, whichever the letters are not at; a flock in the air
+    // finishes its flight first
+    const fly = () => {
+        if (flights.some((anim) => anim.playState === "running")) return;
+        flown = !flown;
         flights.forEach((anim) => anim.cancel());
-        takeOff(away);
+        takeOff(flown);
     };
 
-    // Mouse: while hovering; touch: each tap
-    let pointer = "mouse";
+    // Mouse: each time it comes back over the name, after a real absence (a brush past its
+    // edge doesn't count); touch: each tap
+    let pointer = "mouse", left = -Infinity;
     name.addEventListener("pointerdown", (event) => { pointer = event.pointerType; });
-    name.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") fly(true); });
-    name.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") fly(false); });
-    name.addEventListener("click", () => { if (pointer !== "mouse") fly(!flown); });
+    name.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse" && event.timeStamp - left > 300) fly(); });
+    name.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") left = event.timeStamp; });
+    name.addEventListener("click", () => { if (pointer !== "mouse") fly(); });
 
     // Measured again once the font has loaded and whenever the name's size changes; letters
     // already in the anagram are set straight onto their new spots
