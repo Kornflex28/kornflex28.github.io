@@ -55,15 +55,17 @@
 
     // A fictive time of day for each castle, taken from its seed apart from the drawing's own
     // draws (so a castle stays the same): which side the light comes from (-1 left, 0 above,
-    // 1 right), which way and how far shadows fall, and where the sun stands (x, y, radius).
-    // The sky's and the light's colours come with it in the CSS ([data-moment], _theme.scss).
+    // 1 right), which way and how far shadows fall, and where the sun (the moon, by night)
+    // stands (x, y, radius). Phones only show the middle of the drawing, so each moment also
+    // has a narrow position inside it, away from the night toggle (.sun). The sky's and the
+    // light's colours are in the CSS ([data-moment], _theme.scss).
     const MOMENTS = [
-        { name: "dawn", side: -1, shadow: [11, 3], sun: [170, 160, 20] },
-        { name: "morning", side: -1, shadow: [7, 4], sun: [150, 70, 15] },
-        { name: "noon", side: 0, shadow: [2, 6], sun: [660, 30, 13] },
-        { name: "afternoon", side: 1, shadow: [-7, 4], sun: [760, 80, 15] },
-        { name: "golden", side: 1, shadow: [-10, 3], sun: [830, 175, 19] },
-        { name: "dusk", side: 1, shadow: [-12, 2.5], sun: [885, 210, 22] },
+        { name: "dawn", side: -1, shadow: [11, 3], sun: [170, 160, 20], narrow: [170, 160] },
+        { name: "morning", side: -1, shadow: [7, 4], sun: [150, 70, 15], narrow: [150, 70] },
+        { name: "noon", side: 0, shadow: [2, 6], sun: [660, 30, 13], narrow: [550, 34] },
+        { name: "afternoon", side: 1, shadow: [-7, 4], sun: [760, 80, 15], narrow: [590, 92] },
+        { name: "golden", side: 1, shadow: [-10, 3], sun: [830, 175, 19], narrow: [655, 168] },
+        { name: "dusk", side: 1, shadow: [-12, 2.5], sun: [885, 210, 22], narrow: [688, 200] },
     ];
     const momentOf = (seed) => MOMENTS[(Math.imul(seed, 2654435761) >>> 0) % MOMENTS.length];
 
@@ -1338,8 +1340,9 @@
         const pct = (v, of) => `${(100 * v / of).toFixed(2)}%`;
         // the sun where the moment puts it, with a soft halo; by night, the moon in its phase,
         // the rest of its disc faintly seen
-        const [sx, sy, sr] = moment.sun;
-        const sun = `<svg class="sun" viewBox="${sx - 3 * sr} ${sy - 3 * sr} ${6 * sr} ${6 * sr}" style="left: ${pct(sx - 3 * sr, W)}; top: ${pct(sy - 3 * sr, H)}; width: ${pct(6 * sr, W)}">`
+        const [sx, sy, sr] = moment.sun, [nx, ny] = moment.narrow;
+        const sun = `<svg class="sun" viewBox="${sx - 3 * sr} ${sy - 3 * sr} ${6 * sr} ${6 * sr}" style="--left: ${pct(sx - 3 * sr, W)}; --top: ${pct(sy - 3 * sr, H)};`
+            + ` --narrow-left: ${pct(nx - 3 * sr, W)}; --narrow-top: ${pct(ny - 3 * sr, H)}; width: ${pct(6 * sr, W)}">`
             + '<defs><radialGradient id="sun-halo"><stop offset="0.3" class="sun-light" stop-opacity="0.55" /><stop offset="1" class="sun-light" stop-opacity="0" /></radialGradient></defs>'
             + `<circle class="sun-halo" cx="${sx}" cy="${sy}" r="${3 * sr}" fill="url(#sun-halo)" /><circle class="sun-disc" filter="url(#gouache)" cx="${sx}" cy="${sy}" r="${sr}" />`
             + `<circle class="moon-dark" cx="${sx}" cy="${sy}" r="${sr}" /><path class="moon-lit" filter="url(#gouache)" d="${moonLit(sx, sy, sr, phaseOf(seed))}" /></svg>`;

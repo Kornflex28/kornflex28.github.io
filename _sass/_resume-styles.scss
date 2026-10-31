@@ -57,9 +57,16 @@
     animation: drift ease-in-out infinite alternate;
   }
 
-  // the sun keeps still
+  // the sun keeps still, and moves inside the drawing's middle where only that shows (skyline.js)
   > .sun {
+    left: var(--left);
+    top: var(--top);
     animation: none;
+
+    @media (max-width: 899.98px), (max-width: 1199.98px) and (max-height: 500px) {
+      left: var(--narrow-left);
+      top: var(--narrow-top);
+    }
   }
 
   // the stars, by night only, across the whole sky
