@@ -1,6 +1,6 @@
 {% assign job = include.job %}
-<article class="entry" itemscope itemprop="worksFor" itemtype="https://schema.org/Organization">
-    <h3 class="entry-title" itemprop="name">{% if job.url %}<a href="{{ job.url }}" itemprop="url"
+<article class="entry">
+    <h3 class="entry-title">{% if job.url %}<a href="{{ job.url }}"
             target="_blank">{{ job.company }}</a>{% else %}{{ job.company }}{% endif %}</h3>
     {% for role in job.roles %}
     <div class="role">

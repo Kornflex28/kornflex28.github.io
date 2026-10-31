@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="../css/resume.css?v={{ site.time | date: '%s' }}">
     {% seo %}
+    {% include profile-data.html %}
 {% include favicons.html %}
     <script src="../assets/js/theme.js?v={{ site.time | date: '%s' }}"></script>
     <script src="../assets/js/skyline.js?v={{ site.time | date: '%s' }}" defer></script>
@@ -33,15 +34,15 @@
             <div class="identity">
                 <div>
                     <h1 class="name">{{ site.resume_name }}</h1>
-                    <p class="job-title" itemprop="jobTitle">{{ site.resume_title }}</p>
+                    <p class="job-title">{{ site.resume_title }}</p>
                     <div class="reach">
                         {% include icon-links.html %}
-                        <a href="mailto:{{ site.resume_contact_email }}" class="button" itemprop="email">{% include button-shape.html %}Contact me</a>
+                        <a href="mailto:{{ site.resume_contact_email }}" class="button">{% include button-shape.html %}Contact me</a>
                     </div>
                 </div>
             </div>
 
-            <div class="intro" itemprop="description">
+            <div class="intro">
                 {{ site.resume_header_intro }}
             </div>
         </header>
@@ -93,9 +94,9 @@
 
                 <ul class="lines">
                     {% for education in site.data.education %}
-                    <li itemscope itemprop="alumniOf" itemtype="https://schema.org/CollegeOrUniversity">
+                    <li>
                         <div class="role-head">
-                            <span><strong itemprop="name">{{ education.uni }}</strong> &middot; {{ education.degree }}</span>
+                            <span><strong>{{ education.uni }}</strong> &middot; {{ education.degree }}</span>
                             <span class="dates">{{ education.year }}</span>
                         </div>
                         <p>{{ education.summary }}{% for project in education.projects %}
@@ -125,9 +126,9 @@
 
                 <ul class="lines">
                     {% for association in site.data.associations %}
-                    <li itemscope itemprop="memberOf" itemtype="https://schema.org/Organization">
+                    <li>
                         <div class="role-head">
-                            <span><strong itemprop="name">{% if association.url %}<a href="{{ association.url }}"
+                            <span><strong>{% if association.url %}<a href="{{ association.url }}"
                                         target="_blank">{{ association.organization }}</a>{% else %}{{ association.organization }}{% endif %}</strong>
                                 &middot; {{ association.role }}</span>
                             <span class="dates">{{ association.year }}</span>
