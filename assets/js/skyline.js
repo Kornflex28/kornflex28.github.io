@@ -419,20 +419,26 @@
             add(`<line class="outline thin" x1="${colX + colW}" y1="0" x2="${colX + colW}" y2="${tTop}" />`);
         });
 
-        // often, a grand staircase down the front of the terrace, somewhere it has room: away
-        // from the station, and well clear of the column and the flights on its face
+        // the grand staircase down the front of the terrace, wherever it has room, away from the
+        // station and clear of the column and the flights on its face. Castles that used to have
+        // none draw theirs separately, so the rest of each castle stays the same.
         let opening = null;
         on(RAIL, () => {
-            if (!chance(0.85)) return;
+            const usual = chance(0.85), kept = state;
+            if (!usual) state = (seed ^ 0x3c6ef372) | 0;
             const wt = int(26, 34), colour = pick(STEPS), runner = chance(0.4);
-            for (let i = 0; i < 40; i++) {
-                const cx = rand(DOCK + PAVILION + 110, tx1 - 60);
-                if (cx + 80 > colX && cx - 80 < colX + colW) continue;
-                if (!isFree(box(cx - 50, tTop - 14, cx + 50, H))) continue;
-                opening = grandStairs(cx, tTop, wt, colour, runner);
-                use(box(opening[0] - 6, tTop - 14, opening[1] + 6, tTop));
-                return;
+            const lo = DOCK + PAVILION + 110, hi = tx1 - 60;
+            const fits = (cx) => !(cx + 80 > colX && cx - 80 < colX + colW) && isFree(box(cx - 50, tTop - 14, cx + 50, H));
+            let cx = null;
+            for (let i = 0; i < 40 && cx === null; i++) {
+                const x = rand(lo, hi);
+                if (fits(x)) cx = x;
             }
+            // failing that, the middle of the wider stretch of terrace beside the column
+            if (cx === null) cx = hi - (colX + colW + 80) > colX - 80 - lo ? (colX + colW + 80 + hi) / 2 : (lo + colX - 80) / 2;
+            opening = grandStairs(cx, tTop, wt, colour, runner);
+            use(box(opening[0] - 6, tTop - 14, opening[1] + 6, tTop));
+            if (!usual) state = kept;
         });
 
         on(WALL, () => terraceWall(tx0, tx1, tTop));
