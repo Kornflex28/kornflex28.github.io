@@ -77,7 +77,7 @@
                     <ul class="pub-list">
                         {% for item in year.items %}
                         {% assign last_char = item.authors | strip_html | slice: -1 %}
-                        <li><span class="pub-type">{{ item.type }}</span> {{ item.authors }}{% unless last_char == "." %}.{% endunless %}
+                        <li><span class="pub-type">{{ item.type }}</span> {{ item.authors | replace: "Chauvet L.", "<b>Chauvet L.</b>" }}{% unless last_char == "." %}.{% endunless %}
                             {% if item.url %}<a href="{{ item.url }}" target="_blank">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}.
                             <i>{{ item.venue }}</i>.</li>
                         {% endfor %}
