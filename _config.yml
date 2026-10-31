@@ -8,9 +8,7 @@ title: "Louis Chauvet"
 description: "Louis Chauvet, research engineer at IPGP in Paris, leads space magnetometry data processing for ESA's Swarm and NanoMagSat missions."
 tagline: "Research engineer at Paris Institute of Globe Physics"
 
-# Link previews (jekyll-seo-tag): the castle card, shown large
-twitter:
-  card: summary_large_image
+# Link previews (jekyll-seo-tag): the castle card, which an image shows large
 defaults:
   - scope:
       path: ""
