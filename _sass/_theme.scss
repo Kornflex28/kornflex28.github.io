@@ -21,6 +21,13 @@
   --gold: #d8ad45;
   --blue-deep: #44609a;
   --sand: #ead6b0;
+  --plaster: #d9d3c9;
+  --plaster-ochre: #e2c99c;
+  --thatch: #cfae6c;
+  --timber: #5e4a42;
+  --under: rgb(47 44 72 / .4);          // the shade the lower town lies in
+  --stone: #b3aaa0;                     // and the castle's foundations behind it
+  --stone-deep: #a1978e;
   --hedge: #5f8a4f;
   --hedge-deep: #456b3c;
   --hedge-light: #719c5b;
@@ -79,6 +86,13 @@
   --gold: #b48a3a;
   --blue-deep: #34497f;
   --sand: #4a4f7d;
+  --plaster: #34417c;
+  --plaster-ochre: #434779;
+  --thatch: #4e4a72;
+  --timber: #1f2142;
+  --under: rgb(6 9 28 / .35);
+  --stone: #182047;
+  --stone-deep: #151c40;
   --hedge: #2e4a3c;
   --hedge-deep: #223a2f;
   --hedge-light: #3a5a45;
@@ -113,6 +127,29 @@
 
 :root[data-theme="night"] {
   @include night;
+}
+
+// The lower town lies underground, as in the film. By day it sits in the castle's shade
+// (.ground), so its colours are dimmer and cooler and its windows and lanterns are lit. At
+// night it keeps the night's colours.
+:root:not([data-theme="night"]) .lowertown {
+  --cream: color-mix(in oklab, #f7f1e6 70%, #2f2c48);
+  --cream-deep: color-mix(in oklab, #e4dccd 70%, #2f2c48);
+  --sand: color-mix(in oklab, #ead6b0 70%, #2f2c48);
+  --plaster: color-mix(in oklab, #d9d3c9 70%, #2f2c48);
+  --plaster-ochre: color-mix(in oklab, #e2c99c 70%, #2f2c48);
+  --thatch: color-mix(in oklab, #cfae6c 70%, #2f2c48);
+  --timber: color-mix(in oklab, #5e4a42 80%, #2f2c48);
+  --terracotta: color-mix(in oklab, #c9845f 72%, #2f2c48);
+  --terracotta-deep: color-mix(in oklab, #a8603f 72%, #2f2c48);
+  --slate: color-mix(in oklab, #5f6672 80%, #2f2c48);
+  --green: color-mix(in oklab, #7d9e6e 72%, #2f2c48);
+  --stone: color-mix(in oklab, #b3aaa0 70%, #2f2c48);
+  --stone-deep: color-mix(in oklab, #a1978e 70%, #2f2c48);
+  --window: #e0a24f;
+  --window-glow: .8;
+  --lamp: #ffd98a;
+  --lamp-glow: 1;
 }
 
 // The time of day of each castle (skyline.js sets data-moment): the sky's colours, the light
@@ -220,6 +257,10 @@ a {
 .c-gold { fill: var(--gold); }
 .c-blue-deep { fill: var(--blue-deep); }
 .c-sand { fill: var(--sand); }
+.c-plaster { fill: var(--plaster); }
+.c-plaster-ochre { fill: var(--plaster-ochre); }
+.c-thatch { fill: var(--thatch); }
+.c-timber { fill: var(--timber); }
 .c-hedge { fill: var(--hedge); }
 .c-hedge-deep { fill: var(--hedge-deep); }
 .c-hedge-light { fill: var(--hedge-light); }
@@ -312,6 +353,12 @@ a {
   to { transform: scaleY(.35); }
 }
 
+@keyframes smoke {
+  from { opacity: 0; transform: translate(0, 0) scale(.6); }
+  20% { opacity: .75; }
+  to { opacity: 0; transform: translate(7px, -24px) scale(1.7); }
+}
+
 @keyframes twinkle {
   to { opacity: .25; }
 }
@@ -365,6 +412,45 @@ a {
 .lamp { fill: var(--lamp); }
 .glow { stop-color: var(--lamp-light); }
 .lamp-glow { opacity: var(--lamp-glow); }
+
+// A bare tree of the lower town (skyline.js): its bark over its ink outline
+.bark,
+.bark-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bark { stroke: var(--timber); }
+.bark-line { stroke: var(--line); }
+
+// The big stones of the castle's foundations behind the lower town, with faint joints
+.stone,
+.stone-deep {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-opacity: .3;
+}
+
+.stone { fill: var(--stone); }
+.stone-deep { fill: var(--stone-deep); }
+
+// The chains the lower town's lanterns hang from, coming out of the shade above
+.chain {
+  fill: none;
+  stroke: url(#chain-fade);
+  stroke-width: 1.4;
+  stroke-dasharray: 2.4 1.2;
+}
+
+.chain-stop { stop-color: var(--line); }
+
+// The lower town's ground, ruled straight over the foot of everything on it
+.ground-line {
+  stroke: var(--line);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
 .window-glow { opacity: var(--window-glow); }
 .window-glow.is-off { display: none; }
 

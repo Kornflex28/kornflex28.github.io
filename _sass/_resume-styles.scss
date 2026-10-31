@@ -615,9 +615,135 @@ main .floor {
 
 // Footer
 
+// The ground floor: the lower town (skyline.js), drawn on the page at the castle's scale so the
+// elevator comes down into it, and a line of credits under it. Anything laid over the drawing
+// uses its units, mapped the same way: the middle 720 units across narrow screens, all 952 on
+// wider tablets, and one unit to 1/16 rem on wide screens.
 .ground {
-  padding: 1rem 1.25rem 3rem;
+  --unit: calc(100% / 720);
+  --origin: calc(-100% * 16 / 720);
+  position: relative;
+  padding: 1rem 0 .75rem;
+  overflow-x: clip;
   text-align: center;
+
+  @media (min-width: 900px) and (max-width: 1199.98px) and (min-height: 501px) {
+    --unit: calc(100% / 952);
+    --origin: 0%;
+  }
+
+  @media (min-width: 1200px) {
+    --unit: .0625rem;
+    --origin: calc(50% - var(--measure) / 2 - 15.5rem);
+  }
+}
+
+// the shade the town lies in, darkest at the foot of the page and gone well before the edges
+// of its box, so it has no edge
+.ground::before {
+  --shade: ellipse 50% 80% at 50% 80%;
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: calc(var(--origin) - 80 * var(--unit));
+  bottom: 0;
+  width: calc(1112 * var(--unit));
+  height: 17rem;
+  background: radial-gradient(var(--shade), var(--under), color-mix(in oklab, var(--under) 45%, transparent) 50%, transparent);
+  pointer-events: none;
+
+  // on narrow screens the drawing runs off the screen, so the shade is centred on the page
+  // instead, as a flatter band along the town's ground and the credits
+  @media (max-width: 899.98px) {
+    left: -10%;
+    width: 120%;
+    height: 11rem;
+    --shade: ellipse 55% 58% at 50% 60%;
+  }
+}
+
+.town {
+  position: relative;
+}
+
+// the whole width of the page, its view box lined up with the castle (skyline.js)
+.lowertown {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+// The lower station (skyline.js draws it), with a link laid over it that leads back up. Its call
+// plate sits in the wing beside the arch: a dark plate in a brass rim with three brass arrows
+// pointing up, at the station's scale. On hover the plate lights up and lifts a little, and the
+// dial's needle swings up.
+.station {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--origin) + 16 * var(--unit));
+  width: calc(116 * var(--unit));
+  aspect-ratio: 116 / 97;
+}
+
+.call-plate {
+  position: absolute;
+  left: calc(100% * 64 / 116);  // 80 units across the drawing: in the wing
+  bottom: calc(100% * 8 / 97);
+  width: 19%;
+  aspect-ratio: 20 / 32;
+  border: 2px solid var(--gold);
+  border-radius: 3px;
+  background: #2b2a33;
+  box-shadow: 0 0 0 1.5px var(--line);
+  transform: translateX(-50%);
+  transition: box-shadow .25s ease-out, transform .25s ease-out;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  path {
+    fill: #d9ae4c;
+    transition: fill .25s ease-out;
+  }
+}
+
+.station:is(:hover, :focus-visible) .call-plate {
+  box-shadow: 0 0 0 1.5px var(--line), 0 0 1em .3em rgb(255 217 138 / .55);
+  transform: translate(-50%, -1px);
+
+  path {
+    fill: #f6d77e;
+  }
+}
+
+// the station's floor dial, its needle on the bottom floor until the station is hovered
+.dial-needle {
+  transform-box: fill-box;
+  transform-origin: 100% 100%;
+  transition: transform 1.2s ease-in-out;
+}
+
+.town:has(.station:is(:hover, :focus-visible)) .dial-needle {
+  transform: rotate(165deg);
+}
+
+// a chimney's smoke curling up and away
+.smoke circle {
+  fill: var(--cloud);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smoke 6s ease-out infinite;
+}
+
+.colophon {
+  margin: .6rem 1.25rem 0;
+  color: var(--ink);
+  font-size: .8125rem;
+  line-height: 1.6;
 }
 
 // Elevator: a shaft running down from the castle's pavilion, where the cabin docks at the top
@@ -631,10 +757,12 @@ main .floor {
   display: none;
 }
 
-// it lets the pointer through to the page, but on its landings
+// it lets the pointer through to the page except on its landings, and stays in front of the
+// lower town it goes down into
 .elevator.is-ready {
   display: block;
   position: fixed;
+  z-index: 2;
   pointer-events: none;
   top: 0;
   bottom: 0;
@@ -686,12 +814,14 @@ main .floor {
     }
   }
 
+  // a halo of paper behind the names, for short screens where the last ones reach the town
   a {
     display: flex;
     align-items: center;
     gap: .5rem;
     pointer-events: auto;
     color: var(--ink-soft);
+    text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper);
     font-size: .875rem;
     text-decoration: none;
     white-space: nowrap;

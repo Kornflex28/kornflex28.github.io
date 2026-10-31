@@ -6,7 +6,8 @@
 //
 // Above the floors, the shaft climbs to the castle (skyline.js): at the top of the page the
 // cabin docks in the pavilion on the castle's terrace, the shaft hanging from the pavilion's
-// pulley as the page scrolls.
+// pulley as the page scrolls. Below them, it goes down to the lower town at the foot of the
+// page, where the cabin rests at the very bottom.
 (() => {
     // The page always opens on the rooftop, so the castle is seen first
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
@@ -24,8 +25,10 @@
     // landing in the list, the pavilion being drawn in the castle
     const castle = document.querySelector(".skyline[data-dock]");
     const rooftop = document.getElementById("top");
-    const targets = castle && rooftop ? [rooftop, ...floors] : floors;
-    const first = targets.length - floors.length;      // index of the first floor in targets
+    // and the lower town is the bottom stop, in the same way
+    const town = document.querySelector(".lowertown[data-ground]");
+    const targets = [...(castle && rooftop ? [rooftop] : []), ...floors, ...(town ? [town] : [])];
+    const first = targets.indexOf(floors[0]);           // index of the first floor in targets
 
     const stops = floors.map((floor, i) => {
         const stop = document.createElement("li");
@@ -49,9 +52,10 @@
     };
 
     // Landings: one per floor, spread like the floors in the page between the castle and the
-    // bottom of the screen, kept readable apart. The rooftop's landing is the castle's
-    // terrace, as seen at the top of the page: the cabin stands on it, in the pavilion.
-    let anchors = [], landings = [], dock = null, pulley = null;
+    // lower town, kept readable apart. The rooftop's landing is the castle's terrace, as seen
+    // at the top of the page: the cabin stands on it, in the pavilion. The town's is its
+    // ground, as seen at the bottom of the page.
+    let anchors = [], landings = [], dock = null, pulley = null, ground = null;
     const place = () => {
         const max = maxScroll();
         const pad = Math.min(48, list.clientHeight * 0.06), gap = 28;
@@ -68,35 +72,50 @@
             pulley = box.top + window.scrollY + box.height * parseFloat(castle.dataset.pulley);
             top = box.bottom + window.scrollY + gap;
         }
-        const bottom = list.clientHeight - pad;
+        let bottom = list.clientHeight - pad;
+        if (town) {
+            const box = town.getBoundingClientRect();
+            ground = box.top + window.scrollY + box.height * parseFloat(town.dataset.ground);
+            // the landings stay above the town, unless the screen is too short to leave them room
+            // there
+            const foot = town.closest("footer").getBoundingClientRect().top;
+            bottom = Math.min(bottom, Math.max(foot + window.scrollY - max - gap, top + (floors.length - 1) * gap));
+        }
         // on short screens, the landings start over the castle rather than be crushed below it
         top = Math.min(top, Math.max(pad, bottom - (floors.length - 1) * gap));
         anchors = targets.map(scrollTarget);
         const from = anchors[first];
-        const spots = anchors.slice(first).map((a) => top + (max > from ? (a - from) / (max - from) : 0) * (bottom - top));
+        const spots = anchors.slice(first, first + floors.length).map((a) => top + (max > from ? (a - from) / (max - from) : 0) * (bottom - top));
         for (let i = 1; i < spots.length; i++) spots[i] = Math.max(spots[i], spots[i - 1] + gap);
         spots[spots.length - 1] = Math.min(spots[spots.length - 1], bottom);
         for (let i = spots.length - 2; i >= 0; i--) spots[i] = Math.min(spots[i], spots[i + 1] - gap);
         stops.forEach((stop, i) => { stop.style.top = `${spots[i]}px`; });
-        landings = first ? [dock - cabin.offsetHeight / 2, ...spots] : spots;
-        list.style.setProperty("--shaft-bottom", `${list.clientHeight - spots[spots.length - 1]}px`);
+        landings = [...(first ? [dock - cabin.offsetHeight / 2] : []), ...spots, ...(town ? [ground - max - cabin.offsetHeight / 2] : [])];
+        // the stops met on the way down; when several share a scroll position (the last floors,
+        // at the bottom of the page), only the lowest counts
+        route = [];
+        anchors.forEach((a, i) => {
+            while (route.length && anchors[route[route.length - 1]] >= a) route.pop();
+            route.push(i);
+        });
     };
 
     // Cabin position for a scroll position: from landing to landing as the page scrolls
-    // from one floor's anchor to the next
+    // from one stop's anchor to the next
+    let route = [];
     const cabinAt = (y) => {
-        if (y <= anchors[0]) return landings[0];
-        for (let i = 1; i < anchors.length; i++) {
-            if (y < anchors[i]) {
-                const t = (y - anchors[i - 1]) / (anchors[i] - anchors[i - 1]);
-                return landings[i - 1] + t * (landings[i] - landings[i - 1]);
-            }
+        if (y <= anchors[route[0]]) return landings[route[0]];
+        for (let k = 1; k < route.length; k++) {
+            const i = route[k], j = route[k - 1];
+            if (y < anchors[i]) return landings[j] + (y - anchors[j]) / (anchors[i] - anchors[j]) * (landings[i] - landings[j]);
         }
-        return landings[landings.length - 1];
+        return landings[route[route.length - 1]];
     };
+    // the last floor reached (the town, sharing the last floors' scroll position at the bottom
+    // of the page, is no floor)
     const floorAt = (y) => {
         let index = 0;
-        anchors.forEach((a, i) => { if (y >= a - 2) index = i; });
+        anchors.slice(0, first + floors.length).forEach((a, i) => { if (y >= a - 2) index = i; });
         return index;
     };
 
@@ -114,8 +133,10 @@
     let pinned = null;
     const update = () => {
         const y = window.scrollY;
-        // the shaft hangs from the pavilion's pulley, wherever the scroll has taken it
+        // the shaft hangs from the pavilion's pulley down to the town's ground, wherever the
+        // scroll has taken them
         list.style.setProperty("--shaft-top", `${first ? pulley - y : landings[0]}px`);
+        list.style.setProperty("--shaft-bottom", `${list.clientHeight - (town ? ground - y : landings[landings.length - 1])}px`);
         if (pinned && Math.abs(y - pinned.y) < 2) return;
         pinned = null;
         setCabin(cabinAt(y));

@@ -15,7 +15,7 @@
 //
 // Replaces the static drawing in .skyline, which stays as the no-JS fallback.
 (() => {
-    const svg = document.querySelector(".skyline");
+    const svg = document.querySelector(".skyline"), town = document.querySelector(".lowertown");
     if (!svg) return;
 
     // --- Seeded randomness -----------------------------------------------------------
@@ -382,6 +382,602 @@
             };
         },
     ];
+
+    // Freehand lines: every straight segment is redrawn as a slightly bowed curve, as if drawn
+    // without a ruler; curves stay as they are. Done on the vector paths, so lines stay smooth.
+    const freehand = (d) => {
+        const tokens = d.match(/[MLHVQCAZ]|-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/gi) || [];
+        let i = 0, x = 0, y = 0, sx = 0, sy = 0, out = "";
+        const num = () => parseFloat(tokens[i++]);
+        const bow = (x2, y2) => {
+            const len = Math.hypot(x2 - x, y2 - y);
+            if (len < 6) return ` L${f(x2)} ${f(y2)}`;
+            const o = rand(-1, 1) * Math.min(1.3, len * 0.02);
+            const mx = (x + x2) / 2 - ((y2 - y) / len) * o, my = (y + y2) / 2 + ((x2 - x) / len) * o;
+            return ` Q${f(mx)} ${f(my)} ${f(x2)} ${f(y2)}`;
+        };
+        while (i < tokens.length) {
+            let cmd = tokens[i++];
+            do {
+                const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase();
+                const ox = rel ? x : 0, oy = rel ? y : 0;
+                if (C === "M") { x = sx = num() + ox; y = sy = num() + oy; out += ` M${f(x)} ${f(y)}`; cmd = rel ? "l" : "L"; }
+                else if (C === "L") { const nx = num() + ox, ny = num() + oy; out += bow(nx, ny); x = nx; y = ny; }
+                else if (C === "H") { const nx = num() + ox; out += bow(nx, y); x = nx; }
+                else if (C === "V") { const ny = num() + oy; out += bow(x, ny); y = ny; }
+                else if (C === "Q") { const a = [num() + ox, num() + oy, num() + ox, num() + oy]; out += ` Q${a.map(f).join(" ")}`; [x, y] = a.slice(2); }
+                else if (C === "C") { const a = [num() + ox, num() + oy, num() + ox, num() + oy, num() + ox, num() + oy]; out += ` C${a.map(f).join(" ")}`; [x, y] = a.slice(4); }
+                else if (C === "A") {
+                    // the rotation and the two flags must stay plain integers
+                    const a = [num(), num(), num(), num(), num(), num() + ox, num() + oy];
+                    out += ` A${f(a[0])} ${f(a[1])} ${a[2]} ${a[3]} ${a[4]} ${f(a[5])} ${f(a[6])}`;
+                    [x, y] = a.slice(5);
+                }
+                else if (C === "Z") { out += bow(sx, sy) + " Z"; x = sx; y = sy; break; }
+            } while (i < tokens.length && !/[a-z]/i.test(tokens[i]));
+        }
+        return out.trim();
+    };
+    const asPath = (el, d) => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        [...el.attributes].forEach((a) => { if (!/^(x|y|x1|y1|x2|y2|width|height)$/.test(a.name)) path.setAttribute(a.name, a.value); });
+        if (el.tagName === "line") path.setAttribute("fill", "none");
+        path.setAttribute("d", d);
+        el.replaceWith(path);
+    };
+
+    // The finishing passes on a drawing: lines redrawn freehand, then the volume
+    const finish = (root) => {
+        root.querySelectorAll("g path").forEach((p) => p.setAttribute("d", freehand(p.getAttribute("d"))));
+        root.querySelectorAll("g line").forEach((l) => {
+            const [x1, y1, x2, y2] = ["x1", "y1", "x2", "y2"].map((a) => +l.getAttribute(a));
+            asPath(l, freehand(`M${x1} ${y1} L${x2} ${y2}`));
+        });
+        root.querySelectorAll("g rect:not([rx])").forEach((r) => {
+            const [x, y, w, h] = ["x", "y", "width", "height"].map((a) => +r.getAttribute(a));
+            asPath(r, freehand(`M${x} ${y} H${x + w} V${y + h} H${x} Z`));
+        });
+
+        // Volume: over each piece marked data-shade, a copy of its final outline filled with the
+        // shading, so the two match exactly
+        root.querySelectorAll("[data-shade]").forEach((el) => {
+            const shade = el.cloneNode();
+            shade.setAttribute("class", "shade");
+            shade.setAttribute("fill", `url(#${el.dataset.shade})`);
+            shade.removeAttribute("data-shade");
+            shade.removeAttribute("id");
+            el.after(shade);
+        });
+    };
+
+    // --- The lower town ----------------------------------------------------------------
+
+    // The lower town at the foot of the page (.lowertown), after the one in the film. Poor old
+    // houses (cottages, tower houses, half-timbered houses, plank sheds), never the same kind
+    // twice in a row, limewashed or plastered, under tiles, slates or patched thatch. Few
+    // windows, a boarded one here and there. Wells, bare trees, fences, carts and the like stand
+    // in the alleys, lanterns hang from a vault out of sight, and smoke rises from a chimney or
+    // two. Behind it all is the foot of the castle's foundations. The town is drawn on the page
+    // like the castle, and as wide, so the elevator comes down into it: the cabin rests in the
+    // lower station's arch, next to its call plate (.call-plate). It uses the castle's seed,
+    // apart from the castle's own draws.
+    const TH = 150, TOP = 36;                           // the ground line, above the highest roofs
+    const LIMEWASH = ["c-cream", "c-cream-deep", "c-cream-deep", "c-sand", "c-plaster", "c-plaster", "c-plaster-ochre"];
+    const TILES = ["c-terracotta", "c-terracotta-deep", "c-terracotta-deep", "c-slate", "c-slate"];
+    const WOOD = ["c-terracotta-deep", "c-timber", "c-timber", "c-slate", "c-green"];   // doors, shutters
+    const drawTown = (town, seed) => {
+        state = (seed ^ 0x6a09e667) | 0;
+        parts.length = 0;
+        const chimneys = [];
+        // a piece of dark timber from one point to another, tapering from one thickness to another
+        const timber = (x1, y1, x2, y2, t1 = 3, t2 = t1, cls = "c-timber") => {
+            const len = Math.hypot(x2 - x1, y2 - y1), nx = (y1 - y2) / len / 2, ny = (x2 - x1) / len / 2;
+            add(`<path class="${cls} outline fine" d="M${f(x1 + nx * t1)} ${f(y1 + ny * t1)} L${f(x2 + nx * t2)} ${f(y2 + ny * t2)} L${f(x2 - nx * t2)} ${f(y2 - ny * t2)} L${f(x1 - nx * t1)} ${f(y1 - ny * t1)} Z" />`);
+        };
+        // a window in its frame, on its sill, sometimes with shutters (one may be missing) and
+        // sometimes lit at night. Unless the building is kept up, it may be boarded over.
+        const pane = (x, y, w, h, shutters = false, kept = false) => {
+            if (!kept && chance(0.07)) {
+                add(`<rect class="c-window-dark outline fine" x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" />`);
+                timber(x - 1, y - 1, x + w + 1, y + h + 1, 2.2, 2.2, "c-sand");
+                timber(x + w + 1, y - 1, x - 1, y + h + 1, 2.2, 2.2, "c-sand");
+                return;
+            }
+            const lit = chance(0.35);
+            add(`<ellipse class="window-glow${lit ? "" : " is-off"}" cx="${f(x + w / 2)}" cy="${f(y + h / 2)}" rx="${f(w + 2)}" ry="${f(h + 1)}" fill="url(#window-light)" />`);
+            if (shutters) {
+                const cls = pick(WOOD);
+                add(`<rect class="${cls} outline fine" x="${f(x - w * 0.55 - 0.5)}" y="${f(y)}" width="${f(w * 0.55)}" height="${f(h)}" />`);
+                if (chance(0.7)) add(`<rect class="${cls} outline fine" x="${f(x + w + 0.5)}" y="${f(y)}" width="${f(w * 0.55)}" height="${f(h)}" />`);
+            }
+            add(`<rect class="${lit ? "c-window" : "c-window-dark"} outline fine" x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" />`);
+            add(`<line class="outline fine" x1="${f(x + w / 2)}" y1="${f(y)}" x2="${f(x + w / 2)}" y2="${f(y + h)}" />`);
+            add(`<rect class="c-cream outline fine" x="${f(x - 1)}" y="${f(y + h)}" width="${f(w + 2)}" height="1.5" />`);
+        };
+        // a plank door in two leaves, under a stone lintel
+        const plankDoor = (cx, w, h) => {
+            add(`<rect class="c-cream-deep outline fine" x="${f(cx - w / 2 - 1.5)}" y="${f(TH - h - 2.5)}" width="${f(w + 3)}" height="2.5" />`);
+            add(`<rect class="${pick(WOOD)} outline thin" x="${f(cx - w / 2)}" y="${f(TH - h)}" width="${f(w)}" height="${f(h - 1)}" />`);
+            add(`<line class="outline fine" x1="${f(cx)}" y1="${f(TH - h)}" x2="${f(cx)}" y2="${f(TH - 1)}" />`);
+        };
+        const wall = (x, top, w) =>
+            add(`<rect class="${pick(LIMEWASH)} outline" data-shade="wall" x="${f(x)}" y="${f(top)}" width="${f(w)}" height="${f(TH - top)}" />`);
+        // a roof with its ridge a little off centre. Tiles and slates are laid in courses and
+        // sometimes mended with a patch of another colour; thatch is thick and rounded, its straw
+        // showing at the eaves. The eaves shade the wall below.
+        const roof = (x, top, w, rise, thatch = false) => {
+            const apex = x + w / 2 + rand(-0.06, 0.06) * w;
+            const edge = (t) => [x - 3 + (apex - x + 3) * t, x + w + 3 - (x + w + 3 - apex) * t];   // the roof's sides at height t
+            if (thatch) {
+                add(`<path class="c-thatch outline" data-shade="lit" d="M${f(x - 5)} ${f(top + 2)} Q${f(x - 4)} ${f(top - rise * 0.6)} ${f(apex)} ${f(top - rise - 2)} Q${f(x + w + 4)} ${f(top - rise * 0.6)} ${f(x + w + 5)} ${f(top + 2)} Z" />`);
+                add('<g class="joint">');
+                for (let sx = x - 2; sx < x + w + 3; sx += rand(2.5, 4)) add(`<line x1="${f(sx)}" y1="${f(top + 1.5)}" x2="${f(sx + rand(-0.8, 0.8))}" y2="${f(top - rand(3, 6))}" />`);
+                add(`<path fill="none" d="M${f(x - 1)} ${f(top - rise * 0.45)} Q${f(apex)} ${f(top - rise * 0.62)} ${f(x + w + 1)} ${f(top - rise * 0.45)}" />`);
+                add("</g>");
+            } else {
+                const cls = pick(TILES);
+                add(`<path class="${cls} outline" data-shade="lit" d="M${f(x - 3)} ${f(top)} L${f(apex)} ${f(top - rise)} L${f(x + w + 3)} ${f(top)} Z" />`);
+                add('<g class="joint">');
+                (cls === "c-slate" ? [0.25, 0.5, 0.75] : [0.33, 0.66]).forEach((t) => {
+                    const [l, r] = edge(t);
+                    add(`<line x1="${f(l)}" y1="${f(top - rise * t)}" x2="${f(r)}" y2="${f(top - rise * t)}" />`);
+                });
+                add("</g>");
+                if (chance(0.3)) {
+                    const t = rand(0.12, 0.4), [l, r] = edge(t), pw = Math.min(10, (r - l) * 0.3);
+                    const px = rand(l + (r - l) * 0.2, r - (r - l) * 0.2 - pw), y0 = top - rise * t, y1 = top - rise * (t + 0.22);
+                    add(`<path class="${pick(TILES.filter((c) => c !== cls))} outline fine" d="M${f(px)} ${f(y0)} L${f(px + 1)} ${f(y1)} H${f(px + pw + 1)} L${f(px + pw)} ${f(y0)} Z" />`);
+                }
+            }
+            eave(x, top, w);
+        };
+        // a chimney of stone under a slate cap, of brick, or a stovepipe with a little hat
+        const chimney = (x, base, h) => {
+            const kind = pick(["stone", "stone", "brick", "pipe"]);
+            if (kind === "pipe") {
+                add(`<rect class="c-slate outline thin" x="${f(x + 0.8)}" y="${f(base - h)}" width="2.4" height="${f(h)}" />`);
+                add(`<path class="c-slate outline fine" d="M${f(x - 1)} ${f(base - h)} L${f(x + 2)} ${f(base - h - 3)} L${f(x + 5)} ${f(base - h)} Z" />`);
+                chimneys.push([x + 2, base - h - 3]);
+                return;
+            }
+            add(`<rect class="${kind === "brick" ? "c-terracotta" : "c-cream-deep"} outline thin" x="${f(x)}" y="${f(base - h)}" width="4" height="${f(h)}" />`);
+            add(`<rect class="${kind === "brick" ? "c-terracotta-deep" : "c-slate"} outline fine" x="${f(x - 1)}" y="${f(base - h - 2)}" width="6" height="2" />`);
+            chimneys.push([x + 2, base - h - 2]);
+        };
+        // a small lit lamp hung by its cap at (x, y), its glow in front of everything
+        const lampAt = (x, y, glow) => {
+            on(GROUND, () => add(`<circle class="lamp-glow" cx="${f(x)}" cy="${f(y + 5)}" r="${glow}" fill="url(#glow)" />`));
+            add(`<path class="lamp outline thin" d="M${f(x - 3)} ${f(y)} H${f(x + 3)} L${f(x + 2.4)} ${f(y + 8)} H${f(x - 2.4)} Z" />`);
+            add(`<path class="c-slate outline thin" d="M${f(x - 4.5)} ${f(y + 0.5)} L${f(x)} ${f(y - 4)} L${f(x + 4.5)} ${f(y + 0.5)} Z" />`);
+            add(`<rect class="c-slate outline fine" x="${f(x - 3)}" y="${f(y + 8)}" width="6" height="2" />`);
+        };
+        const KINDS = {
+            // a half-timbered house whose upper storey juts out over the lower one, dark beams on
+            // its plaster, a window upstairs, a door and a window below
+            timber: () => {
+                const w = int(34, 46), h = int(44, 56), rise = w * rand(0.3, 0.42), jut = 3;
+                return { w: w + 2 * jut, draw: (x0) => {
+                    const x = x0 + jut, top = TH - h, mid = top + h * 0.5, cls = pick(["c-cream", "c-cream", "c-plaster", "c-plaster-ochre"]);
+                    if (chance(0.4)) chimney(x + w * rand(0.6, 0.75), top - rise * 0.4, rise * 0.4 + rand(6, 10));
+                    add(`<rect class="${cls} outline" data-shade="wall" x="${f(x)}" y="${f(mid)}" width="${f(w)}" height="${f(TH - mid)}" />`);
+                    add(`<rect class="${cls} outline" data-shade="wall" x="${f(x0)}" y="${f(top)}" width="${f(w + 2 * jut)}" height="${f(mid - top)}" />`);
+                    timber(x + 1.5, mid, x + 1.5, TH);
+                    timber(x + w - 1.5, mid, x + w - 1.5, TH);
+                    timber(x0 + 1.5, top, x0 + 1.5, mid);
+                    timber(x0 + w + 2 * jut - 1.5, top, x0 + w + 2 * jut - 1.5, mid);
+                    timber(x0 + 1.5, mid - 1.5, x + w * 0.28, top + 1.5, 2.6);
+                    timber(x0 + w + 2 * jut - 1.5, mid - 1.5, x + w * 0.72, top + 1.5, 2.6);
+                    timber(x0 - 1, mid, x0 + w + 2 * jut + 1, mid, 3.6);
+                    roof(x0, top, w + 2 * jut, rise, chance(0.2));
+                    pane(x + w / 2 - 3.5, top + (mid - top) * 0.3, 7, 8);
+                    plankDoor(x + w * 0.3, 8, 15);
+                    pane(x + w * 0.62, mid + 6, 6, 7, chance(0.5));
+                } };
+            },
+            // a low cottage under tiles or thatch, often a chimney on it, a window, shutters
+            cottage: () => {
+                const w = int(48, 74), h = int(28, 40), rise = w * rand(0.18, 0.26);
+                return { w, draw: (x) => {
+                    const top = TH - h, thatch = chance(0.45);
+                    if (chance(0.7)) chimney(x + w * rand(0.6, 0.8), top - rise * 0.4, rise * (thatch ? 0.8 : 0.4) + rand(6, 10));
+                    wall(x, top, w);
+                    roof(x, top, w, thatch ? rise * 1.25 : rise, thatch);
+                    plankDoor(x + w * rand(0.2, 0.32), 9, 15);
+                    pane(x + w * rand(0.62, 0.72), top + h * 0.3, 6, 7, chance(0.6));
+                } };
+            },
+            // a narrow tower house, a single high window under a steep roof
+            tower: () => {
+                const w = int(24, 32), h = int(64, 88), rise = w * rand(0.4, 0.55);
+                return { w, draw: (x) => {
+                    const top = TH - h;
+                    wall(x, top, w);
+                    roof(x, top, w, rise);
+                    pane(x + w / 2 - 3, top + 10, 6, 12);
+                    if (h > 76 && chance(0.5)) pane(x + w / 2 - 3, top + 34, 6, 8);
+                    plankDoor(x + w / 2, 8, 15);
+                } };
+            },
+            // a plank shed under a sloping roof, its doorway dark
+            shed: () => {
+                const w = int(28, 42), h = int(22, 30), fall = int(4, 8);
+                return { w, draw: (x) => {
+                    const top = TH - h;
+                    add(`<path class="${pick(["c-sand", "c-cream-deep", "c-terracotta-deep"])} outline" data-shade="wall" d="M${f(x)} ${TH} V${f(top - fall)} L${f(x + w)} ${f(top)} V${TH} Z" />`);
+                    add('<g class="joint">');
+                    for (let px = x + 4; px < x + w - 2; px += 4.5) add(`<line x1="${f(px)}" y1="${f(top - fall * (1 - (px - x) / w) + 1)}" x2="${f(px)}" y2="${TH}" />`);
+                    add("</g>");
+                    add(`<path class="${pick(TILES)} outline thin" d="M${f(x - 3)} ${f(top - fall - 1)} L${f(x + w + 3)} ${f(top - 1)} L${f(x + w + 3)} ${f(top + 2)} L${f(x - 3)} ${f(top - fall + 2)} Z" />`);
+                    add(`<rect class="c-window-dark outline thin" x="${f(x + w * 0.3)}" y="${f(TH - 16)}" width="${f(w * 0.3)}" height="15" />`);
+                } };
+            },
+        };
+        // a barrel, and a cart on its two spoked wheels
+        const barrel = (x) => {
+            add(`<path class="c-terracotta-deep outline thin" data-shade="cyl" d="M${f(x)} ${TH} Q${f(x - 1.5)} ${TH - 6} ${f(x)} ${TH - 12} H${f(x + 9)} Q${f(x + 10.5)} ${TH - 6} ${f(x + 9)} ${TH} Z" />`);
+            add(`<path class="outline fine" fill="none" d="M${f(x - 0.6)} ${TH - 3.5} H${f(x + 9.6)} M${f(x - 0.6)} ${TH - 8.5} H${f(x + 9.6)}" />`);
+        };
+        const cart = (x) => {
+            add(`<rect class="c-terracotta-deep outline thin" x="${f(x)}" y="${f(TH - 11)}" width="20" height="5" />`);
+            add(`<line class="outline thin" x1="${f(x + 20)}" y1="${f(TH - 9)}" x2="${f(x + 32)}" y2="${f(TH - 3)}" />`);
+            [x + 5, x + 15].forEach((cx) => {
+                add(`<circle class="outline thin" fill="none" cx="${f(cx)}" cy="${f(TH - 5)}" r="4.5" />`);
+                add(`<path class="outline fine" fill="none" d="M${f(cx - 4)} ${f(TH - 5)} H${f(cx + 4)} M${f(cx)} ${f(TH - 9)} V${f(TH - 1)}" />`);
+            });
+        };
+        // what stands in the alleys, each giving its width w and drawing itself from its left x
+        const PROPS = {
+            // a well: its stone ring, its posts and their little roof, a bucket on its rope
+            well: () => ({ w: 24, draw: (x) => {
+                timber(x + 3, TH - 8, x + 3, TH - 34, 2.6);
+                timber(x + 21, TH - 8, x + 21, TH - 34, 2.6);
+                timber(x + 1, TH - 32, x + 23, TH - 32, 2.4);
+                add(`<line class="outline fine" x1="${x + 12}" y1="${TH - 32}" x2="${x + 12}" y2="${TH - 22}" />`);
+                add(`<path class="c-timber outline fine" d="M${x + 9.5} ${TH - 22} H${x + 14.5} L${x + 14} ${TH - 17.5} H${x + 10} Z" />`);
+                add(`<path class="${pick(TILES)} outline thin" data-shade="lit" d="M${x - 2} ${TH - 33} L${x + 12} ${TH - 41} L${x + 26} ${TH - 33} Z" />`);
+                add(`<rect class="c-cream-deep outline" data-shade="cyl" x="${x}" y="${TH - 12}" width="24" height="12" />`);
+                add(`<g class="joint"><line x1="${x}" y1="${TH - 6}" x2="${x + 24}" y2="${TH - 6}" /><line x1="${x + 8}" y1="${TH - 12}" x2="${x + 8}" y2="${TH - 6}" /><line x1="${x + 16}" y1="${TH - 12}" x2="${x + 16}" y2="${TH - 6}" /><line x1="${x + 12}" y1="${TH - 6}" x2="${x + 12}" y2="${TH}" /></g>`);
+                add(`<rect class="c-cream outline thin" x="${x - 1}" y="${TH - 13.5}" width="26" height="3" />`);
+            } }),
+            // a bare, gnarled tree whose limbs fork again and again, thinner each time, with roots
+            // spreading at its foot. It is drawn in one piece, the bark over a single ink outline
+            // (.bark).
+            tree: () => {
+                const h = int(40, 54);
+                return { w: 32, draw: (x) => {
+                    const limbs = [], cx = x + 16;
+                    const grow = (x1, y1, angle, len, width, depth) => {
+                        const x2 = x1 + Math.cos(angle) * len, y2 = y1 + Math.sin(angle) * len, bend = rand(-0.15, 0.15) * len;
+                        limbs.push([`M${f(x1)} ${f(y1)} Q${f((x1 + x2) / 2 - Math.sin(angle) * bend)} ${f((y1 + y2) / 2 + Math.cos(angle) * bend)} ${f(x2)} ${f(y2)}`, width]);
+                        if (!depth) return;
+                        const n = depth === 3 ? int(2, 3) : chance(0.25) ? 1 : 2;
+                        for (let k = 0; k < n; k++) {
+                            const turn = n === 1 ? rand(-0.25, 0.25) : (k / (n - 1) - 0.5) * rand(0.9, 1.3);
+                            const next = Math.min(-0.4, Math.max(-Math.PI + 0.4, angle + turn + rand(-0.1, 0.1)));
+                            grow(x2, y2, next, len * rand(0.6, 0.76), width * 0.62, depth - 1);
+                        }
+                    };
+                    grow(cx, TH, -Math.PI / 2 + rand(-0.12, 0.12), h * 0.4, 4.6, 3);
+                    [-1, 1].forEach((side) => limbs.push([`M${f(cx)} ${TH - 6} Q${f(cx + side * 2)} ${TH - 1.5} ${f(cx + side * rand(5, 7))} ${TH - 0.5}`, 2.2]));
+                    limbs.forEach(([d, w]) => add(`<path class="bark-line" stroke-width="${f(w + 2.4)}" d="${d}" />`));
+                    limbs.forEach(([d, w]) => add(`<path class="bark" stroke-width="${f(w)}" d="${d}" />`));
+                } };
+            },
+            // a fence of uneven pointed planks, one missing here and there, one leaning
+            fence: () => {
+                const w = int(22, 38);
+                return { w, draw: (x) => {
+                    const cls = pick(["c-sand", "c-cream-deep", "c-timber"]), end = x + Math.floor((w - 4) / 5) * 5 + 4;
+                    for (let px = x; px < end; px += 5) {
+                        if (chance(0.12)) continue;
+                        const ph = rand(12, 17), lean = chance(0.15) ? rand(-2, 2) : 0;
+                        add(`<path class="${cls} outline fine" d="M${f(px)} ${TH} L${f(px + lean)} ${f(TH - ph + 1.5)} L${f(px + lean + 2)} ${f(TH - ph)} L${f(px + lean + 4)} ${f(TH - ph + 1.5)} L${f(px + 4)} ${TH} Z" />`);
+                    }
+                    timber(x - 1, TH - 10, end + 1, TH - 9.5, 2.2, 2.2, cls);
+                } };
+            },
+            barrels: () => {
+                const n = int(1, 2);
+                return { w: n * 11, draw: (x) => { for (let k = 0; k < n; k++) barrel(x + k * 11); } };
+            },
+            cart: () => ({ w: 32, draw: cart }),
+            // crates, one on top of the others now and then
+            crates: () => ({ w: 22, draw: (x) => {
+                const cls = pick(["c-sand", "c-cream-deep"]);
+                const crate = (bx, by, s) => {
+                    add(`<rect class="${cls} outline thin" x="${f(bx)}" y="${f(by - s)}" width="${s}" height="${s}" />`);
+                    add(`<g class="joint"><line x1="${f(bx)}" y1="${f(by - s)}" x2="${f(bx + s)}" y2="${f(by)}" /><line x1="${f(bx + s)}" y1="${f(by - s)}" x2="${f(bx)}" y2="${f(by)}" /></g>`);
+                };
+                crate(x, TH, 12);
+                crate(x + 12, TH, 10);
+                if (chance(0.5)) crate(x + 2, TH - 12, 9);
+            } }),
+            // logs stacked in a pile, their sawn ends showing
+            woodpile: () => ({ w: 18, draw: (x) => {
+                const r = 2.9;
+                [3, 2, 1].forEach((n, k) => {
+                    for (let i = 0; i < n; i++) {
+                        const cx = x + r + k * r + i * 2 * r, cy = TH - r - k * r * 1.7;
+                        add(`<circle class="c-sand outline fine" cx="${f(cx)}" cy="${f(cy)}" r="${r}" />`);
+                        add(`<circle class="joint" fill="none" cx="${f(cx)}" cy="${f(cy)}" r="${f(r * 0.45)}" />`);
+                    }
+                });
+            } }),
+            // a lantern hung from a bracket on its post, lit at night (.lamp, .lamp-glow)
+            lantern: () => ({ w: 14, draw: (x) => {
+                const cx = x + 3;
+                add(`<rect class="c-slate outline thin" x="${f(cx - 1.2)}" y="${TH - 38}" width="2.4" height="38" />`);
+                add(`<path class="outline thin" fill="none" d="M${f(cx)} ${TH - 36} H${f(cx + 8)} V${TH - 34} M${f(cx)} ${TH - 31} L${f(cx + 4)} ${TH - 36}" />`);
+                lampAt(cx + 8, TH - 32, 18);
+            } }),
+        };
+        // the ground, from a little before the station to a little past the castle's right end
+        const ground = [DOCK - 66, W + 40];
+        // behind everything, the foot of the castle's foundations walls the town in. Its courses
+        // of big stones stand on the ground and fade out upwards and towards the ground's ends.
+        on(SKY, () => {
+            add('<g mask="url(#foundations-fade)">');
+            for (let y = TH, row = 0; y > TOP; row++) {
+                const h = int(12, 17);
+                for (let x = ground[0] - (row % 2) * rand(14, 26); x < ground[1];) {
+                    const w = int(26, 54);
+                    add(`<rect class="${chance(0.3) ? "stone-deep" : "stone"}" x="${f(x)}" y="${f(y - h)}" width="${w}" height="${h}" />`);
+                    x += w;
+                }
+                y -= h;
+            }
+            add("</g>");
+        });
+        // the elevator's lower station, set into the foundations: two storeys of dressed stone
+        // under a cornice. The cable comes in through the pediment over a gilded pulley, as at
+        // the castle's pavilion, then runs down a groove in the facade to the arch where the
+        // cabin rests. Upstairs there are two windows and a floor dial whose needle points to the
+        // bottom floor and swings up on hover (.dial-needle). Downstairs, the wide right wing
+        // holds the call plate (laid over the drawing, .call-plate), a lamp and the keeper's door.
+        // The station only widens to the right, since on a phone the shaft runs down the
+        // screen's left edge.
+        on(BACK, () => {
+            const cx = DOCK, x0 = cx - 24, x1 = cx + 92, top = TH - 80, band = TH - 56, r = 16, spring = TH - 34;
+            add('<g class="lower-station">');
+            add(`<path class="c-cream-deep outline" data-shade="wall" fill-rule="evenodd" d="M${x0} ${TH} V${top} H${x1} V${TH} Z M${cx - r} ${TH} V${spring} A${r} ${r} 0 0 1 ${cx + r} ${spring} V${TH} Z" />`);
+            add('<g class="joint">');
+            [-60, -30, 30, 60].forEach((deg) => {
+                const a = (deg - 90) * Math.PI / 180;
+                add(`<line x1="${f(cx + r * Math.cos(a))}" y1="${f(spring + r * Math.sin(a))}" x2="${f(cx + (r + 7) * Math.cos(a))}" y2="${f(spring + (r + 7) * Math.sin(a))}" />`);
+            });
+            add(`<line x1="${cx + r + 5}" y1="${spring - 8}" x2="${x1}" y2="${spring - 8}" />`);
+            add(`<line x1="${x0}" y1="${top + 12}" x2="${cx - 4}" y2="${top + 12}" />`);
+            add("</g>");
+            add(`<rect class="c-cream outline thin" x="${x0 - 1}" y="${band}" width="${x1 - x0 + 2}" height="3" />`);
+            add(`<path class="c-cream-deep outline thin" data-shade="lit" d="M${cx - 20} ${top - 4} L${cx} ${top - 17} L${cx + 20} ${top - 4} Z" />`);
+            add(`<rect class="c-cream-deep outline thin" x="${x0 - 3}" y="${top - 4}" width="${x1 - x0 + 6}" height="4" />`);
+            add(`<circle class="c-gold outline thin" cx="${cx}" cy="${top - 9.5}" r="3.6" />`);
+            add(`<circle class="c-ink" cx="${cx}" cy="${top - 9.5}" r="0.9" />`);
+            add(`<rect class="c-arch outline thin" x="${cx - 4}" y="${top}" width="8" height="${spring - r - 8 - top}" />`);
+            add(`<path class="c-cream outline thin" d="M${cx - 3.5} ${spring - r + 1} L${cx - 5} ${spring - r - 8} H${cx + 5} L${cx + 3.5} ${spring - r + 1} Z" />`);
+            // upstairs: the window, and the dial
+            pane(cx - 17, top + 6, 7, 9, false, true);
+            pane(cx + 66, top + 6, 7, 9, false, true);
+            const dx = cx + 40, dy = top + 17;
+            add(`<path class="c-gold outline thin" d="M${dx - 11} ${dy + 1.5} A11 11 0 0 1 ${dx + 11} ${dy + 1.5} Z" />`);
+            add(`<path class="c-cream outline fine" d="M${dx - 8} ${dy} A8 8 0 0 1 ${dx + 8} ${dy} Z" />`);
+            for (let t = 0; t <= 4; t++) {
+                const a = Math.PI + t * Math.PI / 4;
+                add(`<line class="outline fine" x1="${f(dx + 5.5 * Math.cos(a))}" y1="${f(dy + 5.5 * Math.sin(a))}" x2="${f(dx + 7.5 * Math.cos(a))}" y2="${f(dy + 7.5 * Math.sin(a))}" />`);
+            }
+            add(`<g class="dial-needle"><path class="outline thin" fill="none" d="M${dx} ${dy} L${dx - 6.5} ${dy - 1.2}" /></g>`);
+            add(`<circle class="c-ink" cx="${dx}" cy="${dy}" r="1.2" />`);
+            // downstairs: the lamp beside the plate, and the keeper's door
+            plankDoor(cx + 80, 9, 18);
+            lampAt(cx + 62, TH - 46, 14);
+            add("</g>");
+        });
+        const clear = [DOCK - 26, DOCK + 96];                 // the station
+
+        // lanterns hung over the alleys on long chains from a vault far above; they swing when
+        // brushed (hangLanterns)
+        const lanterns = [], hung = int(2, 3), from = clear[1] + 40, span = (W - 60 - from) / hung;
+        for (let k = 0; k < hung; k++) lanterns.push([from + span * (k + rand(0.2, 0.8)), TH - int(69, 85)]);
+
+        // the houses, from just past the station to the castle's right end, often something in
+        // the alley after each (each thing once)
+        on(WALL, () => {
+            let kind = null;
+            const things = Object.keys(PROPS);
+            for (let x = clear[1] + int(10, 24); ;) {
+                let next = pick(Object.keys(KINDS));
+                while (next === kind) next = pick(Object.keys(KINDS));
+                kind = next;
+                const building = KINDS[kind]();
+                if (x + building.w > W - 20) break;         // whole buildings only
+                building.draw(x);
+                x += building.w + int(6, 18);
+                if (!things.length || !chance(0.6)) continue;
+                const thing = PROPS[things.splice(int(0, things.length - 1), 1)[0]]();
+                if (x + thing.w > W - 20) break;
+                thing.draw(x);
+                x += thing.w + int(6, 18);
+            }
+        });
+        const smoke = chimneys.filter(([x]) => x > 0 && x < W).sort(() => random() - 0.5).slice(0, 2).map(([x, y]) => [0, 1, 2].map((k) =>
+            `<circle cx="${f(x)}" cy="${f(y - 2)}" r="2.6" style="animation-delay: -${(k * 2 + random() * 0.8).toFixed(1)}s" />`).join("")).join("");
+        town.dataset.ground = ((TH - 1 - TOP) / (TH - TOP)).toFixed(4);   // its ground line, for elevator.js
+        // the foundations fade out in a wide ellipse centred on the ground, to nothing at its
+        // ends and at the top; the chains fade in from the shade above
+        const area = `x="${ground[0]}" y="${TOP}" width="${ground[1] - ground[0]}" height="${TH - TOP}"`;
+        const centre = (ground[0] + ground[1]) / 2, reach = (ground[1] - ground[0]) / 2;
+        town.innerHTML = `<defs><radialGradient id="foundations-light" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(${centre} ${TH}) scale(${reach} ${TH - TOP - 2})">`
+            + [[0, 0.85], [0.3, 0.7], [0.6, 0.35], [0.85, 0.08], [1, 0]].map(([at, o]) => `<stop offset="${at}" stop-color="#fff" stop-opacity="${o}" />`).join("")
+            + `</radialGradient><mask id="foundations-fade" maskUnits="userSpaceOnUse" ${area}><rect ${area} fill="url(#foundations-light)" /></mask>`
+            + `<linearGradient id="chain-fade" gradientUnits="userSpaceOnUse" x1="0" y1="${TOP}" x2="0" y2="${TOP + 36}"><stop offset="0" class="chain-stop" stop-opacity="0" /><stop offset="1" class="chain-stop" /></linearGradient></defs>`
+            + `<g filter="url(#gouache)">${parts.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((p) => p[2]).join("")}</g>`
+            // the ground, ruled straight over the foot of everything standing on it
+            + `<line class="ground-line" x1="${ground[0]}" y1="${TH - 1}" x2="${ground[1]}" y2="${TH - 1}" />`
+            // the lanterns, each hooked at the end of its chain: lit glass under a cap, on a base
+            // (.chain, .lamp, .lamp-glow)
+            + lanterns.map(([x, y]) => `<g class="hanging" data-x="${f(x)}" data-y="${f(y)}"><path class="chain" d="M${f(x)} ${TOP} V${f(y)}" />`
+                + `<g class="lantern" filter="url(#gouache)" transform="translate(${f(x)} ${f(y)})"><circle class="lamp-glow" cy="10" r="22" fill="url(#glow)" />`
+                + '<path class="lamp outline thin" d="M-4 5 H4 L3 15 H-3 Z" /><path class="c-slate outline thin" d="M-5.5 5.5 L0 0 L5.5 5.5 Z" />'
+                + '<rect class="c-slate outline fine" x="-3.5" y="15" width="7" height="2" /></g></g>').join("")
+            + `<g class="smoke">${smoke}</g>`;
+        finish(town);
+        fitTown();
+        hangLanterns();
+    };
+
+    // The town spans the whole page at the castle's scale, lined up with it, so the elevator
+    // comes down where it went up. Its view box is the strip of the town the page shows, worked
+    // out from where the castle stands, and again whenever either one moves or resizes (as when
+    // the elevator makes room for its rail beside the castle).
+    const fitTown = () => {
+        if (!town || !town.dataset.ground) return;
+        const c = svg.getBoundingClientRect(), t = town.getBoundingClientRect(), unit = c.width / W;
+        town.setAttribute("viewBox", `${f((t.left - c.left) / unit)} ${TOP} ${f(t.width / unit)} ${TH - TOP}`);
+    };
+    addEventListener("resize", fitTown);
+    if (town) [svg, town].forEach((el) => new ResizeObserver(fitTown).observe(el));
+
+    // --- Ropes and chains --------------------------------------------------------------
+
+    // Ropes and chains (the bell pull, the lower town's lanterns) use Verlet integration. Each
+    // knot keeps its speed minus what the air takes (keep is the share left after a second),
+    // falls under gravity and drifts with the wind. Then every link is pulled back to its
+    // length, light knots giving more than heavy ones (give(i) is 0 for a fixed or held knot).
+    const swing = (knots, give, link, dt, gravity, keep, wind = 0) => {
+        const kept = Math.pow(keep, dt);
+        knots.forEach((k, i) => {
+            if (!give(i)) return;
+            const vx = (k.x - k.px) * kept, vy = (k.y - k.py) * kept;
+            k.px = k.x;
+            k.py = k.y;
+            k.x += vx + wind * dt * dt;
+            k.y += vy + gravity * dt * dt;
+        });
+        for (let pass = 0; pass < 12; pass++) {
+            for (let i = 0; i < knots.length - 1; i++) {
+                const a = knots[i], b = knots[i + 1], ga = give(i), gb = give(i + 1);
+                if (!ga && !gb) continue;
+                const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy) || 1e-6;
+                const share = (length - link) / length / (ga + gb);
+                a.x += dx * share * ga;
+                a.y += dy * share * ga;
+                b.x -= dx * share * gb;
+                b.y -= dy * share * gb;
+            }
+        }
+    };
+    // a rope as a smooth curve through its knots
+    const strand = (knots) => {
+        let d = `M${f(knots[0].x)} ${f(knots[0].y)}`;
+        for (let i = 1; i < knots.length - 1; i++) {
+            const a = knots[i], b = knots[i + 1];
+            d += ` Q${f(a.x)} ${f(a.y)} ${f((a.x + b.x) / 2)} ${f((a.y + b.y) / 2)}`;
+        }
+        const tip = knots[knots.length - 1];
+        return `${d} L${f(tip.x)} ${f(tip.y)}`;
+    };
+    // the angle (degrees) of whatever hangs from a rope's end, along its last link
+    const hanging = (knots) => {
+        const tip = knots[knots.length - 1], before = knots[knots.length - 2];
+        return -Math.atan2(tip.x - before.x, tip.y - before.y) * 180 / Math.PI;
+    };
+
+    // The pointer brushing past them: the way it moved since its last event, on screen, and
+    // its speed in pixels per second, smoothed over a few moves. Each rope listens (brushers).
+    const pointer = { from: null, to: null, vx: 0, vy: 0, t: 0 };
+    const brushers = [];
+    addEventListener("pointermove", (event) => {
+        const at = { x: event.clientX, y: event.clientY }, dt = (event.timeStamp - pointer.t) / 1000;
+        if (pointer.to && dt > 0 && dt < 0.1) {
+            const share = Math.min(1, dt / 0.04);
+            pointer.vx += ((at.x - pointer.to.x) / dt - pointer.vx) * share;
+            pointer.vy += ((at.y - pointer.to.y) / dt - pointer.vy) * share;
+        } else {
+            pointer.vx = pointer.vy = 0;
+        }
+        pointer.from = pointer.to || at;
+        pointer.to = at;
+        pointer.t = event.timeStamp;
+        brushers.forEach((brushed) => brushed(event));
+    }, { passive: true });
+    // Knots within reach of the pointer's way (a to b) take on part of its speed (vx, vy, per
+    // second), more when they are near and light, so a slow brush sways a rope and a quick one
+    // flings it. Everything is in the rope's own units. Returns whether any knot was touched.
+    const brush = (knots, give, a, b, vx, vy, reach) => {
+        const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, most = reach * 0.5;
+        const wx = Math.max(-most, Math.min(most, vx / 60)), wy = Math.max(-most, Math.min(most, vy / 60));
+        let touched = false;
+        knots.forEach((k, i) => {
+            const g = give(i);
+            if (!g) return;
+            const t = l ? Math.max(0, Math.min(1, ((k.x - a.x) * dx + (k.y - a.y) * dy) / l)) : 0;
+            const d = Math.hypot(k.x - a.x - dx * t, k.y - a.y - dy * t);
+            if (d > reach) return;
+            const pull = 0.5 * (1 - d / reach) * Math.min(1, g * 1.5);
+            const ux = k.x - k.px, uy = k.y - k.py;             // its speed, per frame
+            const px = (wx - ux) * pull, py = (wy - uy) * pull;
+            k.px -= px;
+            k.py -= py;
+            // the rope below follows in part, heavy knots less
+            for (let j = i + 1; j < knots.length; j++) {
+                const share = 0.3 * Math.min(1, give(j) * 1.5);
+                knots[j].px -= px * share;
+                knots[j].py -= py * share;
+            }
+            touched = true;
+        });
+        return touched;
+    };
+
+    // The lower town's lanterns each hang on a chain of a few links from a hook far above, and
+    // the lantern is heavy. Brushed by the pointer, on the chain or the lantern, they swing and
+    // slowly settle. Nothing runs while they hang still.
+    const LINKS_DOWN = 6;
+    const lanternGive = (i) => (i === 0 ? 0 : i === LINKS_DOWN ? 0.15 : 0.6);
+    let lamps = [], swaying = false, swayed = 0;
+    const hangLanterns = () => {
+        lamps = [...town.querySelectorAll(".hanging")].map((el) => {
+            const x = +el.dataset.x, y = +el.dataset.y;
+            const knots = Array.from({ length: LINKS_DOWN + 1 }, (_, i) => {
+                const ky = TOP + (y - TOP) * i / LINKS_DOWN;
+                return { x, y: ky, px: x, py: ky };
+            });
+            return { knots, link: (y - TOP) / LINKS_DOWN, chain: el.querySelector(".chain"), lantern: el.querySelector(".lantern") };
+        });
+    };
+    const sway = (now) => {
+        const dt = Math.min(1 / 30, (now - swayed) / 1000 || 1 / 60);
+        swayed = now;
+        let moving = 0;
+        lamps.forEach(({ knots, link, chain, lantern }) => {
+            swing(knots, lanternGive, link, dt, 320, 0.3);
+            chain.setAttribute("d", strand(knots));
+            const tip = knots[LINKS_DOWN];
+            lantern.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(hanging(knots))})`);
+            knots.forEach((k) => { moving = Math.max(moving, Math.abs(k.x - k.px) + Math.abs(k.y - k.py)); });
+        });
+        if (moving > 0.003) requestAnimationFrame(sway);
+        else swaying = false;
+    };
+    brushers.push(() => {
+        if (!lamps.length || reducedMotion.matches) return;
+        const box = town.getBoundingClientRect();
+        if (Math.max(pointer.from.y, pointer.to.y) < box.top - 20 || Math.min(pointer.from.y, pointer.to.y) > box.bottom) return;
+        const m = town.getScreenCTM().inverse();
+        const local = (p, below = 0) => ({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f - below });
+        const vx = m.a * pointer.vx + m.c * pointer.vy, vy = m.b * pointer.vx + m.d * pointer.vy;
+        let touched = false;
+        lamps.forEach(({ knots }) => {
+            touched = brush(knots, lanternGive, local(pointer.from), local(pointer.to), vx, vy, 5) || touched;
+            // the lantern itself, its middle some 9 units below its hook
+            touched = brush(knots, (i) => (i === LINKS_DOWN ? lanternGive(i) : 0), local(pointer.from, 9), local(pointer.to, 9), vx, vy, 9) || touched;
+        });
+        if (touched && !swaying) {
+            swaying = true;
+            swayed = performance.now();
+            requestAnimationFrame(sway);
+        }
+    });
 
     // --- Composition -----------------------------------------------------------------
 
@@ -794,69 +1390,7 @@
             <feComposite in="painted" in2="light" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" />
             </filter></defs><g filter="url(#gouache)">${drawing}</g>`;
 
-        // Freehand lines: every straight segment is redrawn as a slightly bowed curve, as if drawn
-        // without a ruler; curves stay as they are. Done on the vector paths, so lines stay smooth.
-        const ARGS = { M: 2, L: 2, H: 1, V: 1, Q: 4, C: 6, A: 7, Z: 0 };
-        const freehand = (d) => {
-            const tokens = d.match(/[MLHVQCAZ]|-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/gi) || [];
-            let i = 0, x = 0, y = 0, sx = 0, sy = 0, out = "";
-            const num = () => parseFloat(tokens[i++]);
-            const bow = (x2, y2) => {
-                const len = Math.hypot(x2 - x, y2 - y);
-                if (len < 6) return ` L${f(x2)} ${f(y2)}`;
-                const o = rand(-1, 1) * Math.min(1.3, len * 0.02);
-                const mx = (x + x2) / 2 - ((y2 - y) / len) * o, my = (y + y2) / 2 + ((x2 - x) / len) * o;
-                return ` Q${f(mx)} ${f(my)} ${f(x2)} ${f(y2)}`;
-            };
-            while (i < tokens.length) {
-                let cmd = tokens[i++];
-                do {
-                    const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase();
-                    const ox = rel ? x : 0, oy = rel ? y : 0;
-                    if (C === "M") { x = sx = num() + ox; y = sy = num() + oy; out += ` M${f(x)} ${f(y)}`; cmd = rel ? "l" : "L"; }
-                    else if (C === "L") { const nx = num() + ox, ny = num() + oy; out += bow(nx, ny); x = nx; y = ny; }
-                    else if (C === "H") { const nx = num() + ox; out += bow(nx, y); x = nx; }
-                    else if (C === "V") { const ny = num() + oy; out += bow(x, ny); y = ny; }
-                    else if (C === "Q") { const a = [num() + ox, num() + oy, num() + ox, num() + oy]; out += ` Q${a.map(f).join(" ")}`; [x, y] = a.slice(2); }
-                    else if (C === "C") { const a = [num() + ox, num() + oy, num() + ox, num() + oy, num() + ox, num() + oy]; out += ` C${a.map(f).join(" ")}`; [x, y] = a.slice(4); }
-                    else if (C === "A") {
-                        // the rotation and the two flags must stay plain integers
-                        const a = [num(), num(), num(), num(), num(), num() + ox, num() + oy];
-                        out += ` A${f(a[0])} ${f(a[1])} ${a[2]} ${a[3]} ${a[4]} ${f(a[5])} ${f(a[6])}`;
-                        [x, y] = a.slice(5);
-                    }
-                    else if (C === "Z") { out += bow(sx, sy) + " Z"; x = sx; y = sy; break; }
-                } while (i < tokens.length && !/[a-z]/i.test(tokens[i]));
-            }
-            return out.trim();
-        };
-        const asPath = (el, d) => {
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            [...el.attributes].forEach((a) => { if (!/^(x|y|x1|y1|x2|y2|width|height)$/.test(a.name)) path.setAttribute(a.name, a.value); });
-            if (el.tagName === "line") path.setAttribute("fill", "none");
-            path.setAttribute("d", d);
-            el.replaceWith(path);
-        };
-        svg.querySelectorAll("g path").forEach((p) => p.setAttribute("d", freehand(p.getAttribute("d"))));
-        svg.querySelectorAll("g line").forEach((l) => {
-            const [x1, y1, x2, y2] = ["x1", "y1", "x2", "y2"].map((a) => +l.getAttribute(a));
-            asPath(l, freehand(`M${x1} ${y1} L${x2} ${y2}`));
-        });
-        svg.querySelectorAll("g rect:not([rx])").forEach((r) => {
-            const [x, y, w, h] = ["x", "y", "width", "height"].map((a) => +r.getAttribute(a));
-            asPath(r, freehand(`M${x} ${y} H${x + w} V${y + h} H${x} Z`));
-        });
-
-        // Volume: over each piece marked data-shade, a copy of its final outline filled with the
-        // shading, so the two match exactly
-        svg.querySelectorAll("[data-shade]").forEach((el) => {
-            const shade = el.cloneNode();
-            shade.setAttribute("class", "shade");
-            shade.setAttribute("fill", `url(#${el.dataset.shade})`);
-            shade.removeAttribute("data-shade");
-            shade.removeAttribute("id");
-            el.after(shade);
-        });
+        finish(svg);
 
         // Cast shadows: each turret throws its shadow away from the light, long when the sun is
         // low, onto the column and the turrets behind it only, through a mask made of
@@ -878,6 +1412,7 @@
             behind.push(turret.id);
         });
 
+        if (town) drawTown(town, seed);
         svg.dispatchEvent(new Event("castle-drawn", { bubbles: true }));
     };
 
