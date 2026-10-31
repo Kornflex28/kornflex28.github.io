@@ -42,7 +42,7 @@ resume_contact_email:           "louis@touchevisual.dev"
 resume_contact_telephone:       ""
 resume_contact_address:         "Paris"
 
-resume_header_intro: "<p>Research engineer in scientific computing at the <a href='https://www.ipgp.fr/en/' target='_blank'>Paris Institute of Globe Physics (IPGP)</a>, where I lead the processing of data from ESA magnetometry missions: the <a href='https://earth.esa.int/eogateway/missions/swarm' target='_blank'><b>Swarm</b></a> constellation in operation, and the ground segment of the upcoming <a href='https://nanomagsat.fr/' target='_blank'><b>NanoMagSat</b></a> mission. Graduate engineer from IMT Atlantique (signal processing, space telecommunications) and ISAE-Supaero.</p>"
+resume_header_intro: "<p>Research engineer in scientific computing at the <a href='https://www.ipgp.fr/en/' target='_blank'>Paris Institute of Globe Physics (IPGP)</a>, where I lead the processing of data from ESA magnetometry missions: <a href='https://earth.esa.int/eogateway/missions/swarm' target='_blank'><b>Swarm</b></a>, three satellites measuring the Earth's magnetic field since 2013, and the ground segment of the upcoming <a href='https://nanomagsat.fr/' target='_blank'><b>NanoMagSat</b></a> constellation of three nanosatellites. Graduate engineer from IMT Atlantique (signal processing, space telecommunications) and ISAE-Supaero.</p>"
 
 # Decide which sections to use
 # comment out to hide
