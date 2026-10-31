@@ -1489,63 +1489,44 @@
         return { x: ANCHOR.x, y, px: ANCHOR.x, py: y };
     });
     const tip = knots[LINKS];
-    let stretch = 1, spring = 0, grip = null, dragged = false, passing = null, time = 0, last = 0;
+    let stretch = 1, spring = 0, grip = null, dragged = false, time = 0, last = 0;
     // how easily each knot moves: the anchor not at all, the tassel heavy, and while held, not at all
     const give = (i) => (i === 0 || (grip && i === LINKS) ? 0 : i === LINKS ? 0.35 : 1);
 
     const step = (dt) => {
         const breeze = 60 * Math.sin(0.7 * time) + 25 * Math.sin(1.9 * time + 1);
-        const keep = Math.pow(0.3, dt);                     // the air takes 70% of the speed each second
-        knots.forEach((k, i) => {
-            if (!give(i)) return;
-            const vx = (k.x - k.px) * keep, vy = (k.y - k.py) * keep;
-            k.px = k.x;
-            k.py = k.y;
-            k.x += vx + breeze * dt * dt;
-            k.y += vy + 850 * dt * dt;
-        });
         // the rope's length: a stiff, bouncy spring, stretched only by a pull
         if (!grip) {
             spring += (-260 * (stretch - 1) - 9 * spring) * dt;
             stretch += spring * dt;
         }
-        const link = LENGTH * stretch / LINKS;
-        for (let pass = 0; pass < 12; pass++) {
-            for (let i = 0; i < LINKS; i++) {
-                const a = knots[i], b = knots[i + 1], ga = give(i), gb = give(i + 1);
-                if (!ga && !gb) continue;
-                const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy) || 1e-6;
-                const share = (length - link) / length / (ga + gb);
-                a.x += dx * share * ga;
-                a.y += dy * share * ga;
-                b.x -= dx * share * gb;
-                b.y -= dy * share * gb;
-            }
-        }
+        swing(knots, give, LENGTH * stretch / LINKS, dt, 850, 0.3, breeze);   // the air takes 70% of the speed each second
     };
-    // the rope as a smooth curve through its knots, and the tassel hanging along its last link
+    // the rope, and the tassel hanging along its last link
     const paint = () => {
-        let d = `M${f(knots[0].x)} ${f(knots[0].y)}`;
-        for (let i = 1; i < LINKS; i++) {
-            const a = knots[i], b = knots[i + 1];
-            d += ` Q${f(a.x)} ${f(a.y)} ${f((a.x + b.x) / 2)} ${f((a.y + b.y) / 2)}`;
-        }
-        d += ` L${f(tip.x)} ${f(tip.y)}`;
-        rope.setAttribute("d", d);
-        const turn = -Math.atan2(tip.x - knots[LINKS - 1].x, tip.y - knots[LINKS - 1].y) * 180 / Math.PI;
-        tassel.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(turn)})`);
+        rope.setAttribute("d", strand(knots));
+        tassel.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(hanging(knots))})`);
     };
+    // it moves only while the castle is in view (inView, below)
+    let awake = false;
     const tick = (now) => {
+        if (!inView) {
+            awake = false;
+            return;
+        }
         const dt = Math.min(1 / 30, (now - last) / 1000 || 1 / 60);
         last = now;
         time += dt;
-        if (inView) {
-            step(dt);
-            paint();
-        }
+        step(dt);
+        paint();
         requestAnimationFrame(tick);
     };
-    if (!reducedMotion.matches) requestAnimationFrame(tick);
+    const wake = () => {
+        if (awake || reducedMotion.matches) return;
+        awake = true;
+        requestAnimationFrame(tick);
+    };
+    wake();
 
     // where the pointer is, in the cord's picture
     const local = (event) => {
@@ -1553,17 +1534,13 @@
         return { x: event.clientX - r.left, y: event.clientY - r.top };
     };
 
-    // brushed by the pointer: the knots it passes through are carried along a little
-    addEventListener("pointermove", (event) => {
-        const was = passing;
-        passing = local(event);
-        if (grip || !was || event.pointerType === "touch") return;
-        knots.forEach((k, i) => {
-            if (!give(i) || Math.hypot(k.x - passing.x, k.y - passing.y) > 7) return;
-            k.px -= Math.max(-1.2, Math.min(1.2, (passing.x - was.x) * 0.2));
-            k.py -= Math.max(-1.2, Math.min(1.2, (passing.y - was.y) * 0.2));
-        });
-    }, { passive: true });
+    // brushed by the pointer, the harder the faster it goes
+    brushers.push((event) => {
+        if (grip || event.pointerType === "touch") return;
+        const r = cord.querySelector("svg").getBoundingClientRect();
+        const at = (p) => ({ x: p.x - r.left, y: p.y - r.top });
+        brush(knots, give, at(pointer.from), at(pointer.to), pointer.vx, pointer.vy, 7);
+    });
 
     // pulled by the tassel: it follows the pointer, the rope stretching less and less beyond
     // its length
@@ -1630,7 +1607,10 @@
 
     // At night, now and then a window lights up or goes dark, while the castle is in view
     let inView = true;
-    new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; }).observe(svg);
+    new IntersectionObserver(([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) wake();
+    }).observe(svg);
     const flicker = () => {
         const night = getComputedStyle(document.documentElement).colorScheme === "dark";
         if (inView && night && !document.hidden && !reducedMotion.matches) {
