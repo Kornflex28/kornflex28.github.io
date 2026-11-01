@@ -237,11 +237,13 @@
   cursor: default;
   touch-action: none;
 
+  // on a layer of its own, since it moves every frame, so redrawing it leaves the castle alone
   svg {
     display: block;
     width: 18px;
     height: 46px;
     overflow: visible;
+    will-change: transform;
   }
 }
 

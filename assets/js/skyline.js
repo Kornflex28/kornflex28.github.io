@@ -818,7 +818,7 @@
             // the lanterns, each hooked at the end of its chain: lit glass under a cap, on a base
             // (.chain, .lamp, .lamp-glow)
             + lanterns.map(([x, y]) => `<g class="hanging" data-x="${f(x)}" data-y="${f(y)}"><path class="chain" d="M${f(x)} ${TOP} V${f(y)}" />`
-                + `<g class="lantern" filter="url(#gouache)" transform="translate(${f(x)} ${f(y)})"><circle class="lamp-glow" cy="10" r="22" fill="url(#glow)" />`
+                + `<g class="lantern" transform="translate(${f(x)} ${f(y)})"><circle class="lamp-glow" cy="10" r="22" fill="url(#glow)" />`
                 + '<path class="lamp outline thin" d="M-4 5 H4 L3 15 H-3 Z" /><path class="c-slate outline thin" d="M-5.5 5.5 L0 0 L5.5 5.5 Z" />'
                 + '<rect class="c-slate outline fine" x="-3.5" y="15" width="7" height="2" /></g></g>').join("")
             + `<g class="smoke">${smoke}</g>`;
@@ -1443,13 +1443,13 @@
     const tag = document.createElement("p");
     tag.className = "castle-id";
     tag.innerHTML = '<button type="button" class="castle-cord" title="Pull: a new castle" aria-label="Draw a new castle">'
-        + '<svg viewBox="0 0 18 46" aria-hidden="true" focusable="false"><g filter="url(#gouache)">'
+        + '<svg viewBox="0 0 18 46" aria-hidden="true" focusable="false">'
         + '<path class="rope outline thin" fill="none" d="M9 0 V26" />'
         + '<g class="tassel" transform="translate(9 26)">'
         + '<path class="c-gold outline thin" d="M-2.8 0 Q0 -2.3 2.8 0 V4 H-2.8 Z" />'
         + '<path class="c-red outline thin" d="M-2.8 4 H2.8 L5.1 15 Q0 17.8 -5.1 15 Z" />'
         + '<path class="outline fine" fill="none" d="M-2.8 15.5 V18.3 M0 16.3 V19 M2.8 15.5 V18.3" />'
-        + '</g></g></svg></button>'
+        + '</g></svg></button>'
         + '<label for="castle-id">castle id</label>'
         + '<input id="castle-id" type="text" maxlength="7" spellcheck="false" autocomplete="off" title="Type another ID to draw its castle" aria-label="Castle ID, type another to draw its castle">'
         + `<button type="button" class="castle-tool" data-tool="copy" title="Copy a link to this castle" aria-label="Copy a link to this castle">${icon(ICONS.copy)}</button>`
@@ -1479,7 +1479,8 @@
     // heavier than the rope, stirred by a light, shifting breeze and by the pointer brushing
     // through it. Pulled by its tassel, the rope follows the hand, bending, and beyond its length
     // stretches, ever harder, then springs back. Pulled far enough, or simply clicked (or
-    // tapped), it rings for a new castle.
+    // tapped), it rings for a new castle. It moves every frame, so it has no gouache filter:
+    // Safari would repaint the filter each time, along with the castle beside it.
     const cord = tag.querySelector(".castle-cord");
     const rope = cord.querySelector(".rope"), tassel = cord.querySelector(".tassel");
     const ring = () => {
