@@ -34,6 +34,23 @@
   overflow: hidden;
 }
 
+// While the sun, touched, turns the day round (skyline.js), the sky is a picture
+// one pixel wide laid over the top of the page, under the paper's grain
+.turning-sky {
+  display: none;
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--sky-end);
+  pointer-events: none;
+
+  .is-turning & {
+    display: block;
+  }
+}
+
 // The layers laid exactly over the drawing (skyline.js): clouds and birds behind it,
 // pennants in front
 .clouds,
@@ -170,11 +187,14 @@
   }
 }
 
+// on a layer of its own: what changes around the castle (the sky turning, the bell pull) never
+// makes the browser paint its filter again (skyline.js)
 .skyline {
   display: block;
   width: calc(100% * 952 / 720);
   height: auto;
   margin-left: calc(-100% * 16 / 720);
+  will-change: transform;
 }
 
 @media (min-width: 1200px) {

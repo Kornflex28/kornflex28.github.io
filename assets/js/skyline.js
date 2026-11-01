@@ -75,16 +75,20 @@
         { name: "dusk", side: 1, shadow: [-12, 2.5], at: [15, 14], r: 22 },
     ];
     const momentOf = (seed) => MOMENTS[(Math.imul(seed, 2654435761) >>> 0) % MOMENTS.length];
+    // the drawn castle's moment and moon, and where its sun (its moon) stands on each course,
+    // for the sun and the moon to come back to (turnDay)
+    let today = MOMENTS[0], tonight = null, spot = today.at;
 
     // The moon's phase, taken from the seed the same way: the lit share of its disc, and the
-    // side lit (1 right, waxing; -1 left, waning)
-    const PHASES = [[0.25, 1], [0.5, 1], [0.75, 1], [1, 1], [0.75, -1], [0.5, -1], [0.25, -1]];
+    // side lit (1 right, waxing; -1 left, waning). The quarters are drawn a little past half,
+    // so the terminator is never straight; only the moon going through its phases (turnMoon)
+    // passes, in between, through a straight one.
+    const PHASES = [[0.25, 1], [0.61, 1], [0.75, 1], [1, 1], [0.75, -1], [0.61, -1], [0.25, -1]];
     const phaseOf = (seed) => PHASES[(Math.imul(seed ^ 0x5bd1e995, 0x27d4eb2d) >>> 0) % PHASES.length];
     // The lit part of a moon of radius r at (x, y): down the limb on the lit side, and back up
-    // the terminator, an ellipse that narrows as the quarters come and widens as it fills,
-    // never quite straight
+    // the terminator, an ellipse that narrows as the quarters come and widens as it fills
     const moonLit = (x, y, r, [lit, side]) => {
-        const rx = r * Math.max(0.22, Math.abs(1 - 2 * lit)), limb = side > 0 ? 1 : 0, back = (lit < 0.5) === (side > 0) ? 0 : 1;
+        const rx = r * Math.abs(1 - 2 * lit), limb = side > 0 ? 1 : 0, back = (lit < 0.5) === (side > 0) ? 0 : 1;
         return `M${f(x)} ${f(y - r)} A${f(r)} ${f(r)} 0 0 ${limb} ${f(x)} ${f(y + r)} A${f(rx)} ${f(r)} 0 0 ${back} ${f(x)} ${f(y - r)} Z`;
     };
 
@@ -1009,6 +1013,8 @@
         state = seed | 0;
         const moment = momentOf(seed);
         document.documentElement.dataset.moment = moment.name;
+        today = moment;
+        tonight = phaseOf(seed);
         parts.length = 0;
         used.length = 0;
         tips.length = 0;
@@ -1373,7 +1379,7 @@
                 .filter((d) => d > 10 && d < 170 && (course !== NARROW || d <= 30 || d >= 60));
             return near.find((d) => shown(course, d)) ?? deg;
         };
-        const spot = [place(COURSE, moment.at[0]), place(NARROW, moment.at[1]), place(PRESSED, moment.at[1])];
+        spot = [place(COURSE, moment.at[0]), place(NARROW, moment.at[1]), place(PRESSED, moment.at[1])];
         // there with a soft halo; by night, the moon in its phase, the rest of its disc faintly
         // seen
         const [sx, sy] = onCourse(COURSE, spot[0]), [nx, ny] = onCourse(NARROW, spot[1]), [lx, ly] = onCourse(PRESSED, spot[2]), sr = moment.r;
@@ -1471,6 +1477,154 @@
     pennants.className = "pennants";
     pennants.setAttribute("aria-hidden", "true");
     svg.after(pennants);
+
+    // The sun, touched, turns the day round in a few seconds, the Earth hurrying round it as in
+    // the film to please the newcomers: the sun goes once round its course, setting after dusk
+    // and rising again at dawn, hurrying through the night where it cannot be seen, and the
+    // sky's colours follow it hour after hour, back to the castle's own. By night, the moon goes
+    // through its phases instead, back to tonight's.
+    // Kept light enough to stay smooth: the browser moves the sun itself (an animation of its
+    // picture along 90 points of its course), and the sky is a picture one pixel wide laid over
+    // the top of the page, the only thing painted again each frame. Nothing the castle reads
+    // changes, so the castle, on a layer of its own, stays as it was drawn. Meanwhile neither
+    // another castle nor the night can be called up (inert).
+    const castle = svg.parentElement, root = document.documentElement;
+    const narrowScreen = matchMedia("(max-width: 899.98px), (max-width: 1199.98px) and (max-height: 500px)");
+    const shortScreen = matchMedia("(max-width: 1199.98px) and (max-height: 500px)");
+    const TINTS = ["--sky", "--sky-low", "--sun"];
+    let turning = false, palette = null;
+    const sky = document.createElement("canvas");
+    sky.className = "turning-sky";
+    sky.width = 1;
+    sky.height = 128;
+    sky.setAttribute("aria-hidden", "true");
+    document.body.prepend(sky);
+    const sunAt = (event) => {
+        const sun = clouds.querySelector(".sun");
+        if (!sun) return false;
+        const b = sun.getBoundingClientRect();
+        return Math.hypot(event.clientX - b.left - b.width / 2, event.clientY - b.top - b.height / 2) < b.width / 6 * 1.4;
+    };
+    // each moment's sky colours, read once from the CSS, as [r, g, b]
+    const rgb = (value) => (value.trim().match(/[0-9a-f]{2}/gi) || []).map((h) => parseInt(h, 16));
+    const paletteOf = () => {
+        const kept = root.dataset.moment, style = getComputedStyle(root);
+        const colours = MOMENTS.map(({ name }) => {
+            root.dataset.moment = name;
+            return TINTS.map((p) => rgb(style.getPropertyValue(p)));
+        });
+        root.dataset.moment = kept;
+        return colours.every((m) => m.every((c) => c.length === 3)) ? colours : null;
+    };
+    // read while the page rests after loading, not on the first touch, where it would hold the
+    // first frame up (by day only: by night the CSS gives the night's colours instead)
+    (window.requestIdleCallback || setTimeout)(() => { if (root.dataset.theme !== "night") palette ??= paletteOf(); });
+    // the two moments around the sun at an angle on its course, and how far it has gone from the
+    // first to the second: by day, and from dusk to dawn across the night
+    const between = (deg) => {
+        let a = ((deg % 360) + 360) % 360;
+        const at = MOMENTS.map((m) => m.at[0]);
+        if (a <= at[0] && a >= at[at.length - 1]) {
+            const k = at.findIndex((d) => d <= a);
+            return k === 0 ? [0, 0, 0] : [k - 1, k, (at[k - 1] - a) / (at[k - 1] - at[k])];
+        }
+        if (a > at[0]) a -= 360;
+        return [MOMENTS.length - 1, 0, (at[at.length - 1] - a) / (at[at.length - 1] - (at[0] - 360))];
+    };
+    // the sky's colours with the sun there, and the sun's size, as each moment draws them
+    const skyAt = (deg) => {
+        const [from, to, t] = between(deg);
+        return TINTS.map((_, i) => `rgb(${palette[from][i].map((c, j) => Math.round(c + (palette[to][i][j] - c) * t)).join(" ")})`);
+    };
+    const sizeAt = (deg) => {
+        const [from, to, t] = between(deg);
+        return MOMENTS[from].r + (MOMENTS[to].r - MOMENTS[from].r) * t;
+    };
+    // the time the sun takes over a degree of its course: all it needs while it shows, a sixth of
+    // that once it has set
+    const pace = (deg) => 0.15 + 0.85 * Math.max(0, Math.min(1, (Math.sin(deg * Math.PI / 180) + 0.1) / 0.13));
+    const nextFrame = () => new Promise((done) => requestAnimationFrame(done));
+    const turnDay = async (sun) => {
+        palette ??= paletteOf();
+        if (!palette) return;
+        // the sun's 90 steps of 4° round its course, from where it stands (a0, on the course
+        // shown), each given its time; its size and the sky's colours follow the moment's own
+        // angle (w0)
+        const [course, a0] = shortScreen.matches ? [PRESSED, spot[2]] : narrowScreen.matches ? [NARROW, spot[1]] : [COURSE, spot[0]];
+        const r = today.r, [x0, y0] = onCourse(course, a0), w0 = today.at[0];
+        const times = [0];
+        for (let k = 1; k <= 90; k++) times.push(times[k - 1] + (pace(a0 - 4 * k) + pace(a0 - 4 * k + 4)) / 2);
+        const keys = times.map((time, k) => {
+            const a = a0 - 4 * k, [x, y] = onCourse(course, a);
+            return {
+                offset: time / times[90],
+                transform: `translate(${f(100 * (x - x0) / (6 * r))}%, ${f(100 * (y - y0) / (6 * r))}%) scale(${(sizeAt(w0 - 4 * k) / r).toFixed(3)})`,
+                opacity: Math.max(0, Math.min(1, (Math.sin(a * Math.PI / 180) - 0.03) / 0.12)),
+            };
+        });
+        // how far round the sun has gone, as an angle, when the animation is that far through
+        const angleAt = (p) => {
+            const k = Math.max(1, keys.findIndex((key) => key.offset >= p));
+            return w0 - 4 * (k - 1 + (p - keys[k - 1].offset) / (keys[k].offset - keys[k - 1].offset));
+        };
+        root.classList.add("is-turning");
+        // the sky over the top of the page: the page's own gradient (sky, its low colour at
+        // 17rem, then the paper) in the colours of the hour
+        const paper = getComputedStyle(root).getPropertyValue("--paper").trim(), brush = sky.getContext("2d");
+        const low = Math.min(1, 17 * parseFloat(getComputedStyle(root).fontSize) / sky.offsetHeight);
+        const paint = (a) => {
+            const [high, under, light] = skyAt(a), gradient = brush.createLinearGradient(0, 0, 0, sky.height);
+            gradient.addColorStop(0, high);
+            gradient.addColorStop(low, under);
+            gradient.addColorStop(1, paper);
+            brush.fillStyle = gradient;
+            brush.fillRect(0, 0, 1, sky.height);
+            sun.style.setProperty("--sun", light);
+        };
+        paint(w0);
+        // all that set up and drawn before anything moves, so the first frame that moves does
+        // not come late: some browsers would let the sun or the moon jump ahead to catch up
+        await nextFrame();
+        await nextFrame();
+        const move = sun.animate(keys, { duration: 3000, easing: "ease-in-out" });
+        const tint = () => {
+            const p = move.effect.getComputedTiming().progress;
+            if (p === null) return;
+            paint(angleAt(p));
+            requestAnimationFrame(tint);
+        };
+        requestAnimationFrame(tint);
+        await move.finished;
+        sun.style.removeProperty("--sun");
+        root.classList.remove("is-turning");
+    };
+    // the moon through a whole month of phases, from tonight's: its lit share following a
+    // cosine, waxing on the right, then waning on the left
+    const turnMoon = (sun) => new Promise((done) => {
+        const lit = sun.querySelector(".moon-lit"), [x, y] = onCourse(COURSE, spot[0]), [l0, s0] = tonight;
+        const t0 = (s0 > 0 ? 0 : 1) + s0 * Math.acos(1 - 2 * l0) / (2 * Math.PI), length = 3500;
+        const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p));
+        let start = null;
+        // the month counted from the first frame drawn, so it never starts ahead
+        const frame = (now) => {
+            start ??= now;
+            const p = Math.min(1, (now - start) / length), t = (t0 + ease(p)) % 1;
+            lit.setAttribute("d", moonLit(x, y, today.r, p < 1 ? [(1 - Math.cos(2 * Math.PI * t)) / 2, t < 0.5 ? 1 : -1] : tonight));
+            if (p < 1) return requestAnimationFrame(frame);
+            done();
+        };
+        requestAnimationFrame(frame);
+    });
+    castle.addEventListener("click", async (event) => {
+        if (turning || reducedMotion.matches || !sunAt(event)) return;
+        turning = true;
+        const locked = [tag, document.querySelector(".theme-toggle")].filter(Boolean);
+        locked.forEach((el) => { el.inert = true; });
+        const sun = clouds.querySelector(".sun");
+        await (root.dataset.theme === "night" ? turnMoon(sun) : turnDay(sun));
+        locked.forEach((el) => { el.inert = false; });
+        turning = false;
+    });
 
     // The castle's ID under the drawing, editable (each valid ID typed draws its castle at
     // once, and the address follows), after a bell pull hanging from the drawing that draws a
