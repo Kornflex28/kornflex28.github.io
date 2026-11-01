@@ -68,6 +68,13 @@
       left: var(--narrow-left);
       top: var(--narrow-top);
     }
+
+    // on a phone on its side, only the castle's lower half shows: the sun keeps to a course
+    // pressed into it (the static drawing's, without one, is pressed down)
+    @media (max-width: 1199.98px) and (max-height: 500px) {
+      left: var(--short-left, var(--narrow-left));
+      top: var(--short-top, calc(48% + var(--narrow-top) * .52));
+    }
   }
 
   // the stars, by night only, across the whole sky
