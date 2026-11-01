@@ -93,8 +93,8 @@
 
     // --- Building blocks -------------------------------------------------------------
 
-    // A faint cloud, kept out of the drawing in a picture of its own so it can drift across
-    // the sky without the castle being repainted: its shapes and their bounds
+    // A faint cloud, kept out of the drawing in a picture of its own so it can cross the sky
+    // without the castle being repainted: its shapes and their bounds
     const cloud = (x, y, w) => {
         const h = w * 0.14;
         let shapes = `<ellipse cx="${f(x + w / 2)}" cy="${f(y)}" rx="${f(w / 2)}" ry="${f(h / 2)}" />`;
@@ -1353,9 +1353,15 @@
                 : "";
             return `<circle${twinkle} cx="${f(Math.random() * W)}" cy="${f(Math.random() * H * 0.55)}" r="${f(0.5 + Math.random() * 0.7)}" />`;
         }).join("");
+        // each cloud crosses the whole sky with the wind, from just off its left edge to just off
+        // its right one (--from, --to, in its own widths), at its own slow pace; a random start
+        // puts it anywhere on its way when the page opens
         clouds.innerHTML = `<svg class="stars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${stars}</svg>` + sun + sky.map((c) => {
-            const drift = (Math.random() < 0.5 ? -1 : 1) * (25 + Math.random() * 35);
-            return `<svg viewBox="${f(c.x)} ${f(c.y)} ${f(c.w)} ${f(c.h)}" style="left: ${pct(c.x, W)}; top: ${pct(c.y, H)}; width: ${pct(c.w, W)}; --drift: ${drift.toFixed(0)}%; animation-duration: ${(45 + Math.random() * 45).toFixed(0)}s; animation-delay: -${(Math.random() * 90).toFixed(0)}s"><g class="cloud ${c.tone}" filter="url(#gouache)">${c.shapes}</g></svg>`;
+            const crossing = (W + c.w) / (5 + Math.random() * 4), bobbing = 7 + Math.random() * 6;
+            return `<svg viewBox="${f(c.x)} ${f(c.y)} ${f(c.w)} ${f(c.h)}" style="left: ${pct(c.x, W)}; top: ${pct(c.y, H)}; width: ${pct(c.w, W)};`
+                + ` --from: ${f(-100 * (c.x + c.w) / c.w)}%; --to: ${f(100 * (W - c.x) / c.w)}%;`
+                + ` animation-duration: ${crossing.toFixed(0)}s, ${bobbing.toFixed(1)}s; animation-delay: -${(Math.random() * crossing).toFixed(0)}s, -${(Math.random() * bobbing).toFixed(1)}s">`
+                + `<g class="cloud ${c.tone}" filter="url(#gouache)">${c.shapes}</g></svg>`;
         }).join("");
 
         // two to four pennants flying from some of the highest needles in sight (.pennants)

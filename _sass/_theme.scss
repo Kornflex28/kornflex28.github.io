@@ -323,11 +323,19 @@ a {
   &.bright { fill: var(--cloud-bright); }
 }
 
-// Each cloud drifts slowly to and fro, pennants flutter, and now and then a bird crosses the
+// Each cloud crosses the sky with the wind, fading in on one side and out on the other, and
+// rises and sinks a little on its way; pennants flutter, and now and then a bird crosses the
 // sky beating its wings; by night stars twinkle, a star shoots now and then, and at dusk and
 // by night fireflies wander (skyline.js)
-@keyframes drift {
-  to { transform: translateX(var(--drift)); }
+@keyframes cross {
+  from { translate: var(--from) 0; opacity: 0; }
+  8%, 92% { opacity: 1; }
+  to { translate: var(--to) 0; opacity: 0; }
+}
+
+@keyframes cloud-bob {
+  from { transform: translateY(6%); }
+  to { transform: translateY(-6%); }
 }
 
 @keyframes flutter {

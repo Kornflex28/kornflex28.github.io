@@ -49,12 +49,13 @@
 .clouds {
   z-index: -1;
 
-  // each on a layer of its own, so it glides by fractions of a pixel instead of stepping
+  // each on a layer of its own, so it glides by fractions of a pixel instead of stepping:
+  // crossing the sky, and rising and sinking a little on the way (skyline.js sets the pace)
   > svg {
     position: absolute;
     height: auto;
-    will-change: transform;
-    animation: drift ease-in-out infinite alternate;
+    will-change: transform, translate, opacity;
+    animation: cross linear infinite, cloud-bob ease-in-out infinite alternate;
   }
 
   // the sun keeps still, and moves inside the drawing's middle where only that shows (skyline.js)
