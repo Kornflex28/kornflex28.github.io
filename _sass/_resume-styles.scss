@@ -704,10 +704,8 @@ abbr[title] {
   height: auto;
 }
 
-// The lower station (skyline.js draws it), with a link laid over it that leads back up. Its call
-// plate sits in the wing beside the arch: a dark plate in a brass rim with three brass arrows
-// pointing up, at the station's scale. On hover the plate lights up and lifts a little, and the
-// dial's needle swings up.
+// The lower station (skyline.js draws it), with a link laid over it that leads back up. On hover
+// the gloved hand on its call plate points up, again and again, and the dial's needle swings up.
 .station {
   position: absolute;
   bottom: 0;
@@ -716,38 +714,12 @@ abbr[title] {
   aspect-ratio: 116 / 97;
 }
 
-.call-plate {
-  position: absolute;
-  left: calc(100% * 64 / 116);  // 80 units across the drawing: in the wing
-  bottom: calc(100% * 8 / 97);
-  width: 19%;
-  aspect-ratio: 20 / 32;
-  border: 2px solid var(--gold);
-  border-radius: 3px;
-  background: #2b2a33;
-  box-shadow: 0 0 0 1.5px var(--line);
-  transform: translateX(-50%);
-  transition: box-shadow .25s ease-out, transform .25s ease-out;
-
-  svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  path {
-    fill: #d9ae4c;
-    transition: fill .25s ease-out;
-  }
+.town:has(.station:is(:hover, :focus-visible)) .station-hand {
+  animation: point .6s ease-in-out infinite alternate;
 }
 
-.station:is(:hover, :focus-visible) .call-plate {
-  box-shadow: 0 0 0 1.5px var(--line), 0 0 1em .3em rgb(255 217 138 / .55);
-  transform: translate(-50%, -1px);
-
-  path {
-    fill: #f6d77e;
-  }
+@keyframes point {
+  to { transform: translateY(-2.5px); }
 }
 
 // the station's floor dial, its needle on the bottom floor until the station is hovered

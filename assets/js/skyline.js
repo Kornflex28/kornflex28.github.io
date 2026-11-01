@@ -461,7 +461,7 @@
     // in the alleys, lanterns hang from a vault out of sight, and smoke rises from a chimney or
     // two. Behind it all is the foot of the castle's foundations. The town is drawn on the page
     // like the castle, and as wide, so the elevator comes down into it: the cabin rests in the
-    // lower station's arch, next to its call plate (.call-plate). It uses the castle's seed,
+    // lower station's arch, next to its call plate (.station-hand). It uses the castle's seed,
     // apart from the castle's own draws.
     const TH = 150, TOP = 36;                           // the ground line, above the highest roofs
     const LIMEWASH = ["c-cream", "c-cream-deep", "c-cream-deep", "c-sand", "c-plaster", "c-plaster", "c-plaster-ochre"];
@@ -735,7 +735,8 @@
         // the castle's pavilion, then runs down a groove in the facade to the arch where the
         // cabin rests. Upstairs there are two windows and a floor dial whose needle points to the
         // bottom floor and swings up on hover (.dial-needle). Downstairs, the wide right wing
-        // holds the call plate (laid over the drawing, .call-plate), a lamp and the keeper's door.
+        // holds the call plate, a white-gloved hand on it pointing up (.station-hand), a lamp and
+        // the keeper's door.
         // The station only widens to the right, since on a phone the shaft runs down the
         // screen's left edge.
         on(BACK, () => {
@@ -769,7 +770,20 @@
             }
             add(`<g class="dial-needle"><path class="outline thin" fill="none" d="M${dx} ${dy} L${dx - 6.5} ${dy - 1.2}" /></g>`);
             add(`<circle class="c-ink" cx="${dx}" cy="${dy}" r="1.2" />`);
-            // downstairs: the lamp beside the plate, and the keeper's door
+            // downstairs: the arched call plate, dark in a brass rim, its hand pointing back up to
+            // the castle; then the lamp and the keeper's door
+            const px0 = cx + 29, px1 = cx + 51, pm = cx + 40;
+            add(`<path class="c-gold outline thin" d="M${px0} ${TH - 9} V${TH - 39} Q${px0} ${TH - 45} ${pm} ${TH - 45} Q${px1} ${TH - 45} ${px1} ${TH - 39} V${TH - 9} Z" />`);
+            add(`<path class="c-window-dark outline fine" d="M${px0 + 2} ${TH - 11} V${TH - 38.5} Q${px0 + 2} ${TH - 43} ${pm} ${TH - 43} Q${px1 - 2} ${TH - 43} ${px1 - 2} ${TH - 38.5} V${TH - 11} Z" />`);
+            // the hand, drawn on a 12 by 20 grid scaled to fill the plate (at: a point of it): the
+            // index up from the edge of the fist, on the thumb's side, the other fingers curled
+            // over the fist, the thumb across it
+            const k = 1.35, at = (x, y) => `${f(pm + (x - 6.5) * k)} ${f(TH - 40 + y * k)}`;
+            add('<g class="station-hand">');
+            add(`<path class="c-red outline thin" d="M${at(2.4, 15)} L${at(10.6, 15)} L${at(10.6, 20)} L${at(2.4, 20)} Z" />`);
+            add(`<path class="c-moon outline thin" d="M${at(2.2, 9.5)} L${at(2.2, 1.6)} Q${at(2.2, 0)} ${at(3.7, 0)} Q${at(5.2, 0)} ${at(5.2, 1.6)} L${at(5.2, 8.6)} Q${at(6.3, 7)} ${at(7.4, 8.4)} Q${at(8.5, 7)} ${at(9.6, 8.4)} Q${at(10.9, 7.4)} ${at(11.2, 9.4)} L${at(11.2, 14.5)} Q${at(11.2, 16)} ${at(9.7, 16)} L${at(3.8, 16)} Q${at(1.8, 16)} ${at(1.8, 14)} L${at(1.8, 10.5)} Q${at(1.8, 9.5)} ${at(2.2, 9.5)} Z" />`);
+            add(`<path class="outline fine" fill="none" d="M${at(7.4, 8.4)} L${at(7.4, 10.4)} M${at(9.6, 8.4)} L${at(9.6, 10.4)} M${at(1.8, 12.2)} Q${at(5, 11.2)} ${at(8.6, 12.8)}" />`);
+            add("</g>");
             plankDoor(cx + 80, 9, 18);
             lampAt(cx + 62, TH - 46, 14);
             add("</g>");
