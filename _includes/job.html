@@ -6,7 +6,7 @@
     <div class="role">
         <div class="role-head">
             <h4 class="role-title">{{ role.position }}</h4>
-            <span class="dates">{{ role.duration }}</span>
+            <span class="dates">{{ role.duration | replace: "&mdash; Now", '&mdash; <span class="now">Now</span>' }}</span>
         </div>
         <p>{{ role.summary }}</p>
         {% if role.highlights %}

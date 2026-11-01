@@ -509,6 +509,12 @@ main .floor {
   white-space: nowrap;
 }
 
+// "Now", which gives the time, UTC, to the second when pointed at or tapped (now.js)
+.now {
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
 // Collapsible blocks: publication years, earlier experience
 
 .fold {
