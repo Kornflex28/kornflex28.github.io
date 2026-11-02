@@ -769,11 +769,166 @@ abbr[title] {
   animation: smoke 6s ease-out infinite;
 }
 
+// The credits, a royal proclamation hung under the street: a sheet of parchment, crowned and
+// sealed, on two chains nailed to the ground line, centred under the drawings (the whole
+// screen, or on wide screens their 952 units)
 .colophon {
-  margin: .6rem 1.25rem 0;
+  box-sizing: border-box;
+  width: min(100%, calc(952 * var(--unit)));
+  margin-left: max(0px, var(--origin));
+  padding: 1.35rem 1.25rem 1.6rem;
   color: var(--ink);
-  font-size: .8125rem;
-  line-height: 1.6;
+  font-size: .75rem;
+  line-height: 1.35;
+
+  @media (max-width: 599.98px) {
+    padding-inline: .75rem;
+  }
+}
+
+// Wide and low, so it reads in a few long lines. It sways a little when brushed (skyline.js,
+// which reads its tilt and its chains' lean here).
+.proclamation {
+  --parchment: color-mix(in oklab, var(--sand) 55%, var(--paper));
+  --tilt: -.6deg;
+  --lean: 7deg;
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: .65rem .7rem .5rem;
+  border: 1.5px solid var(--line);
+  border-radius: 2px;
+  outline: 1px solid color-mix(in oklab, var(--line) 50%, transparent);
+  outline-offset: -.4rem;
+  // parchment: fine fibres and broad brown stains over a sheet darker at its edges, darkening
+  // it by night too (lightening it, as the page's grain does, would look like mist)
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .6' numOctaves='3' stitchTiles='stitch' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .24 .7 0 0 0 -.3' result='fine'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018 .03' numOctaves='2' stitchTiles='stitch' seed='9' result='b'/%3E%3CfeColorMatrix in='b' values='0 0 0 0 .45 0 0 0 0 .34 0 0 0 0 .2 .9 0 0 0 -.4' result='broad'/%3E%3CfeMerge%3E%3CfeMergeNode in='broad'/%3E%3CfeMergeNode in='fine'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E") 0 0 / 300px 300px,
+    radial-gradient(ellipse at 50% 40%, var(--parchment) 50%, color-mix(in oklab, var(--parchment) 80%, var(--line)));
+  background-blend-mode: multiply, normal;
+  box-shadow: 0 .35rem .8rem rgb(0 0 0 / .14);
+  transform: rotate(var(--tilt));
+  will-change: transform;
+
+  // justified edge to edge, as proclamations were, each paragraph's last line centred
+  p {
+    margin: 0 0 .15rem;
+    text-align: justify;
+    text-align-last: center;
+    hyphens: auto;
+    text-wrap: pretty;
+  }
+
+  p:last-of-type {
+    margin-bottom: 0;
+  }
+
+  // smaller on a phone, where it would take much of the screen
+  @media (max-width: 599.98px) {
+    padding: .6rem .55rem .45rem;
+    outline-offset: -.3rem;
+    font-size: .6875rem;
+
+    .crown { width: 2.2rem; }
+    .seal { width: 1.9rem; }
+  }
+}
+
+// signed at the bottom left, the seal at the bottom right
+.proclamation .signature {
+  color: var(--ink-soft);
+  font-style: italic;
+  text-align-last: left;
+}
+
+// the proclamation's head, in red as on the old posters
+.decree {
+  line-height: 1.2;
+  color: var(--brick);
+  font-size: .875rem;
+  font-variant: small-caps;
+  letter-spacing: .12em;
+}
+
+// the chains, each hung from a nail on the ground line to a top corner: round links seen
+// face on between links seen edge on (in the slate of the town's metal, lighter than the
+// outlines, so they still show by night). skyline.js lengthens one and shortens the other
+// by --rise, so both nails stay on the ground line however the sheet hangs askew.
+.hanger {
+  position: absolute;
+  bottom: 100%;
+  left: 1.1rem;
+  width: 10px;
+  height: calc(1.5rem + var(--rise, 0px));
+  overflow: visible;
+  fill: none;
+  stroke: color-mix(in oklab, var(--slate) 65%, var(--line));
+  stroke-width: .9;
+  transform: rotate(calc(-1 * var(--lean)));
+  transform-origin: 50% 100%;
+  will-change: transform;
+
+  & + & {
+    left: auto;
+    right: 1.1rem;
+    transform: rotate(var(--lean));
+  }
+
+  .edge {
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+
+  .nail {
+    fill: var(--slate);
+    stroke: var(--line);
+    stroke-width: .7;
+  }
+
+  .shine {
+    fill: #fff;
+    stroke: none;
+    opacity: .55;
+  }
+}
+
+.proclamation .crown,
+.proclamation .seal {
+  position: absolute;
+  stroke: var(--line);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+// the crown astride its top edge, the King's own: tall uneven spikes, those behind in shadow
+.crown {
+  top: 0;
+  left: 50%;
+  width: 2.6rem;
+  fill: var(--gold);
+  transform: translate(-50%, -72%);
+
+  .back { fill: color-mix(in oklab, var(--gold) 65%, var(--line)); }
+  .band { fill: none; }
+}
+
+// the wax seal and its ribbons, on its bottom right corner as on a deed
+.seal {
+  right: 1.2rem;
+  bottom: 0;
+  width: 2.2rem;
+  fill: var(--red);
+  transform: translateY(55%) rotate(8deg);
+
+  .ring {
+    fill: none;
+    stroke: color-mix(in oklab, var(--red) 60%, var(--line));
+  }
+
+  .mark {
+    fill: color-mix(in oklab, var(--red) 70%, var(--line));
+    stroke: none;
+  }
 }
 
 // Elevator: a shaft running down from the castle's pavilion, where the cabin docks at the top

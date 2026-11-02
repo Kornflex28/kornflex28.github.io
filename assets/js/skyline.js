@@ -1051,6 +1051,63 @@
         if (event.target.closest?.(".hanging")) event.preventDefault();
     }, { passive: false });
 
+    // The proclamation under the street (the credits) hangs on two chains too, but it is heavy:
+    // brushed by the pointer, it sways a few pixels aside, slowly, and soon settles. It swings
+    // as a pendulum the length of its chains (an angle, in radians), the chains leaning to stay
+    // on their nails. Each push works out the rest of the swing at once, a damped oscillation,
+    // and gives it to the browser to play: the sheet moves as one picture, its writing never
+    // drawn again letter by letter at each step.
+    const poster = document.querySelector(".proclamation");
+    if (poster) {
+        const PERIOD = 1.4, DAMPING = 0.18, OMEGA = 2 * Math.PI / PERIOD;
+        const DECAY = DAMPING * OMEGA, FREE = OMEGA * Math.sqrt(1 - DAMPING * DAMPING);
+        const chains = [...poster.querySelectorAll(".hanger")];
+        let a0 = 0, s0 = 0, since = 0, push = 0, pending = false, playing = [], askew = 0;
+        // hung a little askew, as each castle has it (its seed, apart from the drawing's own
+        // draws), each chain as long as it takes for its nail to stay on the ground line:
+        // shorter where the sheet rises, longer where it drops
+        const hang = () => {
+            const chain = getComputedStyle(chains[0]), half = poster.offsetWidth / 2 - parseFloat(chain.left) - parseFloat(chain.width) / 2;
+            chains.forEach((c, i) => c.style.setProperty("--rise", `${((i ? half : -half) * Math.sin(askew * Math.PI / 180)).toFixed(2)}px`));
+        };
+        svg.addEventListener("castle-drawn", ({ detail: seed }) => {
+            const h = Math.imul(seed ^ 0x2545f491, 0x9e3779b1) >>> 0;
+            askew = (0.4 + 0.7 * (h % 1000) / 999) * (h & 0x10000 ? 1 : -1);
+            poster.style.setProperty("--tilt", `${askew.toFixed(2)}deg`);
+            playing.forEach((animation) => animation.cancel());
+            [a0, s0, playing] = [0, 0, []];
+            hang();
+        });
+        new ResizeObserver(hang).observe(poster);
+        // the angle and its speed, t seconds after the last push
+        const swingAt = (t) => {
+            const b = (s0 + DECAY * a0) / FREE, e = Math.exp(-DECAY * t), c = Math.cos(FREE * t), s = Math.sin(FREE * t);
+            return [e * (a0 * c + b * s), e * ((FREE * b - DECAY * a0) * c - (DECAY * b + FREE * a0) * s)];
+        };
+        const swing = () => {
+            pending = false;
+            const style = getComputedStyle(poster), tilt = parseFloat(style.getPropertyValue("--tilt")), lean = parseFloat(style.getPropertyValue("--lean"));
+            const length = parseFloat(getComputedStyle(chains[0]).height), now = performance.now(), [angle, speed] = swingAt((now - since) / 1000);
+            [a0, s0, since, push] = [angle, Math.max(-0.6, Math.min(0.6, speed + push)), now, 0];
+            // played until it is too small to see, a few seconds at most
+            const time = Math.min(8, Math.max(0.5, Math.log(Math.hypot(a0, (s0 + DECAY * a0) / FREE) / 1e-3) / DECAY));
+            const steps = Math.ceil(time * 30), angles = Array.from({ length: steps + 1 }, (_, k) => swingAt(time * k / steps)[0]);
+            const timing = { duration: time * 1000 };
+            playing.forEach((animation) => animation.cancel());
+            playing = [
+                poster.animate(angles.map((a) => ({ transform: `translate(${(length * Math.sin(a)).toFixed(2)}px, ${(-length * (1 - Math.cos(a))).toFixed(2)}px) rotate(${tilt}deg)` })), timing),
+                ...chains.map((chain, i) => chain.animate(angles.map((a) => ({ transform: `rotate(${((i ? lean : -lean) - a * 180 / Math.PI).toFixed(3)}deg)` })), timing)),
+            ];
+        };
+        poster.addEventListener("pointermove", () => {
+            if (reducedMotion.matches) return;
+            push += pointer.vx * 4e-5;
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(swing);
+        });
+    }
+
     // --- Composition -----------------------------------------------------------------
 
     // Draws the castle of a seed in place of the current drawing
@@ -1510,7 +1567,7 @@
         });
 
         if (town) drawTown(town, seed);
-        svg.dispatchEvent(new Event("castle-drawn", { bubbles: true }));
+        svg.dispatchEvent(new CustomEvent("castle-drawn", { bubbles: true, detail: seed }));
     };
 
     // The layers laid over the drawing: the clouds' behind it, the pennants' over it
