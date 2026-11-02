@@ -830,19 +830,22 @@
             `<circle cx="${f(x)}" cy="${f(y - 2)}" r="2.6" style="animation-delay: -${(k * 2 + random() * 0.8).toFixed(1)}s" />`).join("")).join("");
         town.dataset.ground = ((TH - 1 - TOP) / (TH - TOP)).toFixed(4);   // its ground line, for elevator.js
         // the foundations fade out in a wide ellipse centred on the ground, to nothing at its
-        // ends and at the top; the chains fade in from the shade above
+        // ends and at the top; the chains, and their lanterns when lifted up there, fade in from
+        // the shade above, so nothing meets the drawing's top edge
         const area = `x="${ground[0]}" y="${TOP}" width="${ground[1] - ground[0]}" height="${TH - TOP}"`;
+        const above = `x="-200" y="${TOP}" width="${W + 400}" height="${TH - TOP}"`;
         const centre = (ground[0] + ground[1]) / 2, reach = (ground[1] - ground[0]) / 2;
         town.innerHTML = `<defs><radialGradient id="foundations-light" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(${centre} ${TH}) scale(${reach} ${TH - TOP - 2})">`
             + [[0, 0.85], [0.3, 0.7], [0.6, 0.35], [0.85, 0.08], [1, 0]].map(([at, o]) => `<stop offset="${at}" stop-color="#fff" stop-opacity="${o}" />`).join("")
             + `</radialGradient><mask id="foundations-fade" maskUnits="userSpaceOnUse" ${area}><rect ${area} fill="url(#foundations-light)" /></mask>`
-            + `<linearGradient id="chain-fade" gradientUnits="userSpaceOnUse" x1="0" y1="${TOP}" x2="0" y2="${TOP + 36}"><stop offset="0" class="chain-stop" stop-opacity="0" /><stop offset="1" class="chain-stop" /></linearGradient></defs>`
+            + `<linearGradient id="hanging-light" gradientUnits="userSpaceOnUse" x1="0" y1="${TOP}" x2="0" y2="${TOP + 36}"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset="1" stop-color="#fff" /></linearGradient>`
+            + `<mask id="hanging-fade" maskUnits="userSpaceOnUse" ${above}><rect ${above} fill="url(#hanging-light)" /></mask></defs>`
             + `<g filter="url(#gouache)">${parts.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((p) => p[2]).join("")}</g>`
             // the ground, ruled straight over the foot of everything standing on it
             + `<line class="ground-line" x1="${ground[0]}" y1="${TH - 1}" x2="${ground[1]}" y2="${TH - 1}" />`
             // the lanterns, each hooked at the end of its chain: lit glass under a cap, on a base
             // (.chain, .lamp, .lamp-glow)
-            + lanterns.map(([x, y]) => `<g class="hanging" data-x="${f(x)}" data-y="${f(y)}"><path class="chain" d="M${f(x)} ${TOP} V${f(y)}" />`
+            + lanterns.map(([x, y]) => `<g class="hanging" mask="url(#hanging-fade)" data-x="${f(x)}" data-y="${f(y)}"><path class="chain" d="M${f(x)} ${TOP} V${f(y)}" />`
                 + `<g class="lantern" transform="translate(${f(x)} ${f(y)})"><circle class="lamp-glow" cy="10" r="22" fill="url(#glow)" />`
                 + '<path class="lamp outline thin" d="M-4 5 H4 L3 15 H-3 Z" /><path class="c-slate outline thin" d="M-5.5 5.5 L0 0 L5.5 5.5 Z" />'
                 + '<rect class="c-slate outline fine" x="-3.5" y="15" width="7" height="2" /></g></g>').join("")
@@ -958,10 +961,12 @@
 
     // The lower town's lanterns each hang on a chain of a few links from a hook far above, and
     // the lantern is heavy. Brushed by the pointer, on the chain or the lantern, they swing and
-    // slowly settle. Nothing runs while they hang still.
+    // slowly settle; held (pressed on, mouse or finger), one follows the hand as far as its
+    // chain reaches, and let go, flies on at the hand's speed. Nothing runs while they hang still.
     const LINKS_DOWN = 6;
     const lanternGive = (i) => (i === 0 ? 0 : i === LINKS_DOWN ? 0.15 : 0.6);
-    let lamps = [], swaying = false, swayed = 0;
+    const heldGive = (i) => (i === LINKS_DOWN ? 0 : lanternGive(i));
+    let lamps = [], swaying = false, swayed = 0, held = null, still = 0;
     const hangLanterns = () => {
         lamps = [...town.querySelectorAll(".hanging")].map((el) => {
             const x = +el.dataset.x, y = +el.dataset.y;
@@ -969,25 +974,35 @@
                 const ky = TOP + (y - TOP) * i / LINKS_DOWN;
                 return { x, y: ky, px: x, py: ky };
             });
-            return { knots, link: (y - TOP) / LINKS_DOWN, chain: el.querySelector(".chain"), lantern: el.querySelector(".lantern") };
+            return { el, knots, link: (y - TOP) / LINKS_DOWN, chain: el.querySelector(".chain"), lantern: el.querySelector(".lantern") };
         });
+        held = null;
     };
     const sway = (now) => {
         const dt = Math.min(1 / 30, (now - swayed) / 1000 || 1 / 60);
         swayed = now;
         let moving = 0;
-        lamps.forEach(({ knots, link, chain, lantern }) => {
-            swing(knots, lanternGive, link, dt, 320, 0.3);
+        lamps.forEach((lamp) => {
+            const { knots, link, chain, lantern } = lamp;
+            swing(knots, held?.lamp === lamp ? heldGive : lanternGive, link, dt, 320, 0.3);
             chain.setAttribute("d", strand(knots));
             const tip = knots[LINKS_DOWN];
             lantern.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(hanging(knots))})`);
             knots.forEach((k) => { moving = Math.max(moving, Math.abs(k.x - k.px) + Math.abs(k.y - k.py)); });
         });
-        if (moving > 0.003) requestAnimationFrame(sway);
+        // still for half a second, not merely at the end of a swing
+        still = moving > 0.003 || held ? 0 : still + 1;
+        if (still < 30) requestAnimationFrame(sway);
         else swaying = false;
     };
+    const stir = () => {
+        if (swaying) return;
+        swaying = true;
+        swayed = performance.now();
+        requestAnimationFrame(sway);
+    };
     brushers.push(() => {
-        if (!lamps.length || reducedMotion.matches) return;
+        if (!lamps.length || held || reducedMotion.matches) return;
         const box = town.getBoundingClientRect();
         if (Math.max(pointer.from.y, pointer.to.y) < box.top - 20 || Math.min(pointer.from.y, pointer.to.y) > box.bottom) return;
         const m = town.getScreenCTM().inverse();
@@ -999,12 +1014,42 @@
             // the lantern itself, its middle some 9 units below its hook
             touched = brush(knots, (i) => (i === LINKS_DOWN ? lanternGive(i) : 0), local(pointer.from, 9), local(pointer.to, 9), vx, vy, 9) || touched;
         });
-        if (touched && !swaying) {
-            swaying = true;
-            swayed = performance.now();
-            requestAnimationFrame(sway);
-        }
+        if (touched) stir();
     });
+    // a point on screen, and a speed (per second), in the town's units
+    const inTown = (x, y, speed = false) => {
+        const m = town.getScreenCTM().inverse();
+        return { x: m.a * x + m.c * y + (speed ? 0 : m.e), y: m.b * x + m.d * y + (speed ? 0 : m.f) };
+    };
+    town?.addEventListener("pointerdown", (event) => {
+        const lamp = lamps.find(({ el }) => el.contains(event.target));
+        if (!lamp || reducedMotion.matches) return;
+        const at = inTown(event.clientX, event.clientY), tip = lamp.knots[LINKS_DOWN];
+        held = { lamp, dx: tip.x - at.x, dy: tip.y - at.y };
+        town.setPointerCapture(event.pointerId);
+        event.preventDefault();
+        stir();
+    });
+    town?.addEventListener("pointermove", (event) => {
+        if (!held) return;
+        const at = inTown(event.clientX, event.clientY), { knots, link } = held.lamp, hook = knots[0], tip = knots[LINKS_DOWN];
+        const tx = at.x + held.dx - hook.x, ty = at.y + held.dy - hook.y, k = Math.min(1, link * LINKS_DOWN / (Math.hypot(tx, ty) || 1e-6));
+        tip.x = tip.px = hook.x + tx * k;
+        tip.y = tip.py = hook.y + ty * k;
+    });
+    const letGo = () => {
+        if (!held) return;
+        const tip = held.lamp.knots[LINKS_DOWN], v = inTown(pointer.vx, pointer.vy, true), most = 4;
+        tip.px = tip.x - Math.max(-most, Math.min(most, v.x / 60));
+        tip.py = tip.y - Math.max(-most, Math.min(most, v.y / 60));
+        held = null;
+    };
+    town?.addEventListener("pointerup", letGo);
+    town?.addEventListener("pointercancel", letGo);
+    // on a touch screen, a finger on a lantern holds it instead of scrolling the page
+    town?.addEventListener("touchstart", (event) => {
+        if (event.target.closest?.(".hanging")) event.preventDefault();
+    }, { passive: false });
 
     // --- Composition -----------------------------------------------------------------
 

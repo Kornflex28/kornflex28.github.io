@@ -443,15 +443,14 @@ a {
 .stone { fill: var(--stone); }
 .stone-deep { fill: var(--stone-deep); }
 
-// The chains the lower town's lanterns hang from, coming out of the shade above
+// The chains the lower town's lanterns hang from, coming out of the shade above (skyline.js
+// fades them, and the lanterns with them, as they near it)
 .chain {
   fill: none;
-  stroke: url(#chain-fade);
+  stroke: var(--line);
   stroke-width: 1.4;
   stroke-dasharray: 2.4 1.2;
 }
-
-.chain-stop { stop-color: var(--line); }
 
 // The lower town's ground, ruled straight over the foot of everything on it
 .ground-line {
