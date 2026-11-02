@@ -5,9 +5,7 @@ Personal resume site of Louis Chauvet, served at <https://touchevisual.dev>.
 Built with [Jekyll](https://jekyllrb.com/) 4 and deployed to GitHub Pages by the
 [`pages.yml`](.github/workflows/pages.yml) workflow on every push to `master`.
 
-The resume is drawn as a tower in the painted style of *Le Roi et l'Oiseau*: a castle generated at
-random on every visit (or again from its ID, `?castle=<ID>`), an elevator riding down the floors,
-a day and night theme, and a name whose letters fly off into its anagram.
+The resume is drawn as a tower in the painted style of *Le Roi et l'Oiseau*: a castle generated at random on every visit (or again from its ID, `?castle=<ID>`).
 
 ## Run locally
 
