@@ -469,8 +469,8 @@
     // houses (cottages, tower houses, half-timbered houses, plank sheds), never the same kind
     // twice in a row, limewashed or plastered, under tiles, slates or patched thatch. Few
     // windows, a boarded one here and there. Wells, bare trees, fences, carts and the like stand
-    // in the alleys, lanterns hang from a vault out of sight, and smoke rises from a chimney or
-    // two. Behind it all is the foot of the castle's foundations. The town is drawn on the page
+    // in the alleys, the King's loudspeakers call from poles, walls and gramophones, lanterns
+    // hang from a vault out of sight, and smoke rises from a chimney or two. Behind it all is the foot of the castle's foundations. The town is drawn on the page
     // like the castle, and as wide, so the elevator comes down into it: the cabin rests in the
     // lower station's arch, next to its call plate (.station-hand). It uses the castle's seed,
     // apart from the castle's own draws.
@@ -638,8 +638,50 @@
                 add(`<path class="outline fine" fill="none" d="M${f(cx - 4)} ${f(TH - 5)} H${f(cx + 4)} M${f(cx)} ${f(TH - 9)} V${f(TH - 1)}" />`);
             });
         };
+        // The King's loudspeakers, calling from every corner of the town as in the film: a brass
+        // horn from (x, y) pointing `angle` degrees (0 right, 180 left), `len` long, its bell b
+        // from its axis, dark in its throat
+        const trumpet = (x, y, angle, len, b, metal = "c-gold") => {
+            const t = 1.3;
+            add(`<g transform="translate(${f(x)} ${f(y)}) rotate(${f(angle)})">`
+                + `<path class="${metal} outline thin" d="M0 ${-t} C${f(len * 0.55)} ${-t} ${f(len * 0.82)} ${f(-b * 0.4)} ${f(len)} ${f(-b)} L${f(len)} ${f(b)} C${f(len * 0.82)} ${f(b * 0.4)} ${f(len * 0.55)} ${t} 0 ${t} Z" />`
+                + `<ellipse class="c-ochre outline thin" cx="${f(len)}" rx="${f(b * 0.3)}" ry="${f(b)}" /><ellipse class="c-window-dark" cx="${f(len + 0.4)}" rx="${f(b * 0.17)}" ry="${f(b * 0.62)}" /></g>`);
+        };
+        // one on an iron bracket off a house's side (side: -1 its left, 1 its right), calling
+        // down the alley
+        const wallHorn = (x, side) => {
+            const y = TH - int(20, 26);
+            timber(x, y, x + side * 5, y - 2.5, 1.4, 1.2, "c-slate");
+            trumpet(x + side * 5, y - 2.5, side > 0 ? -15 : 195, rand(9, 12), rand(3.5, 4.5));
+        };
         // what stands in the alleys, each giving its width w and drawing itself from its left x
         const PROPS = {
+            // one of the King's loudspeakers on its pole, two or three horns calling every way
+            // from under a crown
+            loudspeaker: () => {
+                const h = int(40, 54), three = chance(0.5);
+                return { w: 26, draw: (x) => {
+                    const cx = x + 13, top = TH - h;
+                    add(`<rect class="c-slate outline thin" x="${f(cx - 4)}" y="${TH - 3}" width="8" height="3" />`);
+                    timber(cx, TH - 3, cx, top, 2.6, 2.2, "c-slate");
+                    trumpet(cx, top + 2, 200, rand(13, 16), 5);
+                    trumpet(cx, top + 2, -20, rand(13, 16), 5);
+                    if (three) trumpet(cx, top, -95, 10, 4);
+                    add(`<rect class="c-gold outline fine" x="${f(cx - 3)}" y="${f(top - 1)}" width="6" height="3.5" />`);
+                    if (!three) add(`<path class="c-gold outline fine" d="M${f(cx - 2.5)} ${f(top - 1)} L${f(cx - 3)} ${f(top - 5)} L${f(cx - 1.2)} ${f(top - 3)} L${f(cx)} ${f(top - 6.5)} L${f(cx + 1.2)} ${f(top - 3)} L${f(cx + 3)} ${f(top - 5)} L${f(cx + 2.5)} ${f(top - 1)} Z" />`);
+                } };
+            },
+            // a gramophone on its crate, its horn painted, its crank at its side
+            gramophone: () => ({ w: 26, draw: (x) => {
+                const left = chance(0.5), bx = x + 4;
+                add(`<rect class="c-sand outline thin" x="${f(bx)}" y="${TH - 11}" width="18" height="11" />`);
+                add(`<g class="joint"><line x1="${f(bx)}" y1="${TH - 11}" x2="${f(bx + 18)}" y2="${TH}" /><line x1="${f(bx + 18)}" y1="${TH - 11}" x2="${f(bx)}" y2="${TH}" /></g>`);
+                add(`<rect class="c-terracotta-deep outline thin" x="${f(bx + 2)}" y="${TH - 19}" width="14" height="8" rx="1" />`);
+                add(`<ellipse class="c-slate outline fine" cx="${f(bx + 9)}" cy="${TH - 19.5}" rx="6" ry="1.2" />`);
+                add(`<path class="outline thin" fill="none" d="M${f(bx + 16)} ${TH - 15} h3 v-3.5" />`);
+                add(`<path class="c-slate outline thin" fill="none" d="M${f(bx + (left ? 6 : 12))} ${TH - 20} Q${f(bx + (left ? 5 : 13))} ${TH - 24} ${f(bx + (left ? 2 : 16))} ${TH - 27}" />`);
+                trumpet(bx + (left ? 2 : 16), TH - 27, left ? 225 : -45, rand(14, 18), rand(6.5, 8), pick(["c-gold", "c-rose", "c-blue-deep"]));
+            } }),
             // a well: its stone ring, its posts and their little roof, a bucket on its rope
             well: () => ({ w: 24, draw: (x) => {
                 timber(x + 3, TH - 8, x + 3, TH - 34, 2.6);
@@ -807,9 +849,11 @@
         for (let k = 0; k < hung; k++) lanterns.push([from + span * (k + rand(0.2, 0.8)), TH - int(69, 85)]);
 
         // the houses, from just past the station to the castle's right end, often something in
-        // the alley after each (each thing once)
+        // the alley after each (each thing once); the loudspeakers, on walls, poles or
+        // gramophones, kept HEARD apart, one or two to a quarter of the town
+        const LOUD = new Set(["loudspeaker", "gramophone"]), HEARD = 150;
         on(WALL, () => {
-            let kind = null;
+            let kind = null, heard = -HEARD;              // where the last loudspeaker is
             const things = Object.keys(PROPS);
             for (let x = clear[1] + int(10, 24); ;) {
                 let next = pick(Object.keys(KINDS));
@@ -818,10 +862,19 @@
                 const building = KINDS[kind]();
                 if (x + building.w > W - 20) break;         // whole buildings only
                 building.draw(x);
+                const side = chance(0.5) ? 1 : -1, wall = side > 0 ? x + building.w : x;
+                if (chance(0.3) && wall - heard >= HEARD) {
+                    wallHorn(wall, side);
+                    heard = wall;
+                }
                 x += building.w + int(6, 18);
                 if (!things.length || !chance(0.6)) continue;
-                const thing = PROPS[things.splice(int(0, things.length - 1), 1)[0]]();
+                const name = things.splice(int(0, things.length - 1), 1)[0], thing = PROPS[name]();
                 if (x + thing.w > W - 20) break;
+                if (LOUD.has(name)) {
+                    if (x - heard < HEARD) continue;
+                    heard = x + thing.w;
+                }
                 thing.draw(x);
                 x += thing.w + int(6, 18);
             }
