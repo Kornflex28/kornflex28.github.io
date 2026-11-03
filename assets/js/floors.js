@@ -660,7 +660,7 @@
     }), { rootMargin: "0px 0px -12% 0px" });
 
     addEventListener("castle-drawn", ({ detail }) => {
-        if (detail === undefined) return;
+        if (detail === undefined || (detail === seed && sizes.length)) return;
         seed = detail;
         draw(true);
     });

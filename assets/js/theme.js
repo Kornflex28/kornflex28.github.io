@@ -24,8 +24,9 @@
         button.addEventListener("click", () => {
             root.dataset.theme = root.dataset.theme === "night" ? "day" : "night";
             storage.set(root.dataset.theme);
-            sync();
         });
+        // (and whatever else sets the theme: the castle of now, by night)
+        new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
         sync();
     });
 })();

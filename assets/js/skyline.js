@@ -93,6 +93,76 @@
         return `M${f(x)} ${f(y - r)} A${f(r)} ${f(r)} 0 0 ${limb} ${f(x)} ${f(y + r)} A${f(rx)} ${f(r)} 0 0 ${back} ${f(x)} ${f(y - r)} Z`;
     };
 
+    // "now": a castle drawn at random, but its sun where the real one stands at this moment where
+    // the visitor is, or by night its moon, in its real phase. Where: the time zone's city, or
+    // failing that the longitude its standard time gives and a middle latitude on its side of
+    // the equator. Worked out here, with no call to anything, to within a few minutes.
+    const ZONES = {
+        "Europe/Paris": [48.9, 2.3], "Europe/London": [51.5, -0.1], "Europe/Brussels": [50.8, 4.4], "Europe/Berlin": [52.5, 13.4],
+        "Europe/Madrid": [40.4, -3.7], "Europe/Rome": [41.9, 12.5], "Europe/Amsterdam": [52.4, 4.9], "Europe/Zurich": [47.4, 8.5],
+        "Europe/Lisbon": [38.7, -9.1], "Europe/Stockholm": [59.3, 18.1], "Europe/Athens": [38, 23.7], "Europe/Moscow": [55.8, 37.6],
+        "America/New_York": [40.7, -74], "America/Chicago": [41.9, -87.6], "America/Denver": [39.7, -105], "America/Los_Angeles": [34.1, -118.2],
+        "America/Toronto": [43.7, -79.4], "America/Montreal": [45.5, -73.6], "America/Mexico_City": [19.4, -99.1], "America/Sao_Paulo": [-23.6, -46.6],
+        "America/Buenos_Aires": [-34.6, -58.4], "Africa/Cairo": [30, 31.2], "Africa/Lagos": [6.5, 3.4], "Africa/Johannesburg": [-26.2, 28],
+        "Asia/Tokyo": [35.7, 139.7], "Asia/Shanghai": [31.2, 121.5], "Asia/Kolkata": [22.6, 88.4], "Asia/Dubai": [25.2, 55.3],
+        "Asia/Singapore": [1.3, 103.8], "Australia/Sydney": [-33.9, 151.2], "Pacific/Auckland": [-36.8, 174.8], "Indian/Reunion": [-20.9, 55.5],
+    };
+    const RAD = Math.PI / 180;
+    const whereAmI = () => {
+        const year = new Date().getFullYear(), winter = -new Date(year, 0, 1).getTimezoneOffset(), summer = -new Date(year, 6, 1).getTimezoneOffset();
+        return ZONES[Intl.DateTimeFormat().resolvedOptions().timeZone] ?? [winter > summer ? -35 : 45, Math.min(winter, summer) / 4];
+    };
+    // sunrise and sunset (as times) on the day of a date, in the sun's simple reckoning: its
+    // declination and the equation of time over the year, refraction at the horizon
+    const sunTimes = (date, [lat, lon]) => {
+        const midnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+        const day = (midnight - Date.UTC(date.getUTCFullYear(), 0, 0)) / 864e5, b = 2 * Math.PI * (day - 81) / 365;
+        const tilt = 23.44 * RAD * Math.sin(b), lag = 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
+        const noon = 720 - 4 * lon - lag;
+        const cos = (Math.sin(-0.83 * RAD) - Math.sin(lat * RAD) * Math.sin(tilt)) / (Math.cos(lat * RAD) * Math.cos(tilt));
+        const half = 4 * Math.acos(Math.max(-1, Math.min(1, cos))) / RAD;
+        return [midnight + (noon - half) * 6e4, midnight + (noon + half) * 6e4];
+    };
+    // where the moments stand in the day, from sunrise (0) to sunset (1), and the angles they put
+    // the sun at on each course, just risen and just set beyond them
+    const DAY = [0, 0.04, 0.22, 0.5, 0.72, 0.9, 0.97, 1];
+    const along = (t, values) => {
+        const k = Math.max(1, DAY.findIndex((d) => d >= t));
+        return values[k - 1] + (values[k] - values[k - 1]) * (t - DAY[k - 1]) / (DAY[k] - DAY[k - 1]);
+    };
+    const momentAt = (t, moon) => {
+        const nearest = MOMENTS.reduce((m, x, i) => (Math.abs(DAY[i + 1] - t) < Math.abs(DAY[MOMENTS.indexOf(m) + 1] - t) ? x : m));
+        return {
+            ...nearest,
+            at: [0, 1, 2].map((c) => along(t, [175, ...MOMENTS.map((m) => m.at[c]), 5])),
+            r: moon ? 20 : along(t, [22, ...MOMENTS.map((m) => m.r), 24]),
+        };
+    };
+    // the moment now: by day the sun's, by night the moon crossing the sky from dusk to dawn; but
+    // by day in the night theme the moon where the sun is, and by night in the day theme the last
+    // light of the evening, or the first of the morning after midnight
+    const nowMoment = () => {
+        const date = Date.now(), here = whereAmI(), [rise, set] = sunTimes(new Date(date), here);
+        const night = document.documentElement.dataset.theme === "night";
+        if (date >= rise && date <= set) return momentAt((date - rise) / (set - rise), night);
+        const dusk = date > set ? set : set - 864e5, dawn = date > set ? rise + 864e5 : rise, u = (date - dusk) / (dawn - dusk);
+        if (!night) return momentAt(u < 0.5 ? 0.97 : 0.04, false);
+        return { ...MOMENTS[u < 0.5 ? 5 : 0], at: [0, 1, 2].map(() => 170 - 160 * u), r: 20 };
+    };
+    const isNight = () => {
+        const date = Date.now(), [rise, set] = sunTimes(new Date(date), whereAmI());
+        return date < rise || date > set;
+    };
+    // the moon's phase tonight: its age since a known new moon, in synodic months; its quarters
+    // drawn a little past half, as the castles' are
+    const nowPhase = () => {
+        const month = 29.530588853, age = (((Date.now() - Date.UTC(2000, 0, 6, 18, 14)) / 864e5) % month + month) % month;
+        let lit = (1 - Math.cos(2 * Math.PI * age / month)) / 2;
+        if (Math.abs(lit - 0.5) < 0.1) lit = 0.5 + (lit < 0.5 ? -0.11 : 0.11);
+        return [lit, age < month / 2 ? 1 : -1];
+    };
+    let live = false;            // drawing the castle of now
+
     // Space already used, as boxes {x0, y0, x1, y1}
     const used = [];
     const box = (x0, y0, x1, y1) => ({ x0, y0, x1, y1 });
@@ -1167,10 +1237,10 @@
     // Draws the castle of a seed in place of the current drawing
     const draw = (seed) => {
         state = seed | 0;
-        const moment = momentOf(seed);
+        const moment = live ? nowMoment() : momentOf(seed);
         document.documentElement.dataset.moment = moment.name;
         today = moment;
-        tonight = phaseOf(seed);
+        tonight = live ? nowPhase() : phaseOf(seed);
         parts.length = 0;
         used.length = 0;
         tips.length = 0;
@@ -1544,7 +1614,7 @@
             + ` width: ${pct(6 * sr, W)}">`
             + '<defs><radialGradient id="sun-halo"><stop offset="0.3" class="sun-light" stop-opacity="0.55" /><stop offset="1" class="sun-light" stop-opacity="0" /></radialGradient></defs>'
             + `<circle class="sun-halo" cx="${f(sx)}" cy="${f(sy)}" r="${3 * sr}" fill="url(#sun-halo)" /><circle class="sun-disc" filter="url(#gouache)" cx="${f(sx)}" cy="${f(sy)}" r="${sr}" />`
-            + `<circle class="moon-dark" cx="${f(sx)}" cy="${f(sy)}" r="${sr}" /><path class="moon-lit" filter="url(#gouache)" d="${moonLit(sx, sy, sr, phaseOf(seed))}" /></svg>`;
+            + `<circle class="moon-dark" cx="${f(sx)}" cy="${f(sy)}" r="${sr}" /><path class="moon-lit" filter="url(#gouache)" d="${moonLit(sx, sy, sr, tonight)}" /></svg>`;
         // by night, stars across the upper sky, a few of them twinkling (.stars)
         const stars = Array.from({ length: 34 }, () => {
             const twinkle = Math.random() < 0.4
@@ -1812,11 +1882,16 @@
     const status = tag.querySelector('[role="status"]');
     const randomId = () => (Math.floor(Math.random() * 2 ** 32) >>> 0).toString(36);
 
+    // "now" draws a castle at random under the sky of this moment, and by night the night with it
     let current = "";
     const show = (id) => {
         current = id;
-        draw(parseInt(id, 36) >>> 0);
+        live = id === "now";
+        if (live && isNight()) document.documentElement.dataset.theme = "night";
+        draw(live ? parseInt(randomId(), 36) >>> 0 : parseInt(id, 36) >>> 0);
     };
+    // the night theme switched on or off while it is now: the same castle under the other sky
+    new MutationObserver(() => { if (live) draw(state >>> 0); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
     // IDs fill the field's 7 characters: select it all on focus, so typing replaces it
     input.addEventListener("focus", () => setTimeout(() => input.select()));
