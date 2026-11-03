@@ -491,22 +491,18 @@ main .floor:has(> .floor-deco) {
   border-top-color: transparent;
 }
 
-// By night the plants are in deeper shade, their pale flowers lit by the moon
+// By night the plants are in the castle garden's own night greens, their pale flowers lit by
+// the moon
 :root[data-theme="night"] .floor-deco {
-  --hedge: #233d32;
-  --hedge-deep: #182c24;
-  --hedge-light: #2c4a3a;
-  --hedge-sage: #22403c;
-  --hedge-olive: #2c3a26;
-  --green: #36503f;
-
   .c-moon { fill: #b9c0dc; }
 }
 
 // What stands on each floor's line (floors.js), drawn one pixel to a unit: the line's top 46
 // pixels down, so the drawing starts 48 pixels above the floor, the line being 2 thick.
-// Only the things that answer the pointer catch it (.touch).
-.floor-deco {
+// Only the things that answer the pointer catch it (.touch). The stone under the line is
+// drawn the same way, in a drawing of its own under it (.floor-stone).
+.floor-deco,
+.floor-stone {
   position: absolute;
   top: -48px;
   left: 0;
@@ -518,13 +514,23 @@ main .floor:has(> .floor-deco) {
   // what reaches past the drawing's edges shows (normalize.css hides an svg's overflow)
   &:not(:root) { overflow: visible; }
 
-  .hair { stroke-width: .7; }
+  // the plants' drawing, moving, kept apart from the stone's so the stone is not painted again
+  &.floor-deco { will-change: transform; }
+
+  // the stone's lines at the castle's scale (--k, from floors.js), as thick as the terrace's
+  &.floor-stone {
+    .outline { stroke-width: calc(2px * var(--k, 1)); }
+    .joint { stroke-width: calc(1px * var(--k, 1)); }
+  }
+
+  .hair { stroke-width: .9; }
   .wisp { stroke-width: .4; }
-  .touch { pointer-events: auto; }
+  .touch { pointer-events: auto; cursor: pointer; }
   .hit { fill: transparent; }
 
-  // the climbing plant: its stem and tendrils drawn out, its leaves and flowers opening, one
-  // after the other, once the floor is in view (.grown)
+  // the creeper: its stem and tendrils drawn out, its leaves and flowers opening, one
+  // after the other, once the floor is in view (.grown); the stem drawn out at the pace its
+  // leaves open (from --d, over --t)
   .stem,
   .tendril {
     fill: none;
@@ -532,16 +538,16 @@ main .floor:has(> .floor-deco) {
     stroke-linecap: round;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    transition: stroke-dashoffset 1.4s ease-out;
+    transition: stroke-dashoffset .6s ease-out var(--d);
   }
 
-  .stem { stroke-width: 1.6; }
-
-  .tendril {
-    stroke-width: .9;
-    transition-duration: .6s;
-    transition-delay: var(--d);
+  .stem {
+    stroke-width: 1.6;
+    transition-duration: var(--t);
+    transition-timing-function: linear;
   }
+
+  .tendril { stroke-width: .9; }
 
   .shoot { stroke-width: 1.1; }
 
@@ -594,9 +600,42 @@ main .floor:has(> .floor-deco) {
     transition: transform .5s cubic-bezier(.2, .8, .3, 1) var(--d);
   }
 
+  // the moss on the stone, coming up in tufts (or down, under the course)
+  .moss {
+    transform: scale(0);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: transform .6s cubic-bezier(.2, .8, .3, 1) var(--d);
+  }
+
+  .moss.hang { transform-origin: 50% 0; }
+
+  .moss-edge {
+    stroke: var(--hedge-deep);
+    stroke-width: .5;
+    stroke-linejoin: round;
+  }
+
+  // its spore stalks, and the wisps hanging from it
+  .seta,
+  .beard {
+    fill: none;
+    stroke: var(--hedge-deep);
+    stroke-width: .45;
+    stroke-linecap: round;
+  }
+
+  .beard {
+    stroke: var(--hedge-sage);
+    stroke-width: .8;
+  }
+
+  // (not yet drawn out, a stem shows no dot where it starts)
+  &:not(.grown) :is(.stem, .tendril) { stroke-linecap: butt; }
+
   &.grown {
     .stem, .tendril { stroke-dashoffset: 0; }
-    .leaf, .flower { transform: none; }
+    .leaf, .flower, .moss { transform: none; }
   }
 
   // a light wind: each leaf and flower swings a few degrees about where it leaves the stem
@@ -611,8 +650,24 @@ main .floor:has(> .floor-deco) {
     animation-play-state: paused;
   }
 
-  // a piece of the floor's line laid over a stem winding behind it
-  .rail { fill: var(--ink); }
+  // the stone along the line: the shadow under its course, the moulding where it runs across
+  // the name's panel, a crack
+  .drip { fill: var(--line); opacity: .12; }
+
+  .moulding {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
+    opacity: .55;
+  }
+
+  .crack {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: .8;
+    stroke-linecap: round;
+    opacity: .45;
+  }
 
   // the eyes of the Bird and his chicks, the Bird's legs
   .eye { fill: #f7f1e6; }
@@ -677,7 +732,7 @@ main .floor:has(> .floor-deco) {
 
   // the gears' axle bolts, the slot they come up through, the iron bars that hold them
   .bolt { fill: var(--line); opacity: .7; }
-  .slot { fill: var(--line); }
+
 
   .bar {
     fill: none;
@@ -751,14 +806,60 @@ main .floor:has(> .floor-deco) {
 @media (prefers-reduced-motion: reduce) {
   .floor-deco {
     .stem, .tendril { stroke-dashoffset: 0; transition: none; }
-    .leaf, .flower { transform: none; transition: none; }
+    .leaf, .flower, .moss { transform: none; transition: none; }
     .gear, .waves, .sway { animation: none; }
   }
 }
 
+// printed, every floor's plants grown, those not yet seen too
+@media print {
+  .floor-deco {
+    .stem, .tendril { stroke-dashoffset: 0; transition: none; }
+    .leaf, .flower, .moss { transform: none; transition: none; }
+  }
+}
+
+// Each floor's name, cut in the stone tablet floors.js draws round it under the floor's line
+// (a plain heading where it does not draw): capitals spaced out as on an inscription, a light
+// edge under them where they are sunk in the stone
 .floor-title {
   margin: 0 0 1.5rem;
   font-size: 1.75rem;
+}
+
+main .floor:has(> .floor-deco) > .floor-title {
+  --relief: rgb(255 255 255 / .7);
+  position: relative;   // over the drawing
+  width: fit-content;
+  max-inline-size: 100%;
+  margin: calc(12px - 2.5rem) 0 1.75rem 6px;   // up into the floor's padding, in the panel under the course
+  padding: .3rem 1.4rem .25rem;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 var(--relief);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 599.98px) {
+    padding-inline: 1.15rem;
+    font-size: 1.05rem;
+    letter-spacing: .1em;
+  }
+
+  @media (max-width: 399.98px) {
+    padding-inline: .9rem;
+    letter-spacing: .06em;
+  }
+
+  @media (max-width: 359.98px) {
+    font-size: 1rem;
+  }
+}
+
+:root[data-theme="night"] main .floor:has(> .floor-deco) > .floor-title {
+  --relief: rgb(0 0 0 / .5);
 }
 
 .entry {
