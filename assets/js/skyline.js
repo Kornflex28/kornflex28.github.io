@@ -64,15 +64,16 @@
     // A fictive time of day for each castle, taken from its seed apart from the drawing's own
     // draws (so a castle stays the same): which side the light comes from (-1 left, 0 above,
     // 1 right), which way and how far shadows fall, where the sun (the moon, by night) stands on
-    // its courses (at: wide, narrow; the narrow one clear of the night toggle) and its radius.
+    // each of its courses (at: wide, narrow, on its side; the narrow one clear of the night
+    // toggle; low in the evening on each, as the screen shows it) and its radius.
     // The sky's and the light's colours are in the CSS ([data-moment], _theme.scss).
     const MOMENTS = [
-        { name: "dawn", side: -1, shadow: [11, 3], at: [160, 160], r: 20 },
-        { name: "morning", side: -1, shadow: [7, 4], at: [125, 125], r: 15 },
-        { name: "noon", side: 0, shadow: [2, 6], at: [85, 95], r: 13 },
-        { name: "afternoon", side: 1, shadow: [-7, 4], at: [55, 62], r: 15 },
-        { name: "golden", side: 1, shadow: [-10, 3], at: [30, 28], r: 19 },
-        { name: "dusk", side: 1, shadow: [-12, 2.5], at: [15, 14], r: 22 },
+        { name: "dawn", side: -1, shadow: [11, 3], at: [160, 160, 160], r: 20 },
+        { name: "morning", side: -1, shadow: [7, 4], at: [125, 125, 125], r: 15 },
+        { name: "noon", side: 0, shadow: [2, 6], at: [85, 95, 95], r: 13 },
+        { name: "afternoon", side: 1, shadow: [-7, 4], at: [55, 62, 58], r: 15 },
+        { name: "golden", side: 1, shadow: [-10, 3], at: [30, 24, 12], r: 19 },
+        { name: "dusk", side: 1, shadow: [-12, 2.5], at: [15, 12, 6], r: 22 },
     ];
     const momentOf = (seed) => MOMENTS[(Math.imul(seed, 2654435761) >>> 0) % MOMENTS.length];
     // the drawn castle's moment and moon, and where its sun (its moon) stands on each course,
@@ -1534,7 +1535,7 @@
                 .filter((d) => d > 10 && d < 170 && (course !== NARROW || d <= 30 || d >= 60));
             return near.find((d) => shown(course, d)) ?? deg;
         };
-        spot = [place(COURSE, moment.at[0]), place(NARROW, moment.at[1]), place(PRESSED, moment.at[1])];
+        spot = [place(COURSE, moment.at[0]), place(NARROW, moment.at[1]), place(PRESSED, moment.at[2])];
         // there with a soft halo; by night, the moon in its phase, the rest of its disc faintly
         // seen
         const [sx, sy] = onCourse(COURSE, spot[0]), [nx, ny] = onCourse(NARROW, spot[1]), [lx, ly] = onCourse(PRESSED, spot[2]), sr = moment.r;
@@ -1674,11 +1675,12 @@
     // read while the page rests after loading, not on the first touch, where it would hold the
     // first frame up (by day only: by night the CSS gives the night's colours instead)
     (window.requestIdleCallback || setTimeout)(() => { if (root.dataset.theme !== "night") palette ??= paletteOf(); });
-    // the two moments around the sun at an angle on its course, and how far it has gone from the
-    // first to the second: by day, and from dusk to dawn across the night
-    const between = (deg) => {
+    // the two moments around the sun at an angle on a course (which: wide, narrow, on its side),
+    // and how far it has gone from the first to the second: by day, and from dusk to dawn across
+    // the night
+    const between = (deg, which) => {
         let a = ((deg % 360) + 360) % 360;
-        const at = MOMENTS.map((m) => m.at[0]);
+        const at = MOMENTS.map((m) => m.at[which]);
         if (a <= at[0] && a >= at[at.length - 1]) {
             const k = at.findIndex((d) => d <= a);
             return k === 0 ? [0, 0, 0] : [k - 1, k, (at[k - 1] - a) / (at[k - 1] - at[k])];
@@ -1687,12 +1689,12 @@
         return [MOMENTS.length - 1, 0, (at[at.length - 1] - a) / (at[at.length - 1] - (at[0] - 360))];
     };
     // the sky's colours with the sun there, and the sun's size, as each moment draws them
-    const skyAt = (deg) => {
-        const [from, to, t] = between(deg);
+    const skyAt = (deg, which) => {
+        const [from, to, t] = between(deg, which);
         return TINTS.map((_, i) => `rgb(${palette[from][i].map((c, j) => Math.round(c + (palette[to][i][j] - c) * t)).join(" ")})`);
     };
-    const sizeAt = (deg) => {
-        const [from, to, t] = between(deg);
+    const sizeAt = (deg, which) => {
+        const [from, to, t] = between(deg, which);
         return MOMENTS[from].r + (MOMENTS[to].r - MOMENTS[from].r) * t;
     };
     // the time the sun takes over a degree of its course: all it needs while it shows, a sixth of
@@ -1702,18 +1704,18 @@
     const turnDay = async (sun) => {
         palette ??= paletteOf();
         if (!palette) return;
-        // the sun's 90 steps of 4° round its course, from where it stands (a0, on the course
-        // shown), each given its time; its size and the sky's colours follow the moment's own
-        // angle (w0)
-        const [course, a0] = shortScreen.matches ? [PRESSED, spot[2]] : narrowScreen.matches ? [NARROW, spot[1]] : [COURSE, spot[0]];
-        const r = today.r, [x0, y0] = onCourse(course, a0), w0 = today.at[0];
+        // the sun's 90 steps of 4° round the course shown (which), from where it stands (a0),
+        // each given its time; its size and the sky's colours follow the moment's own angle on
+        // that course (w0), so the sky reddens as the sun sinks there, not as it would on another
+        const which = shortScreen.matches ? 2 : narrowScreen.matches ? 1 : 0, course = [COURSE, NARROW, PRESSED][which], a0 = spot[which];
+        const r = today.r, [x0, y0] = onCourse(course, a0), w0 = today.at[which];
         const times = [0];
         for (let k = 1; k <= 90; k++) times.push(times[k - 1] + (pace(a0 - 4 * k) + pace(a0 - 4 * k + 4)) / 2);
         const keys = times.map((time, k) => {
             const a = a0 - 4 * k, [x, y] = onCourse(course, a);
             return {
                 offset: time / times[90],
-                transform: `translate(${f(100 * (x - x0) / (6 * r))}%, ${f(100 * (y - y0) / (6 * r))}%) scale(${(sizeAt(w0 - 4 * k) / r).toFixed(3)})`,
+                transform: `translate(${f(100 * (x - x0) / (6 * r))}%, ${f(100 * (y - y0) / (6 * r))}%) scale(${(sizeAt(w0 - 4 * k, which) / r).toFixed(3)})`,
                 opacity: Math.max(0, Math.min(1, (Math.sin(a * Math.PI / 180) - 0.03) / 0.12)),
             };
         });
@@ -1728,7 +1730,7 @@
         const paper = getComputedStyle(root).getPropertyValue("--paper").trim(), brush = sky.getContext("2d");
         const low = Math.min(1, 17 * parseFloat(getComputedStyle(root).fontSize) / sky.offsetHeight);
         const paint = (a) => {
-            const [high, under, light] = skyAt(a), gradient = brush.createLinearGradient(0, 0, 0, sky.height);
+            const [high, under, light] = skyAt(a, which), gradient = brush.createLinearGradient(0, 0, 0, sky.height);
             gradient.addColorStop(0, high);
             gradient.addColorStop(low, under);
             gradient.addColorStop(1, paper);
