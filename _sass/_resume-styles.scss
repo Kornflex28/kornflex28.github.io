@@ -944,6 +944,95 @@ main .floor:has(> .floor-deco) > .floor-title {
   }
 }
 
+// One of the King's trapdoors (_includes/trapdoor.html): opened (.open), its leaves drop into
+// the dark under the floor
+.trapdoor {
+  overflow: visible;
+
+  .joint { stroke-width: 1; }
+  .dark { stop-color: var(--line); }
+
+  // the dark under the floor, the drawings' ink thinned, fading out downwards
+  .below {
+    opacity: 0;
+    transition: opacity .2s .1s;
+  }
+
+  .leaf {
+    transform-box: view-box;
+    transition: transform .5s cubic-bezier(.55, 0, .6, 1.35);
+  }
+
+  .left { transform-origin: 16px 6px; }
+  .right { transform-origin: 44px 6px; }
+
+  .grain {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: .6;
+    opacity: .5;
+  }
+
+  .hinge { fill: var(--slate); stroke: var(--line); stroke-width: .7; }
+
+  .ring {
+    fill: none;
+    stroke: var(--slate);
+    stroke-width: 1;
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: transform .15s;
+  }
+}
+
+.trapdoor.open {
+  .below { opacity: .7; }
+  .left { transform: rotate(84deg); }
+  .right { transform: rotate(-84deg); }
+}
+
+// The frog's link: touched, a trapdoor opens under the frog, it drops through and its page
+// opens (trapdoor.js); nothing of it shows under the floor (.fall)
+.frog-link {
+  position: relative;
+
+  .fall {
+    display: block;
+    clip-path: inset(-60% -60% 0 -60%);
+  }
+
+  // the trapdoor, its floor at the frog's feet
+  .frog-trap {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 3.6rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -27%);
+    transition: opacity .15s;
+
+    .trapdoor {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  &.is-falling {
+    .frog-trap { opacity: 1; }
+    .icon { animation: drop .45s .3s cubic-bezier(.5, 0, .9, .6) both; }
+  }
+}
+
+@keyframes drop {
+  to { transform: translateY(125%) rotate(16deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trapdoor :is(.leaf, .below) { transition: none; }
+}
+
+
 // Acronyms, spelt out on hover, or beside them once tapped (acronyms.js)
 abbr[title] {
   border-bottom: 0;
