@@ -17,6 +17,11 @@
 (() => {
     const svg = document.querySelector(".skyline"), town = document.querySelector(".lowertown");
     if (!svg) return;
+    // Snow lies on about one castle in fifteen (from its seed, apart from its drawing), and on
+    // the castle of now only in winter where the visitor is; ?weather=snow brings it on the
+    // castle the page opens on (not on those drawn after it)
+    let snowAsked = new URLSearchParams(location.search).get("weather") === "snow";
+    let snowing = false;
 
     // --- Seeded randomness -----------------------------------------------------------
 
@@ -149,6 +154,10 @@
         if (!night) return momentAt(u < 0.5 ? 0.97 : 0.04, false);
         return { ...MOMENTS[u < 0.5 ? 5 : 0], at: [0, 1, 2].map(() => 170 - 160 * u), r: 20 };
     };
+    const isWinter = () => {
+        const month = new Date().getMonth();
+        return whereAmI()[0] < 0 ? month >= 5 && month <= 7 : month === 11 || month <= 1;
+    };
     const isNight = () => {
         const date = Date.now(), [rise, set] = sunTimes(new Date(date), whereAmI());
         return date < rise || date > set;
@@ -221,7 +230,7 @@
 
     const cone = (x, yt, w, h, cls, needle) => {
         const cx = x + w / 2;
-        add(`<path class="${cls} outline" data-shade="cyl" d="M${f(x - 3)} ${f(yt)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(cx)} ${f(yt - h)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(x + w + 3)} ${f(yt)} Z" />`);
+        add(`<path class="${cls} outline" data-shade="cyl" data-snow="-.3" d="M${f(x - 3)} ${f(yt)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(cx)} ${f(yt - h)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(x + w + 3)} ${f(yt)} Z" />`);
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(yt - h)}" x2="${f(cx)}" y2="${f(yt - h - needle)}" />`);
         if (w >= 18) tips.push({ x: cx, y: yt - h - needle });
     };
@@ -229,7 +238,7 @@
     const onion = (x, yt, w, cls) => {
         const cx = x + w / 2;
         const top = yt - w * 1.15;
-        add(`<path class="${cls} outline" data-shade="sphere" d="M${f(x - 2)} ${f(yt)} C${f(x - w * 0.2)} ${f(yt - w * 0.6)} ${f(cx)} ${f(yt - w * 0.7)} ${f(cx)} ${f(top)} C${f(cx)} ${f(yt - w * 0.7)} ${f(x + w * 1.2)} ${f(yt - w * 0.6)} ${f(x + w + 2)} ${f(yt)} Z" />`);
+        add(`<path class="${cls} outline" data-shade="sphere" data-snow=".45" d="M${f(x - 2)} ${f(yt)} C${f(x - w * 0.2)} ${f(yt - w * 0.6)} ${f(cx)} ${f(yt - w * 0.7)} ${f(cx)} ${f(top)} C${f(cx)} ${f(yt - w * 0.7)} ${f(x + w * 1.2)} ${f(yt - w * 0.6)} ${f(x + w + 2)} ${f(yt)} Z" />`);
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(top)}" x2="${f(cx)}" y2="${f(top - 6)}" />`);
     };
 
@@ -288,30 +297,30 @@
         let d = `M${f(x)} ${f(base)} V${f(base - h)}`;
         for (let mx = x + 2; mx + 7 <= x + w - 2; mx += 12) d += ` H${f(mx)} v-5 h7 v5`;
         d += ` H${f(x + w)} V${f(base)} Z`;
-        add(`<path class="${pick(GREENS)} outline thin" data-shade="lit" d="${d}" />`);
+        add(`<path class="${pick(GREENS)} outline thin" data-shade="lit" data-snow=".4" d="${d}" />`);
         return box(x, base - h - 5, x + w, base);
     };
     const boxHedge = (x, base, w, h) => {
-        add(`<rect class="${pick(GREENS)} outline thin" data-shade="lit" x="${f(x)}" y="${f(base - h)}" width="${f(w)}" height="${f(h)}" rx="4" />`);
+        add(`<rect class="${pick(GREENS)} outline thin" data-shade="lit" data-snow=".35" x="${f(x)}" y="${f(base - h)}" width="${f(w)}" height="${f(h)}" rx="4" />`);
         return box(x, base - h, x + w, base);
     };
     const coneShrub = (x, base, w, h) => {
         const cx = x + w / 2, r = w * 0.22;
-        add(`<path class="${pick(["c-hedge-deep", "c-hedge-deep", "c-hedge-olive"])} outline thin" data-shade="cyl" d="M${f(x)} ${f(base)} L${f(cx)} ${f(base - h)} L${f(x + w)} ${f(base)} Z" />`);
-        add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(base - h - r + 1)}" r="${f(r)}" />`);
+        add(`<path class="${pick(["c-hedge-deep", "c-hedge-deep", "c-hedge-olive"])} outline thin" data-shade="cyl" data-snow=".4" d="M${f(x)} ${f(base)} L${f(cx)} ${f(base - h)} L${f(x + w)} ${f(base)} Z" />`);
+        add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" data-snow=".5" cx="${f(cx)}" cy="${f(base - h - r + 1)}" r="${f(r)}" />`);
         return box(x, base - h - 2 * r, x + w, base);
     };
     const domeShrub = (x, base, w) => {
         const h = w * 0.55;
-        add(`<path class="${pick(GREENS)} outline thin" data-shade="sphere" d="M${f(x)} ${f(base)} Q${f(x)} ${f(base - h)} ${f(x + w / 2)} ${f(base - h)} Q${f(x + w)} ${f(base - h)} ${f(x + w)} ${f(base)} Z" />`);
+        add(`<path class="${pick(GREENS)} outline thin" data-shade="sphere" data-snow=".5" d="M${f(x)} ${f(base)} Q${f(x)} ${f(base - h)} ${f(x + w / 2)} ${f(base - h)} Q${f(x + w)} ${f(base - h)} ${f(x + w)} ${f(base)} Z" />`);
         return box(x, base - h, x + w, base);
     };
     // A clipped ball, sometimes two, on a slim trunk in a terracotta pot
     const topiary = (x, base, w) => {
         const cx = x + w / 2, r = w / 2, two = chance(0.4), top = base - w * (two ? 2.7 : 1.9);
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(base - 5)}" x2="${f(cx)}" y2="${f(top + r)}" />`);
-        if (two) add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(base - w * 1.0)}" r="${f(r * 0.75)}" />`);
-        add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(top + r)}" r="${f(r)}" />`);
+        if (two) add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" data-snow=".5" cx="${f(cx)}" cy="${f(base - w * 1.0)}" r="${f(r * 0.75)}" />`);
+        add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" data-snow=".5" cx="${f(cx)}" cy="${f(top + r)}" r="${f(r)}" />`);
         add(`<rect class="c-terracotta outline thin" x="${f(cx - w * 0.3)}" y="${f(base - 5)}" width="${f(w * 0.6)}" height="5" />`);
         return box(x, top, x + w, base);
     };
@@ -328,7 +337,21 @@
         crenelHedge(x - 2, base - h, w + 4, 7);
     };
 
-    // A stone wall with mortar joints
+    // Snow lying in places along a line at y, from x0 to x1: low mounds of it, here and there
+    // (where its uneven waves rise over `rare`), none elsewhere; the same wherever it is drawn
+    const drifts = (x0, x1, y, high = 2.6, rare = 0.35) => {
+        let d = "";
+        for (let x = x0 + 4; x < x1 - 8; x += 9) {
+            const k = Math.sin(x * 0.067 + 1.3) + 0.6 * Math.sin(x * 0.19 + 0.4);
+            if (k < rare) continue;
+            const wide = 9 + 9 * Math.min(1, k - rare), h = high * (0.7 + 0.3 * Math.sin(x * 0.53));
+            d += ` M${f(x)} ${f(y + 0.8)} Q${f(x + 1.2)} ${f(y - h * 0.9)} ${f(x + wide / 2)} ${f(y - h)} Q${f(x + wide - 1.2)} ${f(y - h * 0.9)} ${f(x + wide)} ${f(y + 0.8)} Z`;
+            x += wide;
+        }
+        return d ? `<path class="snow outline thin" d="${d}" />` : "";
+    };
+
+    // A stone wall with mortar joints, and, when it snows, snow along its top in places
     const terraceWall = (x0, x1, top) => {
         add(`<rect class="c-sand outline" data-shade="wall" x="${f(x0)}" y="${f(top)}" width="${f(x1 - x0)}" height="${f(H - top)}" />`);
         let row = 0;
@@ -338,6 +361,7 @@
                 add(`<line class="joint" x1="${f(x)}" y1="${f(y - 11)}" x2="${f(x)}" y2="${f(y)}" />`);
             }
         }
+        if (snowing) add(drifts(x0, x1, top));
     };
     // An arched stone viaduct carrying the terrace from x0 on past x1, its arches open on the sky
     const viaduct = (x0, x1, top) => {
@@ -359,6 +383,8 @@
             for (let x = a + 3; x < b - 2; x += 5) add(`<line x1="${f(x)}" y1="${f(base - 8)}" x2="${f(x)}" y2="${f(base)}" />`);
             add('</g>');
             add(`<rect class="c-cream outline thin" x="${f(a)}" y="${f(base - 11)}" width="${f(b - a)}" height="3" />`);
+            // when it snows, snow along its rail in places
+            if (snowing) add(drifts(a, b, base - 11, 1.8, 0.2));
         });
     };
 
@@ -441,7 +467,7 @@
                     add(`<rect class="c-cream outline" x="${f(x - 2)}" y="${f(top)}" width="${w + 4}" height="4" />`);
                     if (domed) onion(x, top, w, pick(DOMES));
                     else {
-                        add(`<path class="${pick(DOMES)} outline" data-shade="sphere" d="M${f(x)} ${f(top)} Q${f(x)} ${f(top - dome)} ${f(x + w / 2)} ${f(top - dome)} Q${f(x + w)} ${f(top - dome)} ${f(x + w)} ${f(top)} Z" />`);
+                        add(`<path class="${pick(DOMES)} outline" data-shade="sphere" data-snow=".5" d="M${f(x)} ${f(top)} Q${f(x)} ${f(top - dome)} ${f(x + w / 2)} ${f(top - dome)} Q${f(x + w)} ${f(top - dome)} ${f(x + w)} ${f(top)} Z" />`);
                         add(`<line class="outline thin" x1="${f(x + w / 2)}" y1="${f(top - dome)}" x2="${f(x + w / 2)}" y2="${f(top - dome - 8)}" />`);
                     }
                 },
@@ -529,9 +555,33 @@
             shade.setAttribute("class", "shade");
             shade.setAttribute("fill", `url(#${el.dataset.shade})`);
             shade.removeAttribute("data-shade");
+            shade.removeAttribute("data-snow");
             shade.removeAttribute("id");
             el.after(shade);
         });
+
+        // Snow: on each roof that takes it, a copy of the roof in snow over its shading, cut
+        // off a way down it (data-snow, a share of its height) by a soft, uneven edge; on the
+        // steep needle roofs, which it does not hold to, only along their flared eaves (a share
+        // up from their foot)
+        if (snowing) {
+            const ns = "http://www.w3.org/2000/svg", name = root === svg ? "castle" : "town";
+            root.querySelectorAll("[data-snow]").forEach((el, k) => {
+                const b = el.getBBox(), share = parseFloat(el.dataset.snow), x0 = b.x - 4, x1 = b.x + b.width + 4;
+                const edge = b.y + b.height * (share < 0 ? 1 + share : share), far = share < 0 ? b.y + b.height + 12 : b.y - 12;
+                let d = `M${f(x0)} ${f(far)} H${f(x1)} V${f(edge)}`;
+                for (let x = x1; x > x0; x -= 2.5) d += ` L${f(x)} ${f(edge + 1.3 * Math.sin(x * 0.9 + k) + (Math.sin(x * 0.37 + 2 * k) > 0.85 ? 2.2 : 0))}`;
+                const clip = document.createElementNS(ns, "clipPath");
+                clip.id = `${name}-snow-${k}`;
+                clip.innerHTML = `<path d="${d} L${f(x0)} ${f(edge)} Z" />`;
+                root.append(clip);
+                const snow = el.cloneNode();
+                snow.setAttribute("class", "snow outline");
+                snow.setAttribute("clip-path", `url(#${clip.id})`);
+                ["data-shade", "data-snow", "id"].forEach((a) => snow.removeAttribute(a));
+                (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el).after(snow);
+            });
+        }
     };
 
     // --- The lower town ----------------------------------------------------------------
@@ -593,14 +643,14 @@
             const apex = x + w / 2 + rand(-0.06, 0.06) * w;
             const edge = (t) => [x - 3 + (apex - x + 3) * t, x + w + 3 - (x + w + 3 - apex) * t];   // the roof's sides at height t
             if (thatch) {
-                add(`<path class="c-thatch outline" data-shade="lit" d="M${f(x - 5)} ${f(top + 2)} Q${f(x - 4)} ${f(top - rise * 0.6)} ${f(apex)} ${f(top - rise - 2)} Q${f(x + w + 4)} ${f(top - rise * 0.6)} ${f(x + w + 5)} ${f(top + 2)} Z" />`);
+                add(`<path class="c-thatch outline" data-shade="lit" data-snow=".45" d="M${f(x - 5)} ${f(top + 2)} Q${f(x - 4)} ${f(top - rise * 0.6)} ${f(apex)} ${f(top - rise - 2)} Q${f(x + w + 4)} ${f(top - rise * 0.6)} ${f(x + w + 5)} ${f(top + 2)} Z" />`);
                 add('<g class="joint">');
                 for (let sx = x - 2; sx < x + w + 3; sx += rand(2.5, 4)) add(`<line x1="${f(sx)}" y1="${f(top + 1.5)}" x2="${f(sx + rand(-0.8, 0.8))}" y2="${f(top - rand(3, 6))}" />`);
                 add(`<path fill="none" d="M${f(x - 1)} ${f(top - rise * 0.45)} Q${f(apex)} ${f(top - rise * 0.62)} ${f(x + w + 1)} ${f(top - rise * 0.45)}" />`);
                 add("</g>");
             } else {
                 const cls = pick(TILES);
-                add(`<path class="${cls} outline" data-shade="lit" d="M${f(x - 3)} ${f(top)} L${f(apex)} ${f(top - rise)} L${f(x + w + 3)} ${f(top)} Z" />`);
+                add(`<path class="${cls} outline" data-shade="lit" data-snow=".45" d="M${f(x - 3)} ${f(top)} L${f(apex)} ${f(top - rise)} L${f(x + w + 3)} ${f(top)} Z" />`);
                 add('<g class="joint">');
                 (cls === "c-slate" ? [0.25, 0.5, 0.75] : [0.33, 0.66]).forEach((t) => {
                     const [l, r] = edge(t);
@@ -787,6 +837,8 @@
                     [-1, 1].forEach((side) => limbs.push([`M${f(cx)} ${TH - 6} Q${f(cx + side * 2)} ${TH - 1.5} ${f(cx + side * rand(5, 7))} ${TH - 0.5}`, 2.2]));
                     limbs.forEach(([d, w]) => add(`<path class="bark-line" stroke-width="${f(w + 2.4)}" d="${d}" />`));
                     limbs.forEach(([d, w]) => add(`<path class="bark" stroke-width="${f(w)}" d="${d}" />`));
+                    // when it snows, snow lying along its branches (not its trunk or its roots)
+                    if (snowing) limbs.slice(1, -2).forEach(([d, w]) => add(`<path class="snow-line" stroke-width="${f(w * 0.55)}" transform="translate(0 ${f(-w * 0.45)})" d="${d}" />`));
                 } };
             },
             // a fence of uneven pointed planks, one missing here and there, one leaning
@@ -876,8 +928,9 @@
             add(`<line x1="${x0}" y1="${top + 12}" x2="${cx - 4}" y2="${top + 12}" />`);
             add("</g>");
             add(`<rect class="c-cream outline thin" x="${x0 - 1}" y="${band}" width="${x1 - x0 + 2}" height="3" />`);
-            add(`<path class="c-cream-deep outline thin" data-shade="lit" d="M${cx - 20} ${top - 4} L${cx} ${top - 17} L${cx + 20} ${top - 4} Z" />`);
+            add(`<path class="c-cream-deep outline thin" data-shade="lit" data-snow=".5" d="M${cx - 20} ${top - 4} L${cx} ${top - 17} L${cx + 20} ${top - 4} Z" />`);
             add(`<rect class="c-cream-deep outline thin" x="${x0 - 3}" y="${top - 4}" width="${x1 - x0 + 6}" height="4" />`);
+            if (snowing) add(drifts(x0 - 3, x1 + 3, top - 4, 2.4, 0.1));
             add(`<circle class="c-gold outline thin" cx="${cx}" cy="${top - 9.5}" r="3.6" />`);
             add(`<circle class="c-ink" cx="${cx}" cy="${top - 9.5}" r="0.9" />`);
             add(`<rect class="c-arch outline thin" x="${cx - 4}" y="${top}" width="8" height="${spring - r - 8 - top}" />`);
@@ -966,6 +1019,8 @@
             + `<mask id="hanging-fade" maskUnits="userSpaceOnUse" ${above}><rect ${above} fill="url(#hanging-light)" /></mask></defs>`
             + `<g filter="url(#gouache)">${parts.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((p) => p[2]).join("")}</g>`
             // the ground, ruled straight over the foot of everything standing on it
+            // when it snows, snow lying in the street in places, at the foot of everything
+            + (snowing ? `<g filter="url(#gouache)">${drifts(ground[0], ground[1], TH - 1, 4.6, 0.05)}</g>` : "")
             + `<line class="ground-line" x1="${ground[0]}" y1="${TH - 1}" x2="${ground[1]}" y2="${TH - 1}" />`
             // the lanterns, each hooked at the end of its chain: lit glass under a cap, on a base
             // (.chain, .lamp, .lamp-glow)
@@ -1238,6 +1293,9 @@
     const draw = (seed) => {
         state = seed | 0;
         const moment = live ? nowMoment() : momentOf(seed);
+        snowing = snowAsked || ((Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || isWinter()));
+        if (snowing) document.documentElement.dataset.weather = "snow";
+        else delete document.documentElement.dataset.weather;
         document.documentElement.dataset.moment = moment.name;
         today = moment;
         tonight = live ? nowPhase() : phaseOf(seed);
@@ -1899,6 +1957,7 @@
         const id = input.value.trim().toLowerCase();
         input.setAttribute("aria-invalid", String(!ID.test(id)));
         if (!ID.test(id)) return;
+        snowAsked = false;
         show(id);
         history.replaceState(null, "", `?castle=${id}${location.hash}`);
     });

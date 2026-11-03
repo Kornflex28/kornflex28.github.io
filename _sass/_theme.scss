@@ -277,6 +277,33 @@ a {
   opacity: var(--shade-strength);
 }
 
+// Snow (on a castle in fifteen, skyline.js): its caps on the roofs, the sky overcast, the sun
+// veiled
+:root { --snow: #fbfcfd; }
+:root[data-theme="night"] { --snow: #cdd3e6; }
+
+.snow { fill: var(--snow); }
+
+:root[data-weather="snow"]:not([data-theme="night"])[data-moment] {
+  --sky: #c3c8d1;
+  --sky-low: #e4e3e0;
+  --sun: #f3efe6;
+  --light: #f4f2ee;
+}
+
+// (by day only: the moon, by night, shines through)
+:root[data-weather="snow"]:not([data-theme="night"]) .sun { opacity: .45; }
+
+// on the bare trees' branches, and on the elevator's cabin
+.snow-line {
+  fill: none;
+  stroke: var(--snow);
+  stroke-linecap: round;
+}
+
+.cabin-snow { display: none; }
+:root[data-weather="snow"] .cabin-snow { display: inline; fill: var(--snow); }
+
 // The light of the moment, multiplied into the drawing's paint, and the sun (or the moon)
 .daylight { flood-color: var(--light); }
 .sun-disc { fill: var(--sun); }

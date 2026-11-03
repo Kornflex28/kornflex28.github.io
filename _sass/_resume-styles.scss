@@ -809,6 +809,9 @@ main .floor:has(> .floor-deco) {
   }
 }
 
+// in the snow, no flowers on the plants and the moss under it
+:root[data-weather="snow"] .floor-deco :is(.flower, .moss) { display: none; }
+
 // printed, every floor's plants grown, those not yet seen too
 @media print {
   .floor-deco {

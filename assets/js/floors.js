@@ -134,10 +134,13 @@
             const r = random(), dry = r < 0.11, l = rand(...kind.size) * scale * rand(0.7, 1.25), w = l * 0.42;
             const colour = dry ? pick(DRY) : r < 0.17 ? pick(AUTUMN) : pick(kind.greens), curl = dry && random() < 0.5 ? " scale(1 .6)" : "";
             // its veins: the midrib and two pairs off it (none on wisteria's small leaflets)
+            // (when it snows, a little of it on those turned up)
+            const turned = dry ? 180 : a, snowy = document.documentElement.dataset.weather === "snow" && Math.abs(((turned + 540) % 360) - 180) < 80 && random() < 0.6;
+            const snow = snowy ? `<ellipse class="snow" cx="0" cy="${f(-l * 0.6)}" rx="${f(w * 0.7)}" ry="${f(l * 0.2)}" />` : "";
             const veins = kind.leaf === "pinnate" || l < 6 ? "" : `<path class="vein" d="M0 ${f(-l * 0.12)} V${f(-l * 0.85)}`
                 + [[0.38, 0.6, 0.16], [0.6, 0.45, 0.13]].map(([at, out, up]) => ` M0 ${f(-l * at)} l${f(w * out)} ${f(-l * up)} M0 ${f(-l * at)} l${f(-w * out)} ${f(-l * up)}`).join("") + '" />';
             return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(dry ? rand(140, 220) : a)})${curl}">${sway(x, rand(3, 7), 0.45,
-                `<g class="leaf" style="${delay(t)}" data-at="${f(x)} ${f(y)}"><path class="${colour} outline ${kind.leaf === "pinnate" ? "wisp" : "hair"}" d="${LEAVES[kind.leaf](l, w)}" />${veins}</g>`)}</g>`;
+                `<g class="leaf" style="${delay(t)}" data-at="${f(x)} ${f(y)}"><path class="${colour} outline ${kind.leaf === "pinnate" ? "wisp" : "hair"}" d="${LEAVES[kind.leaf](l, w)}" />${veins}${snow}</g>`)}</g>`;
         };
         // a flower at (x, y)
         const flower = (x, y, type, t = time(x)) => {
@@ -575,8 +578,17 @@
         let moss = tuft(px1 + 2, LOW + 3, true);
         for (let x = px0 + rand(1, 8); x < w - 6; x += rand(4, 20)) if (random() < lush(x)) moss += tuft(x, TOP + 0.6, false);
         for (let x = px1 + rand(10, 40); x < w - 6; x += rand(24, 80)) if (random() < 0.4 + lush(x) * 0.6) moss += tuft(x, LOW - 0.6, true);
+        // snow lying along the course's top, its edge soft and uneven, a lump here and there
+        let snow = "";
+        if (document.documentElement.dataset.weather === "snow") {
+            snow = `<path class="snow outline fine" d="M${f(px0 - 1)} ${TOP + 2} L${f(px0)} ${TOP - 1.4}`;
+            for (let x = px0 + 4; x < w; x += 4) snow += ` L${f(x)} ${f(TOP - 1.6 - (Math.sin(x * 0.21 + i) > 0.8 ? 1.6 : 0) - 0.4 * Math.sin(x * 0.7))}`;
+            snow += ` L${w + 1} ${TOP - 1.4} L${w + 1} ${TOP + 2}`;
+            for (let x = w; x > px0; x -= 3) snow += ` L${f(x)} ${f(TOP + 2.2 + 0.9 * Math.sin(x * 0.8 + i) + (Math.sin(x * 0.13 + 3 * i) > 0.9 ? 2.5 : 0))}`;
+            snow += " Z\" />";
+        }
         const paint = document.getElementById("gouache") ? ' filter="url(#gouache)"' : "";
-        return [`<g${paint}>${wall}${course}${panel}${field}${edges}</g>`, moss];
+        return [`<g${paint}>${wall}${course}${panel}${field}${edges}${snow}</g>`, moss];
     };
 
     // by night, a few fireflies drifting over the plants and glowing on and off (.firefly, as
