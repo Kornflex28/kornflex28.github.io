@@ -1,11 +1,11 @@
-// The page for missing addresses: the elevator stuck between two floors, jolting now and
-// then, and a way back up.
+// The page for missing addresses: the floor come down in ruins, the giant sitting on them,
+// and a way back up.
 
 .lost {
   position: relative;
   max-width: 30rem;
   margin: 0 auto;
-  padding: 0 1.25rem 4rem;
+  padding: 3rem 1.25rem 4rem;
   text-align: center;
 
   .theme-toggle {
@@ -25,58 +25,86 @@
   }
 }
 
-// The shaft, from the top of the screen down past two landings, with the cabin hanging
-// between them
-.lost-shaft {
-  position: relative;
-  width: 2rem;
-  height: 22rem;
+// The floor that came down: its rubble, and the giant sitting on it, thinking
+.lost-ruins {
+  display: block;
+  width: min(100%, 22rem);
+  height: auto;
   margin: 0 auto;
 
-  // the shaft
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(50% - 1px);
-    width: 2px;
-    background: var(--ink);
+  .robot { fill: color-mix(in oklab, var(--slate) 62%, var(--paper)); }
+  .robot-dark { fill: color-mix(in oklab, var(--slate) 85%, var(--line)); }
+  .eye { transition: fill 1s; }
+  .eye-glow { opacity: 0; transition: opacity 1s; }
+  .robot-far { fill: color-mix(in oklab, var(--slate) 80%, var(--paper)); }
+  .robot-pleat { fill: color-mix(in oklab, var(--slate) 74%, var(--paper)); }
+  .robot-recess { fill: color-mix(in oklab, var(--slate) 92%, var(--line)); }
+  .pupil { fill: var(--line); }
+
+  .seam {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: .55;
+    opacity: .6;
   }
 
-  // the two landings it stopped between
-  &::after {
-    content: "";
-    position: absolute;
-    top: 5rem;
-    left: calc(50% - .35rem);
-    box-sizing: border-box;
-    width: .7rem;
-    height: .7rem;
-    border: 2px solid var(--ink);
-    border-radius: 50%;
-    background: var(--paper);
-    box-shadow: 0 14rem 0 -2px var(--paper), 0 14rem 0 0 var(--ink);
+  .rivets {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: .55;
   }
-}
 
-.lost-cabin {
-  position: absolute;
-  z-index: 1;
-  top: 10.5rem;
-  left: calc(50% - 1rem);
-  width: 2rem;
-  animation: stuck 3.2s ease-in-out infinite;
+  .ruin-shadow { fill: var(--line); opacity: .12; }
+  .chip-mark { fill: var(--line); opacity: .22; }
+  .pebble { stroke: var(--line); stroke-width: .5; }
 
-  svg {
-    display: block;
-    width: 100%;
-    height: auto;
+  .pedicel {
+    fill: none;
+    stroke: var(--hedge-deep);
+    stroke-width: .6;
   }
+
+  .legs {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: .7;
+  }
+
+  .tuft,
+  .twigs {
+    fill: none;
+    stroke: var(--hedge);
+    stroke-width: .8;
+    stroke-linecap: round;
+  }
+
+  .twigs { stroke: var(--timber); stroke-width: .7; }
+
+  // one light over the whole scene, from the upper left: every piece drawn with an outline
+  // gets a lit edge on its sides facing it and a dark one on the others (#relief, the head's
+  // turned with it)
+  .outline { filter: url(#relief); }
+  .outline.fine { filter: url(#relief-fine); }
+  .head .outline.thin { filter: url(#relief-head); }
 }
 
-@keyframes stuck {
-  0%, 70%, 100% { transform: translateY(0); }
-  78% { transform: translateY(-.35rem); }
-  86% { transform: translateY(.1rem); }
+// by night the giant's eyes are lit, glowing on and off a little
+:root[data-theme="night"] .lost-ruins {
+  .eye { fill: var(--lamp-light); }
+  .eye-glow { opacity: 1; animation: eyes 4s ease-in-out infinite alternate; }
 }
+
+@keyframes eyes {
+  from { opacity: .7; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lost-ruins .eye-glow { animation: none; }
+}
+
+.relief-light { flood-color: #fff; flood-opacity: .34; }
+.relief-dark { flood-color: var(--line); flood-opacity: .22; }
+:root[data-theme="night"] .relief-light { flood-opacity: .14; }
