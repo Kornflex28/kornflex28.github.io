@@ -432,6 +432,17 @@ a {
   &.fine { stroke-width: 1; }
 }
 
+// The fountains' water on the castle's terrace (skyline.js)
+.skyline .jet {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.5;
+  opacity: .7;
+  stroke-linecap: round;
+
+  &.thin { stroke-width: .9; }
+}
+
 // The shadow a turret casts on the column and the turrets behind it (skyline.js)
 .skyline .cast {
   opacity: calc(.2 * var(--shade-strength));

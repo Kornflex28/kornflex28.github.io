@@ -337,6 +337,117 @@
         crenelHedge(x - 2, base - h, w + 4, 7);
     };
 
+    // More of the palace's terrace, after the film, each standing from its left edge x on base,
+    // and giving its width w and its height h: the King's gilt statue on its pedestal in a bed of
+    // flowers, a fountain, a white colonnade, a stone urn of flowers, a pole of the King's
+    // loudspeakers, and great pale cylinders standing on a block
+    const TERRACE = [
+        () => {
+            const w = 30, h = 48;
+            return {
+                w, h, tall: false, draw: (x, b) => {
+                    const cx = x + w / 2, y0 = b - 20.5;
+                    add(`<rect class="c-hedge outline thin" x="${f(x)}" y="${f(b - 3.5)}" width="${w}" height="3.5" />`);
+                    for (let k = 0; k < 7; k++) add(`<circle class="${k % 2 ? "c-red" : "c-rose"}" cx="${f(x + 2.5 + k * 4.2)}" cy="${f(b - 3.6)}" r="1.1" />`);
+                    add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(cx - 8)}" y="${f(b - 6)}" width="16" height="2.5" />`);
+                    add(`<rect class="c-cream outline thin" data-shade="lit" data-snow=".1" x="${f(cx - 6)}" y="${f(b - 19)}" width="12" height="13" />`);
+                    add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(cx - 7.5)}" y="${f(y0)}" width="15" height="1.5" />`);
+                    // the King, chest thrown out, broad in the shoulders, his cloak hanging from them
+                    // to the plinth, an ermine collar, his head held high under his crown
+                    add(`<path class="c-gold outline thin" data-shade="cyl" data-snow=".06" d="M${f(cx - 7.5)} ${f(y0)} L${f(cx - 6.4)} ${f(y0 - 12)} Q${f(cx - 6.6)} ${f(y0 - 17.5)} ${f(cx - 4.4)} ${f(y0 - 19)} Q${f(cx - 2.5)} ${f(y0 - 19.8)} ${f(cx - 1.4)} ${f(y0 - 19.6)} H${f(cx + 1.4)} Q${f(cx + 2.5)} ${f(y0 - 19.8)} ${f(cx + 4.4)} ${f(y0 - 19)} Q${f(cx + 6.6)} ${f(y0 - 17.5)} ${f(cx + 6.4)} ${f(y0 - 12)} L${f(cx + 7.5)} ${f(y0)} Z" />`);
+                    add(`<path class="outline fine" fill="none" d="M${f(cx - 4.2)} ${f(y0 - 15)} Q${f(cx - 5.4)} ${f(y0 - 7)} ${f(cx - 5.2)} ${f(y0)} M${f(cx + 4.2)} ${f(y0 - 15)} Q${f(cx + 5.4)} ${f(y0 - 7)} ${f(cx + 5.2)} ${f(y0)}" />`);
+                    add(`<path class="c-gold outline fine" data-shade="sphere" d="M${f(cx - 1.8)} ${f(y0 - 19)} C${f(cx - 4.6)} ${f(y0 - 16.5)} ${f(cx - 4.2)} ${f(y0 - 11)} ${f(cx - 2.4)} ${f(y0 - 9.6)} L${f(cx - 2.2)} ${f(y0)} H${f(cx + 2.2)} L${f(cx + 2.4)} ${f(y0 - 9.6)} C${f(cx + 4.2)} ${f(y0 - 11)} ${f(cx + 4.6)} ${f(y0 - 16.5)} ${f(cx + 1.8)} ${f(y0 - 19)} Z" />`);
+                    add(`<path class="outline fine" fill="none" d="M${f(cx - 2.4)} ${f(y0 - 9.6)} H${f(cx + 2.4)} M${f(cx)} ${f(y0 - 8.6)} V${f(y0)}" />`);
+                    add(`<ellipse class="c-gold outline fine" cx="${f(cx)}" cy="${f(y0 - 19.4)}" rx="3.4" ry="1.1" />`);
+                    add(`<circle class="c-gold outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(y0 - 22.2)}" r="2.5" />`);
+                    add(`<path class="c-gold outline fine" data-snow=".35" d="M${f(cx - 2.4)} ${f(y0 - 23.9)} l.5 -3 l1.3 1.6 l.6 -2.4 l.6 2.4 l1.3 -1.6 l.5 3 Z" />`);
+                },
+            };
+        },
+        () => {
+            const w = int(38, 50), h = 38;
+            return {
+                w, h, tall: false, draw: (x, b) => {
+                    const cx = x + w / 2, rim = b - 15;
+                    add(`<path class="jet" d="M${f(cx)} ${f(rim - 10)} V${f(rim - 22)} M${f(cx)} ${f(rim - 21)} Q${f(cx - 8)} ${f(rim - 25)} ${f(cx - 12)} ${f(rim - 1)} M${f(cx)} ${f(rim - 21)} Q${f(cx + 8)} ${f(rim - 25)} ${f(cx + 12)} ${f(rim - 1)}" />`);
+                    add(`<path class="jet thin" d="M${f(cx - 7)} ${f(rim - 10)} Q${f(cx - 9)} ${f(rim - 7)} ${f(cx - 9.5)} ${f(rim)} M${f(cx + 7)} ${f(rim - 10)} Q${f(cx + 9)} ${f(rim - 7)} ${f(cx + 9.5)} ${f(rim)}" />`);
+                    add(`<rect class="c-cream outline thin" data-shade="cyl" x="${f(cx - 2)}" y="${f(rim - 9)}" width="4" height="9" />`);
+                    add(`<path class="c-cream outline thin" data-shade="sphere" data-snow=".35" d="M${f(cx - 7.5)} ${f(rim - 10.5)} Q${f(cx)} ${f(rim - 4.5)} ${f(cx + 7.5)} ${f(rim - 10.5)} Z" />`);
+                    add(`<rect class="c-cream outline thin" data-shade="cyl" x="${f(cx - 5)}" y="${f(b - 6)}" width="10" height="6" />`);
+                    add(`<path class="c-cream outline thin" data-shade="sphere" d="M${f(x)} ${f(rim)} H${f(x + w)} Q${f(x + w - 3)} ${f(b - 6)} ${f(cx)} ${f(b - 6)} Q${f(x + 3)} ${f(b - 6)} ${f(x)} ${f(rim)} Z" />`);
+                    add(`<rect class="c-cream outline thin" data-snow=".5" x="${f(x - 1.5)}" y="${f(rim - 1.5)}" width="${w + 3}" height="2" />`);
+                },
+            };
+        },
+        () => {
+            const n = int(4, 7), gap = int(10, 13), w = (n - 1) * gap + 4, ch = int(22, 30), crown = pick(["hedge", "urns", "plain"]);
+            return {
+                w, h: ch + 8 + (crown === "plain" ? 0 : 7), tall: true, draw: (x, b) => {
+                    const top = b - 3 - ch;
+                    add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(x - 3)}" y="${f(b - 3)}" width="${w + 6}" height="3" />`);
+                    for (let k = 0; k < n; k++) {
+                        const px = x + k * gap;
+                        add(`<rect class="c-cream outline thin" data-shade="cyl" x="${f(px)}" y="${f(top)}" width="4" height="${ch}" />`);
+                        add(`<rect class="c-cream outline thin" x="${f(px - 1)}" y="${f(top - 1.5)}" width="6" height="1.5" />`);
+                    }
+                    add(`<rect class="c-cream outline thin" data-shade="lit" data-snow=".3" x="${f(x - 3)}" y="${f(top - 6.5)}" width="${w + 6}" height="5" />`);
+                    if (crown === "hedge") crenelHedge(x - 2, top - 6.5, w + 4, 5);
+                    if (crown === "urns") for (let k = 0; k < n; k += 2) {
+                        const ux = x + k * gap + 2;
+                        add(`<path class="c-cream outline fine" data-shade="sphere" data-snow=".4" d="M${f(ux - 3)} ${f(top - 12.5)} Q${f(ux - 3.4)} ${f(top - 7.5)} ${f(ux)} ${f(top - 6.5)} Q${f(ux + 3.4)} ${f(top - 7.5)} ${f(ux + 3)} ${f(top - 12.5)} Z" />`);
+                    }
+                },
+            };
+        },
+        () => {
+            const w = 14, h = 31, stone = pick(["c-cream", "c-cream", "c-terracotta"]);
+            return {
+                w, h, tall: false, draw: (x, b) => {
+                    const cx = x + w / 2;
+                    b -= 5;
+                    add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(cx - 4)}" y="${f(b - 8)}" width="8" height="13" />`);
+                    add(`<path class="${stone} outline thin" data-shade="sphere" d="M${f(cx - 5.5)} ${f(b - 15.5)} Q${f(cx - 6)} ${f(b - 9)} ${f(cx - 1.5)} ${f(b - 8.5)} H${f(cx + 1.5)} Q${f(cx + 6)} ${f(b - 9)} ${f(cx + 5.5)} ${f(b - 15.5)} Z" />`);
+                    for (let k = 0; k < 4; k++) add(`<circle class="${pick(GREENS)} outline thin" data-shade="sphere" data-snow=".5" cx="${f(cx - 4.5 + k * 3)}" cy="${f(b - 17 - (k % 2) * 2.5)}" r="${f(rand(2.4, 3.2))}" />`);
+                    for (let k = 0; k < 4; k++) add(`<circle class="${pick(["c-red", "c-rose", "c-gold"])}" cx="${f(cx + rand(-5, 5))}" cy="${f(b - rand(16.5, 21.5))}" r="1" />`);
+                    add(`<rect class="${stone} outline thin" x="${f(cx - 6.4)}" y="${f(b - 16.4)}" width="12.8" height="1.6" />`);
+                },
+            };
+        },
+        () => {
+            const h = int(52, 70), w = 22;
+            return {
+                w, h, tall: true, draw: (x, b) => {
+                    const cx = x + w / 2, top = b - h + 8;
+                    add(`<rect class="c-slate outline thin" x="${f(cx - 1.3)}" y="${f(top)}" width="2.6" height="${f(b - top)}" />`);
+                    add(`<rect class="c-slate outline thin" x="${f(cx - 3)}" y="${f(b - 3)}" width="6" height="3" />`);
+                    // its horns, banded, turned every way
+                    pick([[-160, -20], [-155, -25, 170], [-150, -30, 165, 15]]).forEach((a, k) => {
+                        const y = top + 2 + k * 3.2;
+                        add(`<g transform="translate(${f(cx)} ${f(y)}) rotate(${a})">`);
+                        add('<path class="c-gold outline thin" data-shade="cyl" d="M0 -1 C5 -1 7 -2 10 -4.6 L10 4.6 C7 2 5 1 0 1 Z" />');
+                        add('<ellipse class="c-ochre outline fine" cx="10" rx="1.3" ry="4.6" />');
+                        add("</g>");
+                    });
+                    add(`<rect class="c-slate outline thin" data-snow=".4" x="${f(cx - 3)}" y="${f(top - 1)}" width="6" height="4" rx="1" />`);
+                },
+            };
+        },
+        () => {
+            const n = pick([2, 2, 3]), cw = int(18, 24), w = n * cw + (n + 1) * 4, bh = int(14, 20), ch = int(40, 66);
+            return {
+                w, h: bh + ch + 3, tall: true, draw: (x, b) => {
+                    add(`<rect class="c-cream outline" data-shade="lit" data-snow=".1" x="${f(x)}" y="${f(b - bh)}" width="${w}" height="${bh}" />`);
+                    add(`<rect class="c-window-dark" x="${f(x + 3)}" y="${f(b - bh + 3)}" width="${w - 6}" height="3.5" />`);
+                    for (let k = 0; k < n; k++) {
+                        const cx = x + 4 + k * (cw + 4), top = b - bh - ch + (k % 2) * int(0, 8);
+                        add(`<path class="c-cream outline" data-shade="cyl" d="M${f(cx)} ${f(b - bh)} V${f(top)} A${f(cw / 2)} 2.6 0 0 1 ${f(cx + cw)} ${f(top)} V${f(b - bh)} Z" />`);
+                        add(`<ellipse class="c-cream outline thin" data-snow="1" cx="${f(cx + cw / 2)}" cy="${f(top)}" rx="${f(cw / 2)}" ry="2.6" />`);
+                    }
+                },
+            };
+        },
+    ];
+
     // Snow lying in places along a line at y, from x0 to x1: low mounds of it, here and there
     // (where its uneven waves rise over `rare`), none elsewhere; the same wherever it is drawn
     const drifts = (x0, x1, y, high = 2.6, rare = 0.35) => {
@@ -1623,6 +1734,47 @@
             else cone(x, yt, w, t.roof, t.roofColour, t.needle);
             add('</g>');
         }));
+
+        // More of the palace's terrace (TERRACE): one to three of its pieces, each one once,
+        // away from the column like the buildings, standing behind the low shrubs if they must;
+        // and when the terrace runs on over a viaduct, along it, what is no building: a statue,
+        // an urn, a fountain, a pole of loudspeakers, street lamps, shrubs. Drawn last and from a
+        // draw of their own, so the rest of each castle stays the one its seed has always given.
+        on(BACK, () => {
+            const kept = state;
+            state = (seed ^ 0x510e527f) | 0;
+            const room = (b) => used.every((u) => gardens.includes(u) || !hits(u, b));
+            const place = (piece, x0, x1, near) => {
+                for (let i = 0; i < 40; i++) {
+                    const x = rand(x0, x1 - piece.w);
+                    if (!near && x + piece.w > colX - 70 && x < colX + colW + 70) continue;
+                    if (opening && x + piece.w > opening[0] - 8 && x < opening[1] + 8) continue;
+                    const b = box(x - 6, tTop - piece.h, x + piece.w + 6, tTop);
+                    if (!room(b)) continue;
+                    use(b);
+                    piece.draw(x, tTop);
+                    return true;
+                }
+                return false;
+            };
+            let wanted = pick([1, 2, 2, 3]);
+            const stood = new Set();
+            [...TERRACE].sort(() => random() - 0.5).forEach((make) => {
+                if (wanted && place(make(), tx0 + 6, tx1 - 6, false)) { wanted--; stood.add(make); }
+            });
+            if (railEnd === W + 10) {
+                const shrubs = shrubsAt(tTop).slice(1);
+                const along = [TERRACE[0], TERRACE[1], TERRACE[3], TERRACE[4]].filter((make) => !stood.has(make));
+                along.push(
+                    () => ({ w: 16, h: 64, draw: (x, b) => lamp(x + 8, b) }),
+                    ...shrubs.map((make) => () => { const s = make(); return { ...s, draw: (x) => gardens.push(s.draw(x)) }; }));
+                for (let k = int(2, 4); k > 0; k--) {
+                    const make = pick(along);
+                    if (place(make(), tx1 + 12, W - 8, true) && TERRACE.includes(make)) along.splice(along.indexOf(make), 1);
+                }
+            }
+            state = kept;
+        });
 
         on(GROUND, () => add(`<line class="outline" x1="0" y1="${H - 1}" x2="${W}" y2="${H - 1}" />`));
 
