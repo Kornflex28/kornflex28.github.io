@@ -1777,6 +1777,7 @@
     const shortScreen = matchMedia("(max-width: 1199.98px) and (max-height: 500px)");
     const TINTS = ["--sky", "--sky-low", "--sun"];
     let turning = false, palette = null;
+    const palettes = {};
     const sky = document.createElement("canvas");
     sky.className = "turning-sky";
     sky.width = 1;
@@ -1789,20 +1790,34 @@
         const b = sun.getBoundingClientRect();
         return Math.hypot(event.clientX - b.left - b.width / 2, event.clientY - b.top - b.height / 2) < b.width / 6 * 1.4;
     };
-    // each moment's sky colours, read once from the CSS, as [r, g, b]
+    // each moment's sky colours, read from the CSS, as [r, g, b]. In the snow, whose overcast
+    // sky the CSS gives every moment alike, the clear sky's colours, dulled, set off from the
+    // overcast one as far as they are from those of the castle's own moment: the day still goes
+    // round, greyed, and comes back to the overcast sky it left. Kept for each weather and moment.
     const rgb = (value) => (value.trim().match(/[0-9a-f]{2}/gi) || []).map((h) => parseInt(h, 16));
     const paletteOf = () => {
-        const kept = root.dataset.moment, style = getComputedStyle(root);
-        const colours = MOMENTS.map(({ name }) => {
+        const kept = root.dataset.moment, weather = root.dataset.weather, key = `${weather}|${kept}`, style = getComputedStyle(root);
+        if (palettes[key]) return palettes[key];
+        const read = () => TINTS.map((p) => rgb(style.getPropertyValue(p)));
+        const overcast = read();
+        delete root.dataset.weather;
+        let colours = MOMENTS.map(({ name }) => {
             root.dataset.moment = name;
-            return TINTS.map((p) => rgb(style.getPropertyValue(p)));
+            return read();
         });
         root.dataset.moment = kept;
-        return colours.every((m) => m.every((c) => c.length === 3)) ? colours : null;
+        if (weather) root.dataset.weather = weather;
+        if (!colours.every((m) => m.every((c) => c.length === 3)) || overcast.some((c) => c.length !== 3)) return null;
+        if (weather === "snow") {
+            const dull = (c) => { const l = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]; return c.map((v) => v + (l - v) * 0.7); };
+            const own = colours[Math.max(0, MOMENTS.findIndex((m) => m.name === kept))].map(dull);
+            colours = colours.map((m) => m.map((c, i) => dull(c).map((v, j) => Math.max(0, Math.min(255, overcast[i][j] + 0.75 * (v - own[i][j]))))));
+        }
+        return (palettes[key] = colours);
     };
     // read while the page rests after loading, not on the first touch, where it would hold the
     // first frame up (by day only: by night the CSS gives the night's colours instead)
-    (window.requestIdleCallback || setTimeout)(() => { if (root.dataset.theme !== "night") palette ??= paletteOf(); });
+    (window.requestIdleCallback || setTimeout)(() => { if (root.dataset.theme !== "night") paletteOf(); });
     // the two moments around the sun at an angle on a course (which: wide, narrow, on its side),
     // and how far it has gone from the first to the second: by day, and from dusk to dawn across
     // the night
@@ -1830,8 +1845,10 @@
     const pace = (deg) => 0.15 + 0.85 * Math.max(0, Math.min(1, (Math.sin(deg * Math.PI / 180) + 0.1) / 0.13));
     const nextFrame = () => new Promise((done) => requestAnimationFrame(done));
     const turnDay = async (sun) => {
-        palette ??= paletteOf();
+        palette = paletteOf();
         if (!palette) return;
+        // (veiled in the snow, the sun stays as veiled as it goes round)
+        const veil = parseFloat(getComputedStyle(sun).opacity) || 1;
         // the sun's 90 steps of 4° round the course shown (which), from where it stands (a0),
         // each given its time; its size and the sky's colours follow the moment's own angle on
         // that course (w0), so the sky reddens as the sun sinks there, not as it would on another
@@ -1844,7 +1861,7 @@
             return {
                 offset: time / times[90],
                 transform: `translate(${f(100 * (x - x0) / (6 * r))}%, ${f(100 * (y - y0) / (6 * r))}%) scale(${(sizeAt(w0 - 4 * k, which) / r).toFixed(3)})`,
-                opacity: Math.max(0, Math.min(1, (Math.sin(a * Math.PI / 180) - 0.03) / 0.12)),
+                opacity: veil * Math.max(0, Math.min(1, (Math.sin(a * Math.PI / 180) - 0.03) / 0.12)),
             };
         });
         // how far round the sun has gone, as an angle, when the animation is that far through
