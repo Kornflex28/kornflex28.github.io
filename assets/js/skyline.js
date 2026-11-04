@@ -710,6 +710,15 @@
     const LIMEWASH = ["c-cream", "c-cream-deep", "c-cream-deep", "c-sand", "c-plaster", "c-plaster", "c-plaster-ochre"];
     const TILES = ["c-terracotta", "c-terracotta-deep", "c-terracotta-deep", "c-slate", "c-slate"];
     const WOOD = ["c-terracotta-deep", "c-timber", "c-timber", "c-slate", "c-green"];   // doors, shutters
+    // The giant of the film, who comes up from the lower town by night (see below): behind the
+    // houses, his head, drawn upright about his neck, his eyes to be lit, out of
+    // sight until he rises (.giant.appearing); his top fading into the dark above, as the
+    // lanterns' chains do
+    const GIANT = '<g mask="url(#hanging-fade)"><g class="giant" transform="translate(-999 0)"><g class="giant-rise">'
+        + '<path class="giant-dark outline thin" d="M-7 6 V-3 H7 V6 Z" /><path class="giant-plate outline thin" d="M-15 -1.5 V-42 H15 V-1.5 Q0 1.5 -15 -1.5 Z" /><path class="giant-plate outline thin" d="M-15 -42 Q-15 -55 0 -56.5 Q15 -55 15 -42 Z" /><path class="giant-dark outline thin" d="M5.5 -55.5 L5.3 -57.1 L5.2 -58.6 L5.3 -60.1 L5.5 -61.5 L5.9 -62.9 L6.4 -64.2 L7 -65.5 L7.8 -66.7 L8.6 -67.8 L9.6 -68.8 L10.6 -69.8 L11.8 -70.6 L13.1 -71.4 L14.5 -72 L15.9 -72.6 L17.5 -73 L19.3 -71.6 L17.7 -71.2 L16.3 -70.6 L14.9 -70 L13.6 -69.2 L12.4 -68.4 L11.4 -67.4 L10.4 -66.4 L9.6 -65.3 L8.8 -64.1 L8.2 -62.8 L7.7 -61.5 L7.3 -60.1 L7.1 -58.7 L7 -57.2 L7.1 -55.7 L7.3 -54.1 Z" /><path class="giant-plate outline thin" d="M-5 -55 L-5.3 -57.2 L-5.3 -59.4 L-5.1 -61.6 L-4.7 -63.7 L-4.1 -65.7 L-3.3 -67.7 L-2.3 -69.6 L-1.1 -71.4 L0.2 -73.1 L1.7 -74.6 L3.4 -76.1 L5.3 -77.4 L7.2 -78.5 L9.4 -79.5 L11.6 -80.3 L14 -81 L14.9 -78.8 L16.3 -79.6 L16.2 -77 L17.8 -76.8 L16.8 -74.9 L17.5 -73 L17.5 -73 L15.9 -72.6 L14.5 -72 L13.1 -71.4 L11.8 -70.6 L10.6 -69.8 L9.6 -68.8 L8.6 -67.8 L7.8 -66.7 L7 -65.5 L6.4 -64.2 L5.9 -62.9 L5.5 -61.5 L5.3 -60.1 L5.2 -58.6 L5.3 -57.1 L5.5 -55.5 Z" /><path class="seam" d="M-1.8 -59.2 L-1.7 -61.1 L-1.3 -63 L-0.8 -64.8 L-0.1 -66.6 L0.8 -68.2 L1.8 -69.8 L3 -71.3 L4.3 -72.7 L5.8 -74 L7.4 -75.1 L9.2 -76.2 L11.1 -77" /><path class="seam" d="M1.7 -58.9 L1.8 -60.6 L2.1 -62.3 L2.5 -63.9 L3.1 -65.4 L3.8 -66.9 L4.7 -68.3 L5.8 -69.6 L6.9 -70.8 L8.2 -71.9 L9.6 -72.9 L11.1 -73.8 L12.7 -74.6" /><path class="giant-plate outline thin" d="M-7 -54.6 Q0.5 -58 8 -55.2 L7.5 -53.4 Q0.5 -56 -6.6 -52.8 Z" /><path class="giant-plate outline thin" d="M-16.5 -45.2 Q0 -48 16.5 -45.2 V-39.6 Q0 -42.4 -16.5 -39.6 Z" /><path class="giant-recess" d="M6.6 -40.6 L8.8 -39.8 V-16.6 L6.6 -15.4 Z" /><path class="giant-plate outline thin" d="M2 -41 H6.6 V-15.4 H2 Z" /><ellipse class="giant-recess outline thin" cx="-5.6" cy="-27.5" rx="5.8" ry="8.8" /><ellipse class="c-window-dark" cx="-5" cy="-27.2" rx="4.6" ry="7.6" /><ellipse class="giant-recess outline thin" cx="12" cy="-27.5" rx="2.9" ry="8.2" /><ellipse class="c-window-dark" cx="12.4" cy="-27.3" rx="2" ry="7" /><circle class="giant-plate outline thin" cx="4" cy="-8.6" r="6.6" /><circle class="giant-recess outline fine" cx="4.3" cy="-8.4" r="4.6" /><circle class="c-window-dark" cx="4.6" cy="-8.2" r="2.9" />'
+        + '<g class="giant-eyes"><ellipse cx="-5" cy="-27" rx="13" ry="15" fill="url(#window-light)" /><ellipse cx="12.4" cy="-27" rx="7" ry="13" fill="url(#window-light)" />'
+        + '<g class="giant-look"><ellipse class="giant-eye" cx="-5" cy="-27.2" rx="4.6" ry="7.6" /><ellipse class="giant-eye" cx="12.4" cy="-27.3" rx="2" ry="7" /></g></g>'
+        + "</g></g></g>";
     const drawTown = (town, seed) => {
         state = (seed ^ 0x6a09e667) | 0;
         parts.length = 0;
@@ -1017,6 +1026,7 @@
             }
             add("</g>");
         });
+        on(SKY, () => add(GIANT));
         // the elevator's lower station, set into the foundations: two storeys of dressed stone
         // under a cornice. The cable comes in through the pediment over a gilded pulley, as at
         // the castle's pavilion, then runs down a groove in the facade to the arch where the
@@ -2317,6 +2327,34 @@
         setTimeout(shoot, 15000 + Math.random() * 25000);
     };
     setTimeout(shoot, 5000 + Math.random() * 8000);
+
+    // By night, now and then, the giant comes up from the lower town, as in the film: his head
+    // rises over the roofs where they are lowest, his eyes light up, look round, blink, and he
+    // sinks back into the dark. Only while the lower town is in view.
+    let townInView = false;
+    if (town) new IntersectionObserver(([entry]) => { townInView = entry.isIntersecting; }).observe(town);
+    const giantRises = () => {
+        const night = getComputedStyle(document.documentElement).colorScheme === "dark", giant = town?.querySelector(".giant");
+        if (giant && townInView && night && !document.hidden && !reducedMotion.matches && !giant.classList.contains("appearing") && Math.random() < 0.6) {
+            const S = 1.1, view = town.viewBox.baseVal, standing = [...giant.closest("[filter]").children].filter((el) => !el.matches("[mask]")).map((el) => el.getBBox());
+            // the top of what stands along the town, over a stretch as wide as his head: he comes up
+            // behind a house whose roof hides him up to just under his eyes, neither low nor tall
+            const topAt = (x) => Math.min(TH, ...standing.filter((b) => b.x < x + 19 && b.x + b.width > x - 19).map((b) => b.y));
+            // (and hides him all along his neck: something standing there all across him, up past it)
+            const hidden = (x, neck) => [-18, -12, -6, 0, 6, 12, 18].every((dx) => standing.some((b) => b.x <= x + dx && b.x + b.width >= x + dx && b.y <= neck));
+            const spots = [];
+            for (let x = Math.max(view.x + 70, DOCK + 140); x < view.x + view.width - 50; x += 6) spots.push([x, topAt(x)]);
+            const room = spots.filter(([x, top]) => top >= TOP + 40 && top <= TH - 45 && hidden(x, top - 9 + 27 * S));
+            if (room.length) {
+                const [x, top] = room[Math.floor(Math.random() * room.length)];
+                giant.setAttribute("transform", `translate(${f(x)} ${f(top - 9 + 27 * S)}) scale(${S})`);
+                giant.classList.add("appearing");
+                giant.onanimationend = (event) => { if (event.target.matches(".giant-rise")) giant.classList.remove("appearing"); };
+            }
+        }
+        setTimeout(giantRises, 30000 + Math.random() * 40000);
+    };
+    setTimeout(giantRises, 12000 + Math.random() * 10000);
 
     const asked = (new URLSearchParams(location.search).get("castle") || "").toLowerCase();
     input.value = ID.test(asked) ? asked : randomId();
