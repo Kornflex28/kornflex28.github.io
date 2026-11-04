@@ -345,7 +345,7 @@
         () => {
             const w = 30, h = 48;
             return {
-                w, h, tall: false, draw: (x, b) => {
+                w, h, draw: (x, b) => {
                     const cx = x + w / 2, y0 = b - 20.5;
                     add(`<rect class="c-hedge outline thin" x="${f(x)}" y="${f(b - 3.5)}" width="${w}" height="3.5" />`);
                     for (let k = 0; k < 7; k++) add(`<circle class="${k % 2 ? "c-red" : "c-rose"}" cx="${f(x + 2.5 + k * 4.2)}" cy="${f(b - 3.6)}" r="1.1" />`);
@@ -367,7 +367,7 @@
         () => {
             const w = int(38, 50), h = 38;
             return {
-                w, h, tall: false, draw: (x, b) => {
+                w, h, draw: (x, b) => {
                     const cx = x + w / 2, rim = b - 15;
                     add(`<path class="jet" d="M${f(cx)} ${f(rim - 10)} V${f(rim - 22)} M${f(cx)} ${f(rim - 21)} Q${f(cx - 8)} ${f(rim - 25)} ${f(cx - 12)} ${f(rim - 1)} M${f(cx)} ${f(rim - 21)} Q${f(cx + 8)} ${f(rim - 25)} ${f(cx + 12)} ${f(rim - 1)}" />`);
                     add(`<path class="jet thin" d="M${f(cx - 7)} ${f(rim - 10)} Q${f(cx - 9)} ${f(rim - 7)} ${f(cx - 9.5)} ${f(rim)} M${f(cx + 7)} ${f(rim - 10)} Q${f(cx + 9)} ${f(rim - 7)} ${f(cx + 9.5)} ${f(rim)}" />`);
@@ -382,7 +382,7 @@
         () => {
             const n = int(4, 7), gap = int(10, 13), w = (n - 1) * gap + 4, ch = int(22, 30), crown = pick(["hedge", "urns", "plain"]);
             return {
-                w, h: ch + 8 + (crown === "plain" ? 0 : 7), tall: true, draw: (x, b) => {
+                w, h: ch + 8 + (crown === "plain" ? 0 : 7), draw: (x, b) => {
                     const top = b - 3 - ch;
                     add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(x - 3)}" y="${f(b - 3)}" width="${w + 6}" height="3" />`);
                     for (let k = 0; k < n; k++) {
@@ -402,7 +402,7 @@
         () => {
             const w = 14, h = 31, stone = pick(["c-cream", "c-cream", "c-terracotta"]);
             return {
-                w, h, tall: false, draw: (x, b) => {
+                w, h, draw: (x, b) => {
                     const cx = x + w / 2;
                     b -= 5;
                     add(`<rect class="c-cream outline thin" data-shade="lit" x="${f(cx - 4)}" y="${f(b - 8)}" width="8" height="13" />`);
@@ -416,7 +416,7 @@
         () => {
             const h = int(52, 70), w = 22;
             return {
-                w, h, tall: true, draw: (x, b) => {
+                w, h, draw: (x, b) => {
                     const cx = x + w / 2, top = b - h + 8;
                     add(`<rect class="c-slate outline thin" x="${f(cx - 1.3)}" y="${f(top)}" width="2.6" height="${f(b - top)}" />`);
                     add(`<rect class="c-slate outline thin" x="${f(cx - 3)}" y="${f(b - 3)}" width="6" height="3" />`);
@@ -435,7 +435,7 @@
         () => {
             const n = pick([2, 2, 3]), cw = int(18, 24), w = n * cw + (n + 1) * 4, bh = int(14, 20), ch = int(40, 66);
             return {
-                w, h: bh + ch + 3, tall: true, draw: (x, b) => {
+                w, h: bh + ch + 3, draw: (x, b) => {
                     add(`<rect class="c-cream outline" data-shade="lit" data-snow=".1" x="${f(x)}" y="${f(b - bh)}" width="${w}" height="${bh}" />`);
                     add(`<rect class="c-window-dark" x="${f(x + 3)}" y="${f(b - bh + 3)}" width="${w - 6}" height="3.5" />`);
                     for (let k = 0; k < n; k++) {

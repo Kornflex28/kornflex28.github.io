@@ -13,6 +13,8 @@
     const LINE = 46, HIGH = 70;                 // the floor's line (its top) and each drawing's height, in pixels
     const TOP = LINE - 3, LOW = LINE + 8;       // the course of stone along it: its top, its underside
     const f = (n) => n.toFixed(1);
+    // a piece of what a plant climbs (cable, chain, post), from y0 to y1 at x, laid back over its stem
+    const cord = (cls, x, y0, y1) => `<path class="${cls}" d="M${f(x)} ${f(Math.min(y0, y1) - 0.5)} v${f(Math.abs(y1 - y0) + 1)}" />`;
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
     // on touch screens, fewer things sway (each costs the browser a little, every frame)
     const coarse = matchMedia("(pointer: coarse)");
@@ -310,7 +312,6 @@
     const loudspeaker = (i, w, after) => {
         const cramped = w - after < 110;
         const cx = Math.round(cramped ? Math.min(w - 8, Math.max(w - 30, after + 26)) : rand(after + 30, w - 24)), hang = LOW + int(6, 10), turned = !cramped && (cx < w / 2 || cx - after < 120);
-        const span = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
         const angle = cramped ? rand(98, 112) : rand(135, 165), len = cramped ? rand(13, 16) : rand(16, 20);
         let drawn = `<rect class="c-slate outline hair" x="${cx - 4}" y="${LOW - 1}" width="8" height="3.5" rx=".8" /><path class="cable" d="M${cx} ${LOW + 2.5} V${hang}" />`
             + (random() < 0.5 ? horn(cx + 2, hang + 5, rand(25, 55), rand(8, 10), 3.5, pick(["c-slate", "c-gold"])) : "")
@@ -327,7 +328,7 @@
         return {
             markup: `<g class="speaker touch"><rect class="hit" x="${cx - 42}" y="${LOW - 6}" width="84" height="${hang - LOW + 30}" />${drawn}`
                 + `<g class="bubble"><rect x="${f(bx)}" y="${f(by)}" width="92" height="15" rx="7" /><text x="${f(bx + 46)}" y="${f(by + 10.5)}" text-anchor="middle">Long live the King!</text></g></g>`,
-            support: { a: [cx, LOW + 2.5], b: [cx, hang], r: 2.2, cover: (y0, y1) => `<path class="cable" d="M${cx} ${f(span(y0, y1)[0])} v${f(span(y0, y1)[1])}" />` },
+            support: { a: [cx, LOW + 2.5], b: [cx, hang], r: 2.2, cover: (y0, y1) => cord("cable", cx, y0, y1) },
             gap: [cx, cx + 5],
         };
     };
@@ -396,7 +397,6 @@
         const shift = Math.round(rand(10 - lo, w - 10 - hi));
         train.forEach((g) => { g.x += shift; });
         const slot = train.filter((g) => g.y === sunk).map((g) => { const r = g.n * PITCH / (2 * Math.PI) + 2.6; return `<rect class="c-window-dark outline fine" x="${f(g.x - r)}" y="${TOP - 0.5}" width="${f(2 * r)}" height="3" />`; }).join("");
-        const spans = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
         let frame = "", support = null, gap = null;
         if (climbing) {
             // iron bars bolted from axle to axle, and a post from the highest axle to the floor
@@ -405,7 +405,7 @@
             frame += `<path class="bar post" d="M${f(px)} ${f(top.y)} V${TOP}" /><rect class="c-slate outline hair" x="${f(px - 3)}" y="${TOP - 2}" width="6" height="2.5" />`;
             support = {
                 a: [px, TOP - 1], b: [px, top.y + 6], r: 2.6,
-                cover: (y0, y1) => `<path class="bar post" d="M${f(px)} ${f(spans(y0, y1)[0])} v${f(spans(y0, y1)[1])}" />`,
+                cover: (y0, y1) => cord("bar post", px, y0, y1),
             };
             gap = [px, px + 4];
         }
@@ -506,7 +506,7 @@
             + `<circle class="pupil" cx="${f(hx + 0.8)}" cy="${f(hy - 0.4)}" r=".45" /></g>`;
     };
     const nest = (i, w, after) => {
-        const kind = random(), cx = Math.round(rand(kind < 0.7 ? 40 : Math.min(after + 24, w - 60), w - 34)), span = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
+        const kind = random(), cx = Math.round(rand(kind < 0.7 ? 40 : Math.min(after + 24, w - 60), w - 34));
         let drawn, support = null, perch = null, hit = [cx - 18, TOP - 26, 36, 28];
         if (kind < 0.45) {
             // twigs woven into a bowl, sitting in the plant: its rim, twigs across it, straw
@@ -558,7 +558,7 @@
                 + aside(() => `<path class="straw" d="${Array.from({ length: int(2, 4) }, () => `M${f(cx + rand(-2.5, 2.5))} ${f(top + h - 0.5)} q${f(rand(-1, 1))} ${f(rand(2, 3))} ${f(rand(-1.5, 1.5))} ${f(rand(3, 6))}`).join(" ")}" />`)
                 + `<ellipse class="c-window-dark outline hair" cx="${f(cx + side * 3)}" cy="${f(hy)}" rx="3.2" ry="3.6" />`
                 + chick(cx + side * 3.5, hy + 0.5, side * 70);
-            support = { a: [cx, LOW + 2.5], b: [cx, top], r: 1.8, cover: (y0, y1) => `<path class="cable" d="M${cx} ${f(span(y0, y1)[0])} v${f(span(y0, y1)[1])}" />` };
+            support = { a: [cx, LOW + 2.5], b: [cx, top], r: 1.8, cover: (y0, y1) => cord("cable", cx, y0, y1) };
             perch = [cx - side * 12, TOP];
             hit = [cx - 14, LOW - 4, 28, h + 14];
         }
@@ -581,7 +581,6 @@
         const kind = random(), hung = w - after > 100 && kind < 0.4, tripod = !hung && kind > 0.68;
         const r = hung ? rand(10, 11.5) : tripod ? rand(10.5, 11) : rand(11, 12.5);
         const cx = Math.round(hung ? rand(after + 34, w - 26) : rand(44, w - 34)), cy = hung ? LOW + 9 + r : TOP - (tripod ? 9 : 6) - r, bow = cy - r - 2.6;
-        const span = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
         const at = (q, a) => `${f(cx + q * Math.sin(a))} ${f(cy - q * Math.cos(a))}`;
         let ticks = "", milled = "", rose = "";
         for (let k = 0; k < 16; k++) ticks += `M${at(r - 2.6, k * Math.PI / 8)} L${at(r - (k % 4 ? 3.7 : 4.8), k * Math.PI / 8)} `;
@@ -611,7 +610,7 @@
             + `<path class="glint" d="M${f(cx - g * 0.87)} ${f(cy - g * 0.5)} A${f(g)} ${f(g)} 0 0 1 ${f(cx - g * 0.34)} ${f(cy - g * 0.94)}" />`;
         return {
             markup: `<g class="compass">${drawn}</g>`,
-            support: hung ? { a: [cx, LOW + 2], b: [cx, bow - 2.4], r: 1.8, cover: (y0, y1) => `<path class="chain" d="M${cx} ${f(span(y0, y1)[0])} v${f(span(y0, y1)[1])}" />` } : null,
+            support: hung ? { a: [cx, LOW + 2], b: [cx, bow - 2.4], r: 1.8, cover: (y0, y1) => cord("chain", cx, y0, y1) } : null,
             gap: hung ? [cx, cx + 3] : null,
         };
     };
@@ -814,7 +813,7 @@
 
     // the thing on each floor that has one (it says what stretch of line it leaves the plants
     // and what they can climb). Those that came later draw from draws of their own, so the
-    // plants of each castle stay those its seed has always given.
+    // plants of each castle stay those its seed has always given (aside).
     const OBJECTS = { publications: loudspeaker, skills: gears, associations: nest, experience: compass, education: books, interests: pastimes };
     const LATER = new Set(["experience", "education", "interests"]);
 
@@ -977,11 +976,8 @@
             named = after;
             const [stone, moss] = masonry(i, w, [title.offsetLeft, LINE + 2 + title.offsetTop, title.offsetWidth, title.offsetHeight], k);
             wall.style.setProperty("--k", k.toFixed(3));
-            const own = random;
             side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
-            if (LATER.has(floor.id)) random = seeded(seed ^ Math.imul(i + 7, 0x85ebca6b));
-            const thing = OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" };
-            random = own;
+            const make = () => OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" }, thing = LATER.has(floor.id) ? aside(make) : make();
             const stretches = thing.gap ? [[6, thing.gap[0]], [thing.gap[1], end]] : [[6, end]];
             const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length]);
             // over the stone: its moss, the plants in front of the thing or behind it, the
@@ -1052,15 +1048,12 @@
         });
     };
     const point = (event) => {
-        at = [event.clientX, event.clientY];
+        at = event.type === "mouseleave" ? null : [event.clientX, event.clientY];
         aiming ||= requestAnimationFrame(aim);
     };
     addEventListener("pointermove", point, { passive: true });
     addEventListener("pointerdown", point, { passive: true });
-    document.documentElement.addEventListener("mouseleave", () => {
-        at = null;
-        aiming ||= requestAnimationFrame(aim);
-    });
+    document.documentElement.addEventListener("mouseleave", point);
 
     // Brushed by the pointer, the leaves, flowers and branches near its way since its last move
     // stir, the more the faster it goes, and settle again: each a short swing over its wind
