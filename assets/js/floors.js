@@ -2,9 +2,10 @@
 // l'Oiseau: each a course of the castle terrace's stone, each floor's name cut in a panel
 // under it; moss on the stone, and creepers along it, growing as its floor comes into view, stirring
 // in a light wind and where the pointer brushes them, fireflies over them by night; and on
-// some floors something of the film along the line: one of the town's loudspeakers, gears of
-// the palace's machinery, a nest of the Bird's chicks. Each castle (its seed, from
-// skyline.js) draws them its own way.
+// each floor something along the line: one of the town's loudspeakers, gears of the
+// palace's machinery, a nest of the Bird's chicks, a brass compass, a pile of books under a
+// candle, an old bicycle and a street piano. Each castle (its seed, from skyline.js) draws
+// them its own way.
 (() => {
     const floors = [...document.querySelectorAll("main .floor")];
     if (!floors.length) return;
@@ -29,6 +30,17 @@
     const rand = (a, b) => a + (b - a) * random();
     const int = (a, b) => Math.floor(rand(a, b + 1));
     const pick = (list) => list[Math.floor(random() * list.length)];
+    // details added to the things on the lines after their first drawing come from draws of
+    // their own (aside, a stream for each floor), so the rest of each castle's floors stays
+    // what its seed has always given
+    let side = Math.random;
+    const aside = (draw) => {
+        const own = random;
+        random = side;
+        const drawn = draw();
+        random = own;
+        return drawn;
+    };
 
     // Climbing plants creeping along the line, after the gardens of the King's palace. Each
     // floor grows one or two, each kind with its own leaves (drawn pointing up from their base,
@@ -303,7 +315,11 @@
         let drawn = `<rect class="c-slate outline hair" x="${cx - 4}" y="${LOW - 1}" width="8" height="3.5" rx=".8" /><path class="cable" d="M${cx} ${LOW + 2.5} V${hang}" />`
             + (random() < 0.5 ? horn(cx + 2, hang + 5, rand(25, 55), rand(8, 10), 3.5, pick(["c-slate", "c-gold"])) : "")
             + horn(cx - 2, hang + 5, angle, len, rand(6, 7), pick(["c-gold", "c-gold", "c-slate"]))
-            + `<rect class="c-slate outline thin" x="${cx - 3.5}" y="${hang + 2}" width="7" height="5.5" rx="1" />`;
+            + `<rect class="c-slate outline thin" data-snow=".25" x="${cx - 3.5}" y="${hang + 2}" width="7" height="5.5" rx="1" />`
+            + `<path class="band" d="M${cx - 2.5} ${hang + 3.6} h5 M${cx - 2.5} ${hang + 5.1} h5 M${cx - 2.5} ${hang + 6.6} h5" />`;
+        // a porcelain insulator on its cable, now and then a bird perched on its box
+        drawn += aside(() => (random() < 0.6 ? `<ellipse class="c-cream outline hair" cx="${cx}" cy="${f(LOW + 4.5)}" rx="1.5" ry="1" />` : "")
+            + (random() < 0.3 ? songbird(cx + 2.6, hang + 2, 1) : ""));
         if (turned) drawn = `<g transform="translate(${2 * cx} 0) scale(-1 1)">${drawn}</g>`;
         // what it proclaims, just past the mouth of its main horn, on the side it calls to
         const mouth = 2 + (len + 4) * -Math.cos(angle * Math.PI / 180), by = cramped ? TOP - 22 : hang + 5 + (len + 4) * Math.sin(angle * Math.PI / 180) - 7.5;
@@ -335,13 +351,23 @@
                 d += `${k || j ? " L" : "M"}${f(cx + q * Math.cos(t))} ${f(cy + q * Math.sin(t))}`;
             });
         }
-        const ring = (q) => ` M${f(cx + q)} ${f(cy)} A${f(q)} ${f(q)} 0 1 0 ${f(cx - q)} ${f(cy)} A${f(q)} ${f(q)} 0 1 0 ${f(cx + q)} ${f(cy)} Z`;
+        const ring = (q, x = cx, y = cy) => ` M${f(x + q)} ${f(y)} A${f(q)} ${f(q)} 0 1 0 ${f(x - q)} ${f(y)} A${f(q)} ${f(q)} 0 1 0 ${f(x + q)} ${f(y)} Z`;
         const spokes = r < 9 ? 0 : int(3, 6);
         const spoke = (a) => [[hub * 0.8, -1], [rim + 0.6, -1], [rim + 0.6, 1], [hub * 0.8, 1]]
             .map(([q, side], j) => `${j ? "L" : "M"}${f(cx + q * Math.cos(a) - side * 0.9 * Math.sin(a))} ${f(cy + q * Math.sin(a) + side * 0.9 * Math.cos(a))}`).join(" ") + " Z";
-        return `<g class="gear" style="--turn: ${f(turn)}turn; transform-box: view-box; transform-origin: ${f(cx)}px ${f(cy)}px"><path class="${colour} outline thin" fill-rule="evenodd" d="${d} Z${spokes ? ring(rim) : ""}" />`
-            + (spokes ? `<path class="${colour} outline hair" d="${Array.from({ length: spokes }, (_, k) => spoke(phase + k * 2 * Math.PI / spokes)).join(" ")}" />` : "")
-            + `<circle class="${colour} outline thin" cx="${f(cx)}" cy="${f(cy)}" r="${f(hub)}" /><circle class="bolt" cx="${f(cx)}" cy="${f(cy)}" r="${f(hub * 0.45)}" /></g>`;
+        // some cast whole, round holes in their web instead of spokes; rivets round some hubs; a
+        // groove inside the teeth of some
+        const [holed, rivets, groove] = aside(() => [random() < 0.4, r >= 7 && random() < 0.6, random() < 0.5]);
+        const mid = (hub + rim) / 2, hole = Math.min((rim - hub) * 0.36, mid * Math.sin(Math.PI / Math.max(spokes, 3)) * 0.62);
+        const web = !spokes ? "" : holed
+            ? Array.from({ length: spokes }, (_, k) => ring(hole, cx + mid * Math.cos(phase + k * 2 * Math.PI / spokes), cy + mid * Math.sin(phase + k * 2 * Math.PI / spokes))).join("")
+            : ring(rim);
+        return `<g class="gear" style="--turn: ${f(turn)}turn; transform-box: view-box; transform-origin: ${f(cx)}px ${f(cy)}px"><path class="${colour} outline thin" fill-rule="evenodd" d="${d} Z${web}" />`
+            + (spokes && !holed ? `<path class="${colour} outline hair" d="${Array.from({ length: spokes }, (_, k) => spoke(phase + k * 2 * Math.PI / spokes)).join(" ")}" />` : "")
+            + (groove ? `<circle class="band" cx="${f(cx)}" cy="${f(cy)}" r="${f(root - 0.9)}" />` : "")
+            + `<circle class="${colour} outline thin" cx="${f(cx)}" cy="${f(cy)}" r="${f(hub)}" />`
+            + (rivets ? Array.from({ length: 6 }, (_, k) => `<circle class="rivet" cx="${f(cx + (hub + 1.4) * Math.cos(phase + k * Math.PI / 3))}" cy="${f(cy + (hub + 1.4) * Math.sin(phase + k * Math.PI / 3))}" r=".5" />`).join("") : "")
+            + `<circle class="bolt" cx="${f(cx)}" cy="${f(cy)}" r="${f(hub * 0.45)}" /></g>`;
     };
     const gears = (i, w) => {
         const climbing = random() < 0.45, count = int(2, 3), sunk = TOP + 4;
@@ -386,9 +412,18 @@
         // the height the plant must clear to ride over those in the slot, just above their teeth
         // (and below the line beside them, so it eases off them)
         const tops = train.filter((g) => g.y === sunk).map((g) => [g.x, g.n * PITCH / (2 * Math.PI) + 3.4]);
+        // now and then the machinist's oil can left beside them, its spout turned to them
+        const oil = aside(() => {
+            if (random() > 0.45) return "";
+            const s = lo + shift - 18 > 6 ? 1 : hi + shift + 18 < w - 6 ? -1 : 0, x = s > 0 ? lo + shift - 9 : hi + shift + 9;
+            return !s ? "" : `<path class="handle" d="M${f(x - s * 3.6)} ${TOP - 4.6} q${-s * 3.2} -1 ${-s * 1.4} -5" />`
+                + `<path class="${pick(["c-red", "c-blue-deep", "c-green", "c-ochre"])} outline thin" data-snow=".3" d="M${f(x - 4)} ${TOP} V${TOP - 4.5} Q${f(x - 4)} ${TOP - 7} ${f(x)} ${TOP - 7.5} Q${f(x + 4)} ${TOP - 7} ${f(x + 4)} ${TOP - 4.5} V${TOP} Z" />`
+                + `<path class="spout" d="M${f(x + s * 2.4)} ${TOP - 5.6} L${f(x + s * 9)} ${TOP - 11}" /><rect class="c-gold outline hair" x="${f(x - 1.3)}" y="${TOP - 9.2}" width="2.6" height="2" />`
+                + `<path class="band" d="M${f(x - 4)} ${TOP - 2} h8" />`;
+        });
         return {
             markup: `<clipPath id="floor-slot-${i}"><rect x="0" y="-${HIGH}" width="100%" height="${TOP + 1.5 + HIGH}" /></clipPath>${slot}`
-                + `<g clip-path="url(#floor-slot-${i})">${train.map((g) => gear(g.x, g.y, g.n, g.phase, g.turn, pick(METALS))).join("")}</g>${frame}`,
+                + `<g clip-path="url(#floor-slot-${i})">${train.map((g) => gear(g.x, g.y, g.n, g.phase, g.turn, pick(METALS))).join("")}</g>${frame}${oil}`,
             support,
             gap,
             across: !gap,
@@ -410,12 +445,17 @@
     // a chick's head at (x, y), its beak pointing `turn` degrees off straight up: two halves
     // meeting at the tip, hinged where they leave the head; a tuft of down on top
     const chick = (x, y, turn) => {
-        const t = (turn - 90) * Math.PI / 180, r = 3.6, along = (d, side) => [x + d * Math.cos(t) - side * Math.sin(t), y + d * Math.sin(t) + side * Math.cos(t)];
+        // each its own size, some dozing, their eyes shut
+        const [r, dozing] = aside(() => [rand(3.1, 4.1), random() < 0.2]);
+        const eyes = dozing
+            ? `<path class="lid" d="M${f(x - 2.1)} ${f(y + 0.2)} q.7 .6 1.4 0 M${f(x + 0.7)} ${f(y + 0.2)} q.7 .6 1.4 0" />`
+            : `<circle class="pupil" cx="${f(x - 1.4)}" cy="${f(y + 0.3)}" r=".7" /><circle class="pupil" cx="${f(x + 1.4)}" cy="${f(y + 0.3)}" r=".7" />`;
+        const t = (turn - 90) * Math.PI / 180, along = (d, side) => [x + d * Math.cos(t) - side * Math.sin(t), y + d * Math.sin(t) + side * Math.cos(t)];
         const [bx, by] = along(r - 0.6, 0), tip = along(r + 4, 0).map(f).join(" "), hinge = `transform-origin: ${f(bx)}px ${f(by)}px`;
         const half = (side) => along(r - 0.8, side).map(f).join(" ");
         return `<path class="tuft" d="M${f(x - 0.8)} ${f(y - r + 0.4)} l-0.7 -1.8 M${f(x)} ${f(y - r)} v-2 M${f(x + 0.8)} ${f(y - r + 0.4)} l0.7 -1.8" />`
             + `<circle class="${pick(FLUFF)} outline hair" cx="${f(x)}" cy="${f(y)}" r="${r}" />`
-            + `<circle class="pupil" cx="${f(x - 1.4)}" cy="${f(y + 0.3)}" r=".7" /><circle class="pupil" cx="${f(x + 1.4)}" cy="${f(y + 0.3)}" r=".7" />`
+            + eyes
             + `<path class="beak upper c-terracotta outline hair" style="${hinge}" d="M${half(-1.5)} L${tip} L${f(bx)} ${f(by)} Z" />`
             + `<path class="beak lower c-terracotta outline hair" style="${hinge}" d="M${half(1.5)} L${tip} L${f(bx)} ${f(by)} Z" />`;
     };
@@ -424,8 +464,10 @@
         const n = int(2, 4);
         return Array.from({ length: n }, (_, k) => {
             const x = x0 + (x1 - x0) * (n === 1 ? 0.5 : k / (n - 1));
+            // an egg, speckled, or a chick
             return random() < 0.15
-                ? `<ellipse class="c-pale outline hair" cx="${f(x)}" cy="${f(y + 1.5)}" rx="2.4" ry="3.1" transform="rotate(${f(rand(-25, 25))} ${f(x)} ${f(y + 1.5)})" />`
+                ? `<g transform="rotate(${f(rand(-25, 25))} ${f(x)} ${f(y + 1.5)})"><ellipse class="c-pale outline hair" cx="${f(x)}" cy="${f(y + 1.5)}" rx="2.4" ry="3.1" />`
+                    + aside(() => Array.from({ length: 5 }, () => `<circle class="speck" cx="${f(x + rand(-1.4, 1.4))}" cy="${f(y + 1.5 + rand(-2, 2))}" r="${f(rand(0.25, 0.45))}" />`).join("")) + "</g>"
                 : chick(x, y - (k % 2) * 1.5, rand(-35, 35));
         }).join("");
     };
@@ -441,7 +483,28 @@
         + '<path class="c-red outline hair" d="M6.3 -13 L11.5 -11.6 L6.3 -10.3 Z" />'
         + '<circle class="eye" cx="4.8" cy="-12.6" r=".9" /><circle class="pupil" cx="5.1" cy="-12.6" r=".45" />'
         + '<rect class="c-slate outline hair" x="1.6" y="-19.5" width="4.2" height="4.4" /><rect class="c-slate outline hair" x=".6" y="-15.4" width="6.2" height="1.1" />'
+        // now and then a worm in his beak for them
+        + aside(() => (random() < 0.4 ? '<path class="worm" d="M10.6 -11.8 q1.6 1.2 .2 2.6 q-1.4 1.4 .4 2.8" />' : ""))
         + "</g>";
+    // A small bird of the gardens perched at (x, y) (its feet), facing `facing`: a robin, a blue
+    // tit, a sparrow or a goldfinch, its head up or down, pecking
+    const SONGBIRDS = [
+        { body: "c-timber", breast: "c-terracotta", cap: "c-timber" },
+        { body: "c-green", breast: "c-gold", cap: "c-blue" },
+        { body: "c-thatch", breast: "c-sand", cap: "c-timber" },
+        { body: "c-sand", breast: "c-cream", cap: "c-red" },
+    ];
+    const songbird = (x, y, facing) => {
+        const s = pick(SONGBIRDS), [hx, hy] = random() < 0.25 ? [3.8, -3.6] : [2.6, -6.2];
+        return `<g transform="translate(${f(x)} ${f(y)}) scale(${facing} 1)">`
+            + '<path class="legs" d="M-.6 -2.2 V0 M.8 -2.2 V0" />'
+            + `<path class="${s.body} outline hair" d="M-2.5 -4.2 L-7.5 -3 L-7 -1.8 L-2 -2.8 Z" />`
+            + `<ellipse class="${s.body} outline hair" cx="0" cy="-4" rx="3.6" ry="2.6" /><ellipse class="${s.breast}" cx="1.5" cy="-3.4" rx="1.8" ry="1.6" />`
+            + '<path class="wing" d="M-2.8 -4.8 Q0 -6 1.4 -4.1 Q-.6 -3 -2.8 -3.6 Z" />'
+            + `<circle class="${s.cap} outline hair" cx="${hx}" cy="${hy}" r="2" />`
+            + `<path class="c-ochre outline hair" d="M${hx + 1.7} ${f(hy - 0.5)} L${f(hx + 3.6)} ${hy} L${hx + 1.7} ${f(hy + 0.6)} Z" />`
+            + `<circle class="pupil" cx="${f(hx + 0.8)}" cy="${f(hy - 0.4)}" r=".45" /></g>`;
+    };
     const nest = (i, w, after) => {
         const kind = random(), cx = Math.round(rand(kind < 0.7 ? 40 : Math.min(after + 24, w - 60), w - 34)), span = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
         let drawn, support = null, perch = null, hit = [cx - 18, TOP - 26, 36, 28];
@@ -458,7 +521,12 @@
             drawn = brood(cx - r * 0.55, cx + r * 0.55, y0 - 2.5)
                 + `<path class="c-thatch outline thin" d="M${f(cx - r)} ${f(y0)} C${f(cx - r)} ${f(y0 + 13.3)} ${f(cx + r)} ${f(y0 + 13.3)} ${f(cx + r)} ${f(y0)} Z" />`
                 + `<path class="twig" d="${twigs}" /><path class="straw" d="${straw}" />`
-                + `<path class="twig rim" d="M${f(cx - r)} ${f(y0)} Q${f(cx)} ${f(y0 - 2.5)} ${f(cx + r)} ${f(y0)}" />`;
+                + `<path class="twig rim" d="M${f(cx - r)} ${f(y0)} Q${f(cx)} ${f(y0 - 2.5)} ${f(cx + r)} ${f(y0)}" />`
+                // a feather or two caught in its rim, a leaf woven in
+                + aside(() => Array.from({ length: int(1, 3) }, () => {
+                    const s = random() < 0.5 ? 1 : -1;
+                    return `<path class="${pick(["c-cream", "c-pale", "c-blue-deep", "c-sand"])} outline hair" transform="translate(${f(cx + s * rand(0.55, 0.95) * r)} ${f(y0 + 1.5)}) rotate(${f(s * rand(35, 75))})" d="${pointed(rand(5, 7.5), 1.5)}" />`;
+                }).join("") + (random() < 0.5 ? `<path class="${pick(["c-hedge", "c-hedge-olive", "c-ochre"])} outline hair" transform="translate(${f(cx + rand(-0.4, 0.4) * r)} ${f(y0 + 6)}) rotate(${f(rand(70, 110) * (random() < 0.5 ? 1 : -1))})" d="${pointed(5.5, 2.2)}" />` : ""));
             perch = [cx + (random() < 0.5 ? 1 : -1) * (r + 9), TOP];
         } else if (kind < 0.7) {
             // an old flowerpot, cracked, on the line, full of straw
@@ -466,7 +534,13 @@
                 + `<path class="c-terracotta outline thin" d="M${cx - 10} ${TOP - 13} L${cx - 7.5} ${TOP} H${cx + 7.5} L${cx + 10} ${TOP - 13} Z" />`
                 + `<path class="joint" d="M${cx + 3} ${TOP - 13} l-1.5 3 l2 2 l-1.5 3.5" />`
                 + `<path class="straw" d="M${cx - 9} ${TOP - 15.5} l-3 -2 M${cx - 6} ${TOP - 16} l-1 -3 M${cx + 7} ${TOP - 16} l2 -2.5 M${cx + 9.5} ${TOP - 15} l3 -1" />`
-                + `<rect class="c-terracotta-deep outline thin" x="${cx - 11.5}" y="${TOP - 16}" width="23" height="3.5" />`;
+                + `<rect class="c-terracotta-deep outline thin" data-snow=".5" x="${cx - 11.5}" y="${TOP - 16}" width="23" height="3.5" />`
+                // a band painted round it, a chip off its rim, moss at its foot, sometimes a
+                // daisy come up in the straw
+                + aside(() => (random() < 0.55 ? `<path class="${pick(["c-cream", "c-blue", "c-gold", "c-green"])} outline hair" d="M${cx - 8.9} ${TOP - 7.6} H${cx + 8.9} L${cx + 8.6} ${TOP - 5.8} H${cx - 8.6} Z" />` : "")
+                    + (random() < 0.5 ? `<path class="chip" d="M${cx + rand(-9, 5)} ${TOP - 16} l2 2.4 l2.2 -2.4 Z" />` : "")
+                    + (random() < 0.6 ? `<path class="${pick(MOSS)} moss-edge" d="M${cx - 8} ${TOP} q.6 -2.4 2 -1.6 q1 -2 2.4 -.6 q1.2 -1.2 1.8 .6 Q${cx - 1.4} ${TOP - 0.6} ${cx - 1} ${TOP} Z" />` : "")
+                    + (random() < 0.45 ? `<g transform="translate(${cx + 7.5} ${TOP - 15.5}) rotate(12)">${FLOWERS.daisy(pick(["c-cream", "c-moon", "c-gold"]))}</g>` : ""));
             perch = [cx + (random() < 0.5 ? 1 : -1) * 21, TOP];
         } else {
             // a pouch woven of grass, hung on a cord under the line, a chick peeping out of its
@@ -478,8 +552,10 @@
                 weave += ` M${f(cx - half)} ${f(y)} Q${f(cx)} ${f(y + 1.5)} ${f(cx + half)} ${f(y)}`;
             }
             drawn = `<path class="twig" d="M${cx - 2} ${LOW + 1} l2 1.5 l2 -1.5" /><path class="cable" d="M${cx} ${LOW + 2.5} V${top}" />`
-                + `<path class="c-thatch outline thin" d="M${cx} ${top} C${cx + 9} ${top + 2} ${cx + 9.5} ${f(top + h * 0.8)} ${cx} ${f(top + h)} C${cx - 9.5} ${f(top + h * 0.8)} ${cx - 9} ${top + 2} ${cx} ${top} Z" />`
+                + `<path class="c-thatch outline thin" data-snow=".15" d="M${cx} ${top} C${cx + 9} ${top + 2} ${cx + 9.5} ${f(top + h * 0.8)} ${cx} ${f(top + h)} C${cx - 9.5} ${f(top + h * 0.8)} ${cx - 9} ${top + 2} ${cx} ${top} Z" />`
                 + `<path class="twig" d="${weave}" />`
+                // loose grass hanging from its bottom
+                + aside(() => `<path class="straw" d="${Array.from({ length: int(2, 4) }, () => `M${f(cx + rand(-2.5, 2.5))} ${f(top + h - 0.5)} q${f(rand(-1, 1))} ${f(rand(2, 3))} ${f(rand(-1.5, 1.5))} ${f(rand(3, 6))}`).join(" ")}" />`)
                 + `<ellipse class="c-window-dark outline hair" cx="${f(cx + side * 3)}" cy="${f(hy)}" rx="3.2" ry="3.6" />`
                 + chick(cx + side * 3.5, hy + 0.5, side * 70);
             support = { a: [cx, LOW + 2.5], b: [cx, top], r: 1.8, cover: (y0, y1) => `<path class="cable" d="M${cx} ${f(span(y0, y1)[0])} v${f(span(y0, y1)[1])}" />` };
@@ -495,9 +571,269 @@
         };
     };
 
+    // A brass compass, each castle's its own: on a turned stand or a brass tripod on the line,
+    // or, past the floor's name, a pocket compass hung on its chain under it, the floor's plant
+    // climbing the chain. A milled bezel, a faint rose on its dial, its north marked in red. Its
+    // needle turns to the pointer wherever it is on the page, swinging past and settling as a
+    // magnetised needle does, and back to the north when the pointer leaves (see below).
+    const loop = (x, y, a, b) => [a, b].map((q) => `M${f(x + q)} ${f(y)} A${q} ${q} 0 1 0 ${f(x - q)} ${f(y)} A${q} ${q} 0 1 0 ${f(x + q)} ${f(y)} Z`).join(" ");
+    const compass = (i, w, after) => {
+        const kind = random(), hung = w - after > 100 && kind < 0.4, tripod = !hung && kind > 0.68;
+        const r = hung ? rand(10, 11.5) : tripod ? rand(10.5, 11) : rand(11, 12.5);
+        const cx = Math.round(hung ? rand(after + 34, w - 26) : rand(44, w - 34)), cy = hung ? LOW + 9 + r : TOP - (tripod ? 9 : 6) - r, bow = cy - r - 2.6;
+        const span = (y0, y1) => [Math.min(y0, y1) - 0.5, Math.abs(y1 - y0) + 1];
+        const at = (q, a) => `${f(cx + q * Math.sin(a))} ${f(cy - q * Math.cos(a))}`;
+        let ticks = "", milled = "", rose = "";
+        for (let k = 0; k < 16; k++) ticks += `M${at(r - 2.6, k * Math.PI / 8)} L${at(r - (k % 4 ? 3.7 : 4.8), k * Math.PI / 8)} `;
+        for (let k = 0; k < 40; k++) milled += `M${at(r - 0.15, k * Math.PI / 20)} L${at(r - 0.9, k * Math.PI / 20)} `;
+        for (let k = 0; k < 8; k++) rose += `${k ? "L" : "M"}${at(k % 2 ? (r - 5) * 0.24 : r - 5, k * Math.PI / 4)} `;
+        const n = r - 3.4, g = r - 3.2;
+        let stand;
+        if (hung) {
+            stand = `<rect class="c-slate outline hair" x="${cx - 3}" y="${LOW - 1}" width="6" height="3" rx=".8" /><path class="chain" d="M${cx} ${LOW + 2} V${f(bow - 2.4)}" />`
+                + `<path class="c-gold outline hair" fill-rule="evenodd" d="${loop(cx, bow, 2.4, 1.2)}" /><rect class="c-gold outline hair" x="${cx - 1.6}" y="${f(cy - r - 1.8)}" width="3.2" height="2.2" rx=".5" />`;
+        } else if (tripod) {
+            const legs = `M${cx} ${f(cy + r - 1)} L${cx - 8.5} ${TOP - 0.6} M${cx} ${f(cy + r - 1)} L${cx + 8.5} ${TOP - 0.6}`;
+            stand = `<path class="arm" d="M${cx} ${f(cy + r)} L${cx + 1.5} ${TOP - 0.6}" /><path class="tube-edge" d="${legs}" /><path class="tube" style="stroke: var(--gold)" d="${legs}" />`
+                + `<circle class="c-slate outline hair" cx="${cx - 8.5}" cy="${TOP - 0.6}" r=".9" /><circle class="c-slate outline hair" cx="${cx + 8.5}" cy="${TOP - 0.6}" r=".9" />`
+                + `<rect class="c-gold outline hair" x="${cx - 2.5}" y="${f(cy + r - 1.5)}" width="5" height="2.6" rx=".6" />`;
+        } else {
+            stand = `<path class="${pick(["c-timber", "c-timber", "c-terracotta-deep", "c-slate"])} outline thin" d="M${cx - 8} ${TOP} Q${cx - 7} ${TOP - 3} ${cx - 2.2} ${TOP - 3.5} L${cx - 1.8} ${f(cy + r - 1)} H${cx + 1.8} L${cx + 2.2} ${TOP - 3.5} Q${cx + 7} ${TOP - 3} ${cx + 8} ${TOP} Z" />`
+                + `<path class="band" d="M${cx - 5} ${TOP - 2.4} h10 M${cx - 1.8} ${f(cy + r + 0.6)} h3.6" />`;
+        }
+        const drawn = stand
+            + `<circle class="c-gold outline thin" data-snow=".16" cx="${cx}" cy="${f(cy)}" r="${f(r)}" /><path class="ticks" d="${milled}" /><circle class="c-ochre" cx="${cx}" cy="${f(cy)}" r="${f(r - 1.2)}" />`
+            + `<circle class="dial c-cream outline hair" cx="${cx}" cy="${f(cy)}" r="${f(r - 1.9)}" /><path class="rose" d="${rose}Z" /><path class="ticks" d="${ticks}" />`
+            + `<path class="c-red" d="M${at(r - 2.2, 0)} L${at(r - 4.8, -0.13)} L${at(r - 4.8, 0.13)} Z" />`
+            + `<g class="needle" style="transform-box: view-box; transform-origin: ${cx}px ${f(cy)}px">`
+            + `<path class="c-red outline hair" d="M${cx} ${f(cy - n)} L${cx + 1.8} ${f(cy)} H${cx - 1.8} Z" /><path class="c-slate outline hair" d="M${cx} ${f(cy + n)} L${cx + 1.8} ${f(cy)} H${cx - 1.8} Z" /></g>`
+            + `<circle class="c-gold outline hair" cx="${cx}" cy="${f(cy)}" r="1.1" />`
+            + `<path class="glint" d="M${f(cx - g * 0.87)} ${f(cy - g * 0.5)} A${f(g)} ${f(g)} 0 0 1 ${f(cx - g * 0.34)} ${f(cy - g * 0.94)}" />`;
+        return {
+            markup: `<g class="compass">${drawn}</g>`,
+            support: hung ? { a: [cx, LOW + 2], b: [cx, bow - 2.4], r: 1.8, cover: (y0, y1) => `<path class="chain" d="M${cx} ${f(span(y0, y1)[0])} v${f(span(y0, y1)[1])}" />` } : null,
+            gap: hung ? [cx, cx + 3] : null,
+        };
+    };
+
+    // A pile of old books on the line, each castle's its own: spines banded and labelled, or
+    // page edges with gilt corners and a ribbon hanging out; a candle burning on top in its brass
+    // dish, its wax run down it; beside them, now and then, books standing up, a diploma rolled
+    // in its ribbon, an inkwell and its quill, spectacles left on the pile, a bird. Brushed, the
+    // flame wavers; touched, it goes out in a wisp of smoke, and lights again.
+    const BINDINGS = ["c-red", "c-blue-deep", "c-green", "c-terracotta-deep", "c-ochre", "c-timber", "c-slate"];
+    // a book standing at x (its foot on the line), t thick and h tall, leaning `lean` degrees
+    // (towards the left when less than 0) about its foot's far corner: its spine turned out
+    const upright = (x, t, h, lean) => {
+        const bands = Array.from({ length: int(2, 3) }, (_, k) => `M${f(x + 0.5)} ${f(TOP - h * (0.14 + k * 0.32))} h${f(t - 1)}`).join(" ");
+        return `<g transform="rotate(${f(lean)} ${f(lean < 0 ? x + t : x)} ${TOP})"><rect class="${pick(BINDINGS)} outline thin" data-snow=".1" x="${f(x)}" y="${f(TOP - h)}" width="${f(t)}" height="${f(h)}" rx=".6" />`
+            + `<path class="band" d="${bands}" /><rect class="c-gold" x="${f(x + t * 0.25)}" y="${f(TOP - h * 0.62)}" width="${f(t * 0.5)}" height="${f(h * 0.16)}" /></g>`;
+    };
+    const books = (i, w) => {
+        const cx = Math.round(rand(58, w - 58)), widths = Array.from({ length: int(3, 4) }, () => rand(24, 34)).sort((a, b) => b - a);
+        let y = TOP, shift = 0, drawn = "", ribbons = "";
+        widths.forEach((bw, k) => {
+            const t = rand(3.2, 4.2), x = cx - bw / 2 + shift, colour = pick(BINDINGS);
+            y -= t;
+            drawn += `<rect class="${colour} outline thin"${k === widths.length - 1 ? ' data-snow=".45"' : ""} x="${f(x)}" y="${f(y)}" width="${f(bw)}" height="${f(t)}" rx=".8" />`;
+            if (random() < 0.5) {
+                const ends = random() < 0.5 ? [2.2, 3.8] : [2.4];
+                drawn += `<path class="band" d="${ends.map((e) => `M${f(x + e)} ${f(y + 0.6)} V${f(y + t - 0.6)} M${f(x + bw - e)} ${f(y + 0.6)} V${f(y + t - 0.6)}`).join(" ")}" />`
+                    + `<rect class="${pick(["c-gold", "c-gold", "c-cream"])}" x="${f(x + bw * 0.36)}" y="${f(y + t * 0.3)}" width="${f(bw * rand(0.2, 0.3))}" height="${f(t * 0.4)}" />`;
+            } else {
+                drawn += `<rect class="c-cream" x="${f(x + 1.4)}" y="${f(y + 0.9)}" width="${f(bw - 2.2)}" height="${f(t - 1.8)}" /><path class="leaves" d="M${f(x + 2)} ${f(y + t / 2)} H${f(x + bw - 1)}" />`
+                    + (random() < 0.45 ? `<path class="c-gold" d="M${f(x + bw - 0.3)} ${f(y + 0.3)} v2 l-2 -2 Z M${f(x + bw - 0.3)} ${f(y + t - 0.3)} v-2 l-2 2 Z" />` : "");
+                if (random() < 0.4) {
+                    const rx = x + bw * rand(0.3, 0.8), l = rand(3, 6);
+                    ribbons += `<path class="${pick(["c-red", "c-blue", "c-gold"])}" d="M${f(rx)} ${f(y + t - 0.8)} V${f(y + t + l)} l.7 -.9 l.7 .9 V${f(y + t - 0.8)} Z" />`;
+                }
+            }
+            shift += rand(-2.5, 2.5);
+        });
+        drawn += ribbons;
+        // the candle, its top where it has burnt down to, wax run down its side, in a dish with
+        // a ring to carry it by, or a plain saucer with a pool of wax in it
+        const sx = cx + shift + rand(-4, 4), ct = y - 1.6 - rand(5, 7), pivot = `transform-box: view-box; transform-origin: ${f(sx)}px ${f(ct - 1)}px`;
+        const drip = (dx, d) => `<path class="c-cream outline hair" d="M${f(sx + dx)} ${f(ct + 0.4)} C${f(sx + dx * 1.45)} ${f(ct + d * 0.5)} ${f(sx + dx * 1.5)} ${f(ct + d)} ${f(sx + dx * 1.1)} ${f(ct + d + 0.6)} C${f(sx + dx * 0.7)} ${f(ct + d + 0.6)} ${f(sx + dx * 0.7)} ${f(ct + d * 0.5)} ${f(sx + dx * 0.7)} ${f(ct + 0.4)} Z" />`;
+        drawn += (random() < 0.6 ? `<path class="ring-handle" d="M${f(sx + 5.2)} ${f(y - 1.2)} q2.8 -.4 2.6 -2.6 q-.2 -1.6 -1.8 -1" />` : `<ellipse class="c-cream" cx="${f(sx + 0.6)}" cy="${f(y - 1.5)}" rx="3" ry=".6" />`)
+            + `<ellipse class="c-gold outline hair" cx="${f(sx)}" cy="${f(y - 0.8)}" rx="5.5" ry="1.3" />`
+            + `<rect class="c-cream outline hair" x="${f(sx - 1.7)}" y="${f(ct)}" width="3.4" height="${f(y - 1.6 - ct)}" />`
+            + drip(-1.7, rand(1.5, 3.5)) + (random() < 0.5 ? drip(1.7, rand(1, 2.5)) : "")
+            + `<path class="wick" d="M${f(sx)} ${f(ct)} l.3 -1.4" />`
+            + `<g class="flame" style="${pivot}"><circle class="candle-glow" cx="${f(sx)}" cy="${f(ct - 4)}" r="10" fill="url(#firefly-glow)" />`
+            + `<path class="c-gold" d="M${f(sx)} ${f(ct - 0.8)} C${f(sx + 2.2)} ${f(ct - 2)} ${f(sx + 1)} ${f(ct - 4.5)} ${f(sx + 0.2)} ${f(ct - 7)} C${f(sx - 1.2)} ${f(ct - 4.5)} ${f(sx - 2.2)} ${f(ct - 2)} ${f(sx)} ${f(ct - 0.8)} Z" />`
+            + `<path class="c-cream" d="M${f(sx)} ${f(ct - 1.2)} C${f(sx + 1)} ${f(ct - 1.8)} ${f(sx + 0.5)} ${f(ct - 3.2)} ${f(sx + 0.1)} ${f(ct - 4.2)} C${f(sx - 0.6)} ${f(ct - 3.2)} ${f(sx - 1)} ${f(ct - 1.8)} ${f(sx)} ${f(ct - 1.2)} Z" /></g>`
+            + `<path class="smoke" d="M${f(sx + 0.3)} ${f(ct - 1.6)} q-1.5 -2.5 0 -5 q1.5 -2.5 0 -5" />`;
+        // on the top book, at its other end from the candle: spectacles left there, or a bird
+        const top = widths[widths.length - 1], ex = sx > cx + shift ? Math.max(cx + shift - top / 2 + 6, sx - 13) : Math.min(cx + shift + top / 2 - 6, sx + 13);
+        const thing = random();
+        if (thing < 0.3) drawn += `<path class="specs" d="M${f(ex - 3.9)} ${f(y - 1)} a1.9 1.1 0 1 0 3.8 0 a1.9 1.1 0 1 0 -3.8 0 M${f(ex + 0.1)} ${f(y - 1)} a1.9 1.1 0 1 0 3.8 0 a1.9 1.1 0 1 0 -3.8 0 M${f(ex - 0.1)} ${f(y - 1.2)} h.2 M${f(ex + 3.9)} ${f(y - 1.2)} l3 -.6" />`;
+        else if (thing < 0.55) drawn += songbird(ex, y, sx > ex ? -1 : 1);
+        // beside the pile: on one side an inkwell and its quill, on the other books standing up,
+        // or a diploma rolled in its ribbon
+        const s = random() < 0.5 ? 1 : -1, edge = cx + s * (widths[0] / 2 + 1.5);
+        if (random() < 0.55) {
+            const ix = cx + s * (widths[0] / 2 + 7);
+            drawn += `<path class="c-cream outline hair" d="M${f(ix)} ${TOP - 6.5} C${f(ix + s)} ${TOP - 12} ${f(ix + s * 5)} ${TOP - 19} ${f(ix + s * 9)} ${TOP - 23} C${f(ix + s * 6)} ${TOP - 17} ${f(ix + s * 4.5)} ${TOP - 12} ${f(ix + s * 1.2)} ${TOP - 8} Z" />`
+                + `<path class="quill" d="M${f(ix)} ${TOP - 6} Q${f(ix + s * 4)} ${TOP - 14} ${f(ix + s * 9)} ${TOP - 23}" />`
+                + `<path class="${pick(["c-blue-deep", "c-slate", "c-green"])} outline thin" d="M${f(ix - 4)} ${TOP} V${TOP - 4} Q${f(ix - 4)} ${TOP - 5.5} ${f(ix - 2)} ${TOP - 5.5} V${TOP - 7} H${f(ix + 2)} V${TOP - 5.5} Q${f(ix + 4)} ${TOP - 5.5} ${f(ix + 4)} ${TOP - 4} V${TOP} Z" />`;
+        }
+        const other = random(), o = -s, oe = cx + o * (widths[0] / 2 + 1.5);
+        if (other < 0.45) {
+            // one standing straight against the pile, sometimes another leaning on it
+            const t1 = rand(3.4, 4.6), h1 = rand(14, 19), x1 = o > 0 ? oe : oe - t1;
+            if (random() < 0.6) {
+                const t2 = rand(3, 4.2), h2 = rand(13, 17), lean = rand(10, 18), x2 = o > 0 ? x1 + t1 + h2 * Math.sin(lean * Math.PI / 180) * 0.8 : x1 - t2 - h2 * Math.sin(lean * Math.PI / 180) * 0.8;
+                drawn += upright(x2, t2, h2, o > 0 ? -lean : lean);
+            }
+            drawn += upright(x1, t1, h1, 0);
+        } else if (other < 0.8) {
+            const x = o > 0 ? oe + 1 : oe - 17;
+            drawn += `<rect class="c-cream outline hair" x="${f(x)}" y="${TOP - 4}" width="16" height="4" rx="2" /><ellipse class="c-sand outline hair" cx="${f(o > 0 ? x + 16 : x)}" cy="${TOP - 2}" rx="1.2" ry="2" />`
+                + `<rect class="c-red" x="${f(x + 7)}" y="${TOP - 4.3}" width="2" height="4.6" /><path class="c-red" d="M${f(x + 8)} ${TOP - 0.2} l-2 3 l1.2 .2 Z M${f(x + 8)} ${TOP - 0.2} l2 2.6 l-1.2 .4 Z" />`;
+        }
+        return { markup: `<g class="books touch"><rect class="hit" x="${cx - 30}" y="${f(ct - 9)}" width="60" height="${f(TOP - ct + 9)}" />${drawn}</g>` };
+    };
+
+    // A wheel of n spokes round (x, y), turning about its hub (a bicycle's, a cart's)
+    const wheel = (x, y, r, n = 12) => {
+        let spokes = "";
+        for (let k = 0; k < n; k++) {
+            const a = k * 2 * Math.PI / n + 0.13;
+            spokes += `M${f(x + 1.1 * Math.cos(a))} ${f(y + 1.1 * Math.sin(a))} L${f(x + (r - 1.4) * Math.cos(a))} ${f(y + (r - 1.4) * Math.sin(a))} `;
+        }
+        return `<g class="wheel" style="transform-box: view-box; transform-origin: ${f(x)}px ${f(y)}px"><circle class="tyre" cx="${f(x)}" cy="${f(y)}" r="${f(r - 0.8)}" />`
+            + `<circle class="rim" cx="${f(x)}" cy="${f(y)}" r="${f(r - 1.6)}" /><path class="spoke" d="${spokes}" /><circle class="c-slate outline hair" cx="${f(x)}" cy="${f(y)}" r="1.1" /></g>`;
+    };
+    // An old bicycle standing on its stand on the line from x, facing right: a roadster's frame
+    // with a gilt line along it, mudguards, a sprung leather saddle, swept-back or straight bars
+    // with a bell, a lamp lit by night; sometimes a chain guard, a rack with a parcel or a
+    // satchel, a basket with a loaf, a newspaper or flowers, a bird. Touched, its wheels spin.
+    const FRAMES = ["c-blue-deep", "c-green", "c-red", "c-slate", "c-terracotta-deep", "c-cream"];
+    const bicycle = (x) => {
+        const r = rand(9.5, 10.5), L = r * rand(2.45, 2.65), ax = x + r, ay = TOP - r, fx = ax + L, colour = pick(FRAMES), n = pick([16, 18, 20]);
+        const p = (px, py) => `${f(px)} ${f(py)}`;
+        const bb = [ax + L * 0.42, ay + 1.5], seat = [ax + L * 0.3, ay - r * 1.15], head = [fx - L * 0.14, ay - r * 1.1], low = [fx - L * 0.1, ay - r * 0.55];
+        const guard = (cx, a0, a1) => `M${p(cx + (r + 0.6) * Math.cos(a0), ay + (r + 0.6) * Math.sin(a0))} A${f(r + 0.6)} ${f(r + 0.6)} 0 0 1 ${p(cx + (r + 0.6) * Math.cos(a1), ay + (r + 0.6) * Math.sin(a1))}`;
+        const swept = random() < 0.65, grip = swept ? [head[0] - 5, head[1] - 4.4] : [head[0] - 3.4, head[1] - 3.6];
+        const bars = swept ? `Q${p(head[0] - 1, head[1] - 5)} ${p(...grip)}` : `L${p(...grip)}`;
+        const frame = `M${p(...bb)} L${p(...seat)} L${p(...head)} L${p(...low)} Z M${p(...bb)} L${p(ax, ay)} L${p(...seat)} M${p(...low)} Q${p(low[0] + 2.5, ay - r * 0.2)} ${p(fx, ay)}`
+            + ` M${p(...seat)} L${p(seat[0] - 0.8, seat[1] - 3)} M${p(...head)} L${p(head[0] + 0.4, head[1] - 3.2)} ${bars}`
+            + ` ${guard(ax, -2.9, -0.5)} ${guard(fx, -2.7, -0.3)}`;
+        const crank = rand(0, 2 * Math.PI), pedal = [bb[0] + 4.5 * Math.cos(crank), bb[1] + 4.5 * Math.sin(crank)];
+        let drawn = `<path class="arm" d="M${p(bb[0] - 1, bb[1] + 1)} L${p(bb[0] - 6, TOP - 0.3)}" />`
+            + wheel(ax, ay, r, n) + wheel(fx, ay, r, n)
+            + `<path class="chain" d="M${p(bb[0], bb[1] - 3)} L${p(ax, ay - 1.2)} M${p(bb[0], bb[1] + 3)} L${p(ax, ay + 1.2)}" />`
+            + `<path class="tube-edge" d="${frame}" /><path class="tube" style="stroke: var(--${colour.slice(2)})" d="${frame}" />`
+            + `<path class="pin" d="M${p(seat[0] + 1, seat[1] + 0.4)} L${p(head[0] - 1, head[1] + 0.4)} M${p(bb[0] + 1.5, bb[1] - 1.6)} L${p(low[0] - 1.4, low[1] + 1)}" />`
+            + (random() < 0.5 ? `<path class="${colour} outline hair" d="M${p(bb[0] + 2.6, bb[1] - 3.8)} L${p(ax + 1, ay - 2.4)} Q${p(ax - 1.4, ay - 0.6)} ${p(ax + 1.4, ay + 0.8)} L${p(bb[0] + 1, bb[1] - 1)} Z" />` : "")
+            + `<circle class="c-slate outline hair" cx="${f(bb[0])}" cy="${f(bb[1])}" r="3" /><path class="arm" d="M${p(...bb)} L${p(...pedal)}" />`
+            + `<rect class="c-slate outline hair" x="${f(pedal[0] - 2)}" y="${f(pedal[1] - 0.7)}" width="4" height="1.4" />`
+            + `<path class="spring" d="M${p(seat[0] - 3.6, seat[1] - 2.8)} l.6 .7 l-.6 .6 l.6 .6 M${p(seat[0] + 1.2, seat[1] - 2.7)} l.6 .7 l-.6 .6" />`
+            + `<path class="${pick(["c-timber", "c-timber", "c-terracotta-deep", "c-slate"])} outline hair" data-snow=".55" d="M${p(seat[0] - 4.8, seat[1] - 3.4)} Q${p(seat[0] - 1, seat[1] - 5.6)} ${p(seat[0] + 2.6, seat[1] - 3.8)} L${p(seat[0] + 0.6, seat[1] - 2.6)} Q${p(seat[0] - 2, seat[1] - 2.4)} ${p(seat[0] - 4.8, seat[1] - 3.4)} Z" />`
+            + `<path class="grip" d="M${p(...grip)} l${swept ? "-2.2 .4" : "-.5 -2.2"}" />`
+            + `<circle class="c-gold outline hair" cx="${f(head[0] - 1.6)}" cy="${f(head[1] - 5.7)}" r="1.1" />`
+            + `<rect class="c-gold outline hair" x="${f(low[0] + 0.6)}" y="${f(low[1] - 2.4)}" width="3.2" height="3" rx="1" /><circle class="lamp outline hair" cx="${f(low[0] + 3.9)}" cy="${f(low[1] - 0.9)}" r="1.3" />`;
+        // on the rack over the back wheel, a parcel tied with string or a satchel slung from it;
+        // or a bird perched there
+        const ry = ay - r - 2, load = random();
+        if (load < 0.55) {
+            drawn += `<path class="rack" d="M${p(ax - r * 0.7, ry)} H${f(seat[0] - 1.5)} M${p(ax - r * 0.5, ry)} L${p(ax, ay)} M${p(ax + r * 0.3, ry)} L${p(ax, ay)}" />`;
+            if (load < 0.25) drawn += `<rect class="${pick(["c-sand", "c-thatch", "c-cream-deep"])} outline hair" data-snow=".3" x="${f(ax - r * 0.6)}" y="${f(ry - 5)}" width="${f(r * 0.9)}" height="5" rx=".4" /><path class="string" d="M${p(ax - r * 0.15, ry - 5)} v5 M${p(ax - r * 0.6, ry - 2.5)} h${f(r * 0.9)}" />`;
+            else if (load < 0.4) drawn += `<rect class="c-timber outline hair" x="${f(ax - r * 0.55)}" y="${f(ry)}" width="${f(r * 0.7)}" height="6" rx="1" /><path class="c-terracotta-deep outline hair" d="M${p(ax - r * 0.55, ry)} h${f(r * 0.7)} v2.4 Q${p(ax - r * 0.2, ry + 3.6)} ${p(ax - r * 0.55, ry + 2.4)} Z" /><rect class="c-gold" x="${f(ax - r * 0.25)}" y="${f(ry + 2.2)}" width="1.4" height="1.2" />`;
+            else drawn += songbird(ax - r * 0.2, ry, random() < 0.5 ? 1 : -1);
+        } else if (load < 0.75) drawn += songbird(ax - r * 0.25, ay - r - 0.9, random() < 0.5 ? 1 : -1);
+        if (random() < 0.45) {
+            const bx = head[0] + 1.2, by = head[1] - 1.5, what = random();
+            drawn += what < 0.35
+                ? `<path class="c-ochre outline hair" d="M${p(bx + 1, by - 1)} L${p(bx + 9, by - 6.5)} Q${p(bx + 10.4, by - 6.4)} ${p(bx + 9.8, by - 5.2)} L${p(bx + 2.4, by + 0.6)} Z" /><path class="band" d="M${p(bx + 4, by - 2.4)} l1 .8 M${p(bx + 6, by - 3.8)} l1 .8 M${p(bx + 8, by - 5.2)} l1 .8" />`
+                : what < 0.6
+                    ? `<path class="c-cream outline hair" d="M${p(bx + 1.5, by - 1)} L${p(bx + 3, by - 6.5)} L${p(bx + 7.6, by - 5.6)} L${p(bx + 7.6, by - 1)} Z" /><path class="leaves" d="M${p(bx + 3.4, by - 4.8)} h3.6 M${p(bx + 3, by - 3.4)} h4 M${p(bx + 2.6, by - 2)} h4.4" />`
+                    : [2.5, 5, 7.5].map((dx) => `<path class="pedicel" d="M${p(bx + dx, by)} V${f(by - 2)}" /><circle class="${pick(["c-rose", "c-red", "c-gold", "c-cream", "c-blue"])} outline hair" cx="${f(bx + dx)}" cy="${f(by - 2.6 - random())}" r="1.5" />`).join("");
+            drawn += `<path class="c-thatch outline hair" d="M${p(bx, by - 1)} H${f(bx + 9.5)} L${p(bx + 8.5, by + 4.5)} H${f(bx + 1.2)} Z" />`
+                + `<path class="twig" d="M${p(bx + 0.5, by + 1.2)} H${f(bx + 9)} M${p(bx + 1, by + 3)} H${f(bx + 8.6)} M${p(bx + 3.5, by - 1)} V${f(by + 4.5)} M${p(bx + 6, by - 1)} V${f(by + 4.5)}" />`;
+        }
+        return `<g class="bicycle touch"><rect class="hit" x="${f(x - 2)}" y="${f(head[1] - 8)}" width="${f(fx + r - x + 6)}" height="${f(TOP - head[1] + 8)}" />${drawn}</g>`;
+    };
+    // A street piano on its cart, centred on cx: a painted cabinet lined in gilt under a cornice,
+    // a window onto its punched roll, under it a medallion between scrolls or pleated silk, the
+    // crank on its side; sometimes a lantern on a bracket, a tin cup hung for coins, a bird on
+    // its shafts. Touched, it plays: the crank turns, the roll runs and notes rise from it.
+    const PAINTS = ["c-red", "c-green", "c-blue-deep", "c-terracotta-deep", "c-ochre"];
+    const streetPiano = (i, cx) => {
+        const W = rand(26, 31), H = rand(15, 18), base = TOP - 8, top = base - H, x0 = cx - W / 2, paint = pick(PAINTS), trim = pick(["gold", "gold", "cream"]);
+        const wx = x0 + 4, wy = top + 3, ww = W - 8, wh = 6.5, P = 12, spokes = pick([6, 8, 10]);
+        // the roll's holes over one turn of it (P high), laid twice so it can run on
+        let holes = "";
+        for (let c = 0; c < 7; c++) {
+            for (let k = int(1, 2); k > 0; k--) {
+                const y0 = rand(0, P - 1), l = Math.min(rand(1, 3.5), P - y0);
+                [0, P].forEach((o) => { holes += `<rect class="c-window-dark" x="${f(wx + 1 + c * (ww - 2) / 7)}" y="${f(wy + y0 + o)}" width=".9" height="${f(l)}" />`; });
+            }
+        }
+        const ay = wy + wh + 4, axle = `transform-box: view-box; transform-origin: ${f(x0 + W + 0.6)}px ${f(ay)}px`;
+        const py = wy + wh + 2.5, ph = base - wy - wh - 4.5, my = py + ph / 2;
+        const panel = random() < 0.5
+            ? `<rect class="panel" x="${f(x0 + 3)}" y="${f(py)}" width="${f(W - 6)}" height="${f(ph)}" rx="1" /><circle class="c-gold outline hair" cx="${f(cx)}" cy="${f(my)}" r="2.6" />`
+                + `<path class="band" d="M${f(cx - 6.5)} ${f(my)} q1.5 -2 3 0 q1 1.2 .4 1.8 M${f(cx + 3.5)} ${f(my)} q1.5 -2 3 0 q1 1.2 .4 1.8" />`
+            : `<rect class="${pick(["c-rose", "c-cream", "c-gold", "c-red"])} outline hair" x="${f(x0 + 3)}" y="${f(py)}" width="${f(W - 6)}" height="${f(ph)}" rx="1" />`
+                + `<path class="pleats" d="${Array.from({ length: 9 }, (_, k) => `M${f(cx)} ${f(py + ph)} L${f(x0 + 3.4 + (W - 6.8) * k / 8)} ${f(py + 0.4)}`).join(" ")}" /><circle class="c-gold outline hair" cx="${f(cx)}" cy="${f(py + ph - 0.4)}" r="1.4" />`;
+        const notes = [0, 1, 2].map((k) => {
+            const nx = x0 + 3 + k * 6, ny = top - 3 - (k % 2) * 2, pair = random() < 0.35;
+            return `<g class="note" style="--k: ${k}"><ellipse class="note-head" cx="${f(nx)}" cy="${f(ny)}" rx="1.5" ry="1.1" transform="rotate(-20 ${f(nx)} ${f(ny)})" />`
+                + (pair ? `<ellipse class="note-head" cx="${f(nx + 3.4)}" cy="${f(ny - 1)}" rx="1.5" ry="1.1" transform="rotate(-20 ${f(nx + 3.4)} ${f(ny - 1)})" /><path class="note-stem" d="M${f(nx + 1.3)} ${f(ny)} V${f(ny - 5)} L${f(nx + 4.7)} ${f(ny - 6)} V${f(ny - 1)}" />`
+                    : `<path class="note-stem" d="M${f(nx + 1.3)} ${f(ny)} V${f(ny - 5)} q1.5 1 2 2.5" />`) + "</g>";
+        }).join("");
+        let drawn = wheel(x0 + 3, TOP - 4.6, 4.6, spokes) + wheel(x0 + W - 3, TOP - 4.6, 4.6, spokes)
+            + `<path class="shaft" d="M${f(x0 - 3)} ${f(base + 1.2)} L${f(x0 - 11)} ${f(base - 3)}" /><path class="grip" d="M${f(x0 - 9.4)} ${f(base - 2.2)} L${f(x0 - 11.4)} ${f(base - 3.2)}" />`
+            + `<rect class="c-timber outline thin" x="${f(x0 - 3)}" y="${f(base)}" width="${f(W + 6)}" height="2.4" />`
+            + `<rect class="${paint} outline thin" x="${f(x0)}" y="${f(top)}" width="${f(W)}" height="${f(H)}" />`
+            + `<rect class="lining" style="stroke: var(--${trim})" x="${f(x0 + 1.6)}" y="${f(top + 1.4)}" width="${f(W - 3.2)}" height="${f(H - 2.8)}" rx=".6" />`
+            + [[x0 + 1.6, top + 1.4], [x0 + W - 1.6, top + 1.4], [x0 + 1.6, base - 1.4], [x0 + W - 1.6, base - 1.4]].map(([rx, ry]) => `<circle class="c-${trim}" cx="${f(rx)}" cy="${f(ry)}" r=".8" />`).join("")
+            + `<path class="c-gold outline hair" data-snow=".6" d="M${f(cx - 6)} ${f(top - 2.2)} Q${f(cx)} ${f(top - 6)} ${f(cx + 6)} ${f(top - 2.2)} Z" /><rect class="c-timber outline thin" data-snow=".5" x="${f(x0 - 1.5)}" y="${f(top - 2.2)}" width="${f(W + 3)}" height="2.4" />`
+            + `<clipPath id="floor-roll-${i}"><rect x="${f(wx)}" y="${f(wy)}" width="${f(ww)}" height="${wh}" /></clipPath>`
+            + `<rect class="c-gold outline hair" x="${f(wx - 1)}" y="${f(wy - 1)}" width="${f(ww + 2)}" height="${wh + 2}" /><rect class="c-cream" x="${f(wx)}" y="${f(wy)}" width="${f(ww)}" height="${wh}" />`
+            + `<g clip-path="url(#floor-roll-${i})"><g class="roll" style="--roll: -${P}px">${holes}</g></g>`
+            + panel
+            + `<g class="crank" style="${axle}"><path class="arm" d="M${f(x0 + W + 0.6)} ${f(ay)} h5.4" /><circle class="c-timber outline hair" cx="${f(x0 + W + 6)}" cy="${f(ay)}" r="1.3" /></g>`
+            + `<circle class="c-slate outline hair" cx="${f(x0 + W + 0.6)}" cy="${f(ay)}" r="1" />`;
+        if (random() < 0.4) drawn += `<path class="arm" d="M${f(x0)} ${f(top + 2)} h-4 v1.2" /><rect class="lamp outline hair" x="${f(x0 - 5.6)}" y="${f(top + 3.2)}" width="3.2" height="4" rx=".6" /><path class="c-gold outline hair" d="M${f(x0 - 6)} ${f(top + 3.4)} h4 l-.6 -1 h-2.8 Z" />`;
+        if (random() < 0.55) {
+            const px = cx + rand(-3, 3);
+            drawn += `<path class="cable" d="M${f(px)} ${f(base + 2.4)} v1.4" /><path class="c-slate outline hair" d="M${f(px - 2)} ${f(base + 3.8)} h4 l-.5 3.4 h-3 Z" /><circle class="c-gold" cx="${f(px + 0.6)}" cy="${f(base + 4.2)}" r=".6" />`;
+        }
+        if (random() < 0.35) drawn += songbird(x0 - 10.6, base - 3.4, random() < 0.5 ? 1 : -1);
+        return `<g class="street-piano touch"><rect class="hit" x="${f(x0 - 12)}" y="${f(top - 7)}" width="${f(W + 22)}" height="${f(TOP - top + 7)}" />${drawn}${notes}</g>`;
+    };
+    // what fills the time outside work: the bicycle and the street piano, each in one half of the line
+    const pastimes = (i, w) => {
+        const left = random() < 0.5;
+        const bike = bicycle(left ? rand(20, w / 2 - 66) : rand(w / 2 + 10, w - 66));
+        return { markup: bike + streetPiano(i, left ? rand(w / 2 + 26, w - 30) : rand(30, w / 2 - 26)) };
+    };
+
     // the thing on each floor that has one (it says what stretch of line it leaves the plants
-    // and what they can climb)
-    const OBJECTS = { publications: loudspeaker, skills: gears, associations: nest };
+    // and what they can climb). Those that came later draw from draws of their own, so the
+    // plants of each castle stay those its seed has always given.
+    const OBJECTS = { publications: loudspeaker, skills: gears, associations: nest, experience: compass, education: books, interests: pastimes };
+    const LATER = new Set(["experience", "education", "interests"]);
+
+    // In the snow, snow lying on the things along the lines: over each piece marked data-snow
+    // (the share of its height it covers from its top), a copy of it in snow, cut off by a soft,
+    // uneven edge, as on the castle's roofs
+    const snowOn = (deco, i) => deco.querySelectorAll("[data-snow]").forEach((el, k) => {
+        const b = el.getBBox(), edge = b.y + b.height * parseFloat(el.dataset.snow), x0 = b.x - 2, x1 = b.x + b.width + 2;
+        let d = `M${f(x0)} ${f(b.y - 6)} H${f(x1)} V${f(edge)}`;
+        for (let x = x1; x > x0; x -= 1.5) d += ` L${f(x)} ${f(edge + 0.5 * Math.sin(x * 1.3 + k) + (Math.sin(x * 0.5 + 2 * k) > 0.8 ? 0.8 : 0))}`;
+        const clip = document.createElementNS(NS, "clipPath");
+        clip.id = `floor-snow-${i}-${k}`;
+        clip.innerHTML = `<path d="${d} L${f(x0)} ${f(edge)} Z" />`;
+        const snow = el.cloneNode();
+        snow.setAttribute("class", "snow outline hair");
+        snow.setAttribute("clip-path", `url(#${clip.id})`);
+        snow.removeAttribute("data-snow");
+        el.after(clip, snow);
+    });
 
     const MOSS = ["c-hedge", "c-hedge", "c-hedge-olive", "c-hedge-sage"], MOSS_LIGHT = ["c-hedge-light", "c-hedge-sage"];
     // The floor's line, a course of the stone the castle's terrace is walled with, drawn as the
@@ -641,7 +977,11 @@
             named = after;
             const [stone, moss] = masonry(i, w, [title.offsetLeft, LINE + 2 + title.offsetTop, title.offsetWidth, title.offsetHeight], k);
             wall.style.setProperty("--k", k.toFixed(3));
+            const own = random;
+            side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
+            if (LATER.has(floor.id)) random = seeded(seed ^ Math.imul(i + 7, 0x85ebca6b));
             const thing = OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" };
+            random = own;
             const stretches = thing.gap ? [[6, thing.gap[0]], [thing.gap[1], end]] : [[6, end]];
             const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length]);
             // over the stone: its moss, the plants in front of the thing or behind it, the
@@ -649,6 +989,7 @@
             const ground = thing.behind ? thing.markup + grown.main : grown.main + thing.markup;
             wall.innerHTML = stone;
             deco.innerHTML = `${moss}${ground}${fireflies(end)}${grown.climb}`;
+            if (document.documentElement.dataset.weather === "snow") snowOn(deco, i);
             // the leaves, flowers and branches, where they leave the stem and how far they can
             // swing, for the pointer to stir
             deco.parts = [...deco.querySelectorAll("[data-at]")].map((el) => {
@@ -686,12 +1027,39 @@
         if (!sizes.length) draw(false);
     });
 
-    // the loudspeaker, touched, proclaims
+    // the things touched: the loudspeaker proclaims, the candle goes out (and lights again),
+    // the bicycle's wheels spin, the street piano plays
+    const TOUCHED = { speaker: ["speaking", 2500], books: ["snuffed", 2600], bicycle: ["rolling", 2600], "street-piano": ["playing", 3800] };
     document.querySelector("main").addEventListener("click", (event) => {
-        const speaker = event.target.closest(".speaker");
-        if (!speaker || speaker.classList.contains("speaking")) return;
-        speaker.classList.add("speaking");
-        setTimeout(() => speaker.classList.remove("speaking"), 2500);
+        const thing = event.target.closest(".touch");
+        const [state, time] = Object.entries(TOUCHED).find(([name]) => thing?.classList.contains(name))?.[1] ?? [];
+        if (!state || thing.classList.contains(state)) return;
+        thing.classList.add(state);
+        setTimeout(() => thing.classList.remove(state), time);
+    });
+
+    // The compass's needle turns to the pointer wherever it is on the page (a finger's tap on
+    // a touch screen), the shorter way round from where it points, and back to the north when
+    // the pointer leaves the page
+    let at = null, aiming = 0;
+    const aim = () => {
+        aiming = 0;
+        document.querySelectorAll("main .compass .needle").forEach((needle) => {
+            const dial = needle.parentNode.querySelector(".dial").getBoundingClientRect();
+            const to = at ? Math.atan2(at[0] - dial.left - dial.width / 2, dial.top + dial.height / 2 - at[1]) * 180 / Math.PI : 0, from = needle.turned || 0;
+            needle.turned = from + ((to - from + 540) % 360) - 180;
+            needle.style.transform = `rotate(${f(needle.turned)}deg)`;
+        });
+    };
+    const point = (event) => {
+        at = [event.clientX, event.clientY];
+        aiming ||= requestAnimationFrame(aim);
+    };
+    addEventListener("pointermove", point, { passive: true });
+    addEventListener("pointerdown", point, { passive: true });
+    document.documentElement.addEventListener("mouseleave", () => {
+        at = null;
+        aiming ||= requestAnimationFrame(aim);
     });
 
     // Brushed by the pointer, the leaves, flowers and branches near its way since its last move

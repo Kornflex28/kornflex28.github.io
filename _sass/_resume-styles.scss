@@ -777,6 +777,16 @@ main .floor:has(> .floor-deco) {
     stroke-linecap: round;
   }
 
+  // a dozing chick's shut eyes, an egg's speckles, a worm brought them, the small birds'
+  // wings, a chip off the flowerpot's rim; the oil can by the gears
+  .lid { fill: none; stroke: var(--line); stroke-width: .5; stroke-linecap: round; }
+  .speck { fill: var(--line); opacity: .35; }
+  .worm { fill: none; stroke: var(--rose); stroke-width: 1.1; stroke-linecap: round; }
+  .wing { fill: var(--line); opacity: .22; }
+  .chip { fill: var(--terracotta-deep); }
+  .spout { fill: none; stroke: var(--slate); stroke-width: 1.2; stroke-linecap: round; }
+  .handle { fill: none; stroke: var(--line); stroke-width: .8; }
+
   // the chicks' down
   .tuft {
     fill: none;
@@ -785,7 +795,112 @@ main .floor:has(> .floor-deco) {
     stroke-linecap: round;
   }
 
+  // the compass: its dial's marks, the glass catching the light, a pocket one's chain (and the
+  // bicycle's); its needle swinging round to the pointer and settling, as a magnetised one does
+  .ticks { fill: none; stroke: var(--line); stroke-width: .5; opacity: .7; }
+
+  .glint {
+    fill: none;
+    stroke: #fff;
+    stroke-width: .8;
+    stroke-linecap: round;
+    opacity: .55;
+  }
+
+  .chain {
+    fill: none;
+    stroke: var(--slate);
+    stroke-width: 1.2;
+    stroke-dasharray: 1.6 .7;
+  }
+
+  .needle { transition: transform 1.2s cubic-bezier(.3, 1.7, .45, 1); }
+  .rose { fill: var(--gold); opacity: .35; }
+
+  // the candle's ring to carry it by, spectacles left on the books
+  .ring-handle { fill: none; stroke: var(--gold); stroke-width: 1; stroke-linecap: round; }
+  .specs { fill: none; stroke: var(--line); stroke-width: .5; }
+
+  // the books' pages, the candle's wick, the quill; the flame flickering while its floor is in
+  // view, wavering when brushed, out in a wisp of smoke when touched (.snuffed), its light
+  // warmer about it by night
+  .leaves { fill: none; stroke: var(--line); stroke-width: .35; opacity: .4; }
+
+  .wick,
+  .quill {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: .6;
+    stroke-linecap: round;
+  }
+
+  .flame { transition: opacity .3s; }
+  &.awake .flame { animation: flicker 2.2s ease-in-out infinite alternate; }
+  &.awake .books:hover .flame { animation-duration: .25s; }
+  .candle-glow { opacity: .45; }
+  .snuffed .flame { opacity: 0; }
+
+  .smoke {
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: .7;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  .snuffed .smoke { animation: smoke 1.6s ease-out; }
+
+  // the wheels (the bicycle's, the street piano's cart's), the bicycle's frame drawn in its
+  // paint over its outline, its grips and cranks; brushed, its wheels turn; touched, its bell
+  // rings and they spin (.rolling)
+  .tyre { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  .rim { fill: none; stroke: var(--slate); stroke-width: .6; }
+  .spoke { fill: none; stroke: var(--line); stroke-width: .3; opacity: .65; }
+
+  .tube-edge,
+  .tube {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tube { stroke-width: 1.4; }
+  .grip { fill: none; stroke: var(--line); stroke-width: 1.8; stroke-linecap: round; }
+
+  .arm {
+    fill: none;
+    stroke: var(--slate);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+  }
+
+  .bicycle:hover .wheel { animation: roll 5s linear infinite; }
+  .bicycle.rolling .wheel { animation: roll-off 2.6s cubic-bezier(.15, .7, .35, 1); }
+
+  // its gilt line, saddle springs, rack and the string round its parcel
+  .pin { fill: none; stroke: var(--gold); stroke-width: .35; opacity: .8; }
+  .spring { fill: none; stroke: var(--line); stroke-width: .45; }
+  .rack { fill: none; stroke: var(--slate); stroke-width: .9; stroke-linecap: round; }
+  .string { fill: none; stroke: var(--timber); stroke-width: .45; }
+
+  // the street piano's cart and panels; touched, it plays (.playing): its crank turns, its
+  // roll runs on (--roll: one turn of it) and notes rise
+  .shaft { fill: none; stroke: var(--timber); stroke-width: 1.6; stroke-linecap: round; }
+  .lining { fill: none; stroke-width: .5; opacity: .85; }
+  .pleats { fill: none; stroke: var(--line); stroke-width: .35; opacity: .4; }
+  .panel { fill: none; stroke: var(--line); stroke-width: .6; opacity: .45; }
+  .note { opacity: 0; }
+  .note-head { fill: var(--ink-soft); }
+  .note-stem { fill: none; stroke: var(--ink-soft); stroke-width: .6; }
+  .playing .crank { animation: roll .9s linear infinite; }
+  .playing .roll { animation: unroll 2.4s linear infinite; }
+  .playing .note { animation: note 1.5s ease-out calc(var(--k) * .5s) infinite; }
+
 }
+
+:root[data-theme="night"] .floor-deco .candle-glow { opacity: 1; }
 
 @keyframes sway {
   from { transform: rotate(calc(-1 * var(--amp))); }
@@ -801,11 +916,33 @@ main .floor:has(> .floor-deco) {
   to { transform: rotate(var(--turn)); }
 }
 
+@keyframes flicker {
+  0% { transform: scale(1, 1) skewX(0); }
+  40% { transform: scale(.94, 1.06) skewX(3deg); }
+  100% { transform: scale(1.03, .95) skewX(-2deg); }
+}
+
+@keyframes smoke {
+  from { opacity: .8; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes roll { to { transform: rotate(1turn); } }
+@keyframes roll-off { to { transform: rotate(3turn); } }
+@keyframes unroll { to { transform: translateY(var(--roll)); } }
+
+@keyframes note {
+  from { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: .9; }
+  to { opacity: 0; transform: translate(4px, -9px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .floor-deco {
     .stem, .tendril { stroke-dashoffset: 0; transition: none; }
     .leaf, .flower, .moss { transform: none; transition: none; }
-    .gear, .waves, .sway { animation: none; }
+    .gear, .waves, .sway, .flame, .wheel, .crank, .roll, .note { animation: none !important; }
+    .needle { transition: none; }
   }
 }
 
