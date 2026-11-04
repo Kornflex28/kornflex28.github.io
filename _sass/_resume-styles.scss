@@ -523,7 +523,7 @@ main .floor:has(> .floor-deco) {
 
   .hair { stroke-width: .9; }
   .wisp { stroke-width: .4; }
-  .touch { pointer-events: auto; cursor: pointer; }
+  .touch { pointer-events: auto; }
   .hit { fill: transparent; }
 
   // the creeper: its stem and tendrils drawn out, its leaves and flowers opening, one
