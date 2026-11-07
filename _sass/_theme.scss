@@ -1,4 +1,38 @@
 // Shared look: palette, type, links and buttons.
+
+// The site's typeface, Atkinson Hyperlegible Next (SIL Open Font License, assets/fonts/OFL.txt),
+// served with the site rather than from another one, so nothing holds the first paint up: its
+// upright in every weight from regular to bold, and its italic. Latin letters, French ones too.
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/atkinson-hyperlegible-next-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/atkinson-hyperlegible-next-italic-latin.woff2") format("woff2");
+}
+
+// Until it has come, Arial sized to take up the same room, so the text keeps its lines when it
+// comes in (the bold as wide already)
+@font-face {
+  font-family: "Atkinson fallback";
+  font-weight: 400;
+  src: local("Arial");
+  size-adjust: 103%;
+}
+
+@font-face {
+  font-family: "Atkinson fallback";
+  font-weight: 700;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+}
 // Palette loosely inspired by Paul Grimault's flat painted colours.
 
 :root {
@@ -60,7 +94,7 @@
   --window-dark: #2b2a33;
   color-scheme: light;
 
-  --font: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Atkinson Hyperlegible Next", "Atkinson fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --measure: 44rem;
 }
 

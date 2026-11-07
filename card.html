@@ -14,8 +14,7 @@ sitemap: false
     <meta charset="utf-8">
     <meta name="robots" content="noindex">
     <title>Link preview card</title>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link rel="preload" href="{{ '/assets/fonts/atkinson-hyperlegible-next-latin.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ '/css/resume.css' | relative_url }}?v={{ site.time | date: '%s' }}">
     <style>
         html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
