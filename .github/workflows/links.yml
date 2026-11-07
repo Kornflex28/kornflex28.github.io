@@ -3,7 +3,8 @@ name: Check the links
 # Every Monday, every link of the built site tried (the articles, the profiles, the pages
 # themselves): those that no longer answer are listed in an issue, opened, or brought up to
 # date if one is already open, and closed once they all answer again. Sites that turn robots
-# away (403, 429, LinkedIn's 999) count as answering; slow ones get a minute.
+# away (403, 429, LinkedIn's 999) count as answering; slow ones get two minutes (the IPGP
+# data repository takes over a minute to answer).
 on:
   schedule:
     - cron: "41 6 * * 1"
@@ -29,7 +30,7 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: >-
-            --no-progress --max-retries 3 --timeout 60
+            --no-progress --max-retries 3 --timeout 120
             --accept 200..=299,403,429,999
             --root-dir ${{ github.workspace }}/_site
             --fallback-extensions html
