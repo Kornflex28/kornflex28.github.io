@@ -39,25 +39,13 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow websocket-client
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
-      # The pages opened as a visitor would, by a headless Chrome: the publication stops if a
-      # script fails, or if what the scripts draw is not there (the castle and its sky, the
-      # floors' drawings, the castle's ID, the frog)
+      # The pages opened as a visitor would, by a headless Chrome (scripts/check.py): the
+      # publication stops if a script fails, or if what the scripts draw is not there
       - name: Check the pages draw
         run: |
           python3 -m http.server 8001 --directory _site > /dev/null 2>&1 &
           sleep 1
-          check() {
-            page="$1"; shift
-            google-chrome --headless=new --enable-logging=stderr --v=0 --virtual-time-budget=8000 \
-              --dump-dom "http://localhost:8001$page" > "$RUNNER_TEMP/dom.html" 2> "$RUNNER_TEMP/log.txt"
-            if grep "Uncaught" "$RUNNER_TEMP/log.txt"; then echo "::error::a script fails on $page"; exit 1; fi
-            for mark in "$@"; do
-              grep -q -- "$mark" "$RUNNER_TEMP/dom.html" || { echo "::error::$mark missing on $page"; exit 1; }
-            done
-          }
-          check / 'data-moment=' 'class="floor-deco' 'id="castle-id"'
-          check /frogs 'canvas-frog'
-          check /404.html 'lost-ruins'
+          python .github/scripts/check.py http://localhost:8001
       # A new castle for link previews at each publication: a headless Chrome photographs
       # the card page, and the picture replaces the card kept in the repository. If anything
       # fails, that card stays.
