@@ -2,6 +2,13 @@
 # Sources: ORCID 0000-0002-1467-9136 and Google Scholar.
 
 - year: 2026
+  type: Conference
+  authors: Hulot G., …, Chauvet L. et al.
+  title: The ESA Scout NanoMagSat Mission, a Nanosatellite Constellation to Further Improve Geomagnetic Field and Ionospheric Environment Monitoring and Modeling, on Course for First Launch in 2027
+  venue: EGU General Assembly, EGU26-2836
+  url: https://doi.org/10.5194/egusphere-egu26-2836
+
+- year: 2026
   type: Article
   authors: Beggan C. D., …, Chauvet L. et al.
   title: "International Geomagnetic Reference Field: the fourteenth generation"
