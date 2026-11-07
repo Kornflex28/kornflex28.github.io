@@ -5,6 +5,9 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  # every morning, published again: a castle of the day for the link previews and the README
+  schedule:
+    - cron: "17 5 * * *"
 
 permissions:
   contents: read
