@@ -2,7 +2,8 @@ name: Check the links
 
 # Every Monday, every link of the built site tried (the articles, the profiles, the pages
 # themselves): those that no longer answer are listed in an issue, opened, or brought up to
-# date if one is already open. Publishers that turn robots away (403, 429) count as answering.
+# date if one is already open, and closed once they all answer again. Sites that turn robots
+# away (403, 429, LinkedIn's 999) count as answering; slow ones get a minute.
 on:
   schedule:
     - cron: "41 6 * * 1"
@@ -28,15 +29,15 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: >-
-            --no-progress --max-retries 3 --timeout 30
-            --accept 200..=299,403,429
+            --no-progress --max-retries 3 --timeout 60
+            --accept 200..=299,403,429,999
             --root-dir ${{ github.workspace }}/_site
+            --fallback-extensions html
             --exclude-path _site/card.html
             '_site/**/*.html'
           output: ${{ runner.temp }}/links.md
           fail: false
       - id: open
-        if: steps.lychee.outputs.exit_code != 0
         env:
           GH_TOKEN: ${{ github.token }}
         run: echo "number=$(gh issue list --repo "$GITHUB_REPOSITORY" --label links --state open --json number --jq '.[0].number')" >> "$GITHUB_OUTPUT"
@@ -47,3 +48,7 @@ jobs:
           content-filepath: ${{ runner.temp }}/links.md
           labels: links
           issue-number: ${{ steps.open.outputs.number }}
+      - if: steps.lychee.outputs.exit_code == 0 && steps.open.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue close "${{ steps.open.outputs.number }}" --repo "$GITHUB_REPOSITORY" --comment "Every link answers again."
