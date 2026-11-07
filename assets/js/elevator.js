@@ -206,10 +206,11 @@
     // Landings move when the layout changes: fonts loading, folds opening, resizing
     new ResizeObserver(() => { place(); pinned = null; update(); }).observe(document.body);
     // and the castle's terrace, when another castle is drawn (skyline.js), and the screen's
-    // height, as when a phone's address bar shows or hides
-    ["castle-drawn", "resize"].forEach((type) => window.addEventListener(type, () => { place(); pinned = null; update(); }));
+    // height, as when a phone's address bar shows or hides; measured in the next frame, once
+    // the castle and the floors are redrawn, so the page is laid out once for all of them
+    ["castle-drawn", "resize"].forEach((type) => window.addEventListener(type, () => requestAnimationFrame(() => { place(); pinned = null; update(); })));
 
     if (!location.hash) window.scrollTo(0, 0);
-    place();
-    update();
+    // placed once the castle, the floors and the town are drawn and the page laid out with them
+    requestAnimationFrame(() => { place(); update(); });
 })();

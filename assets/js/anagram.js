@@ -66,8 +66,9 @@
 
     // Where everything lands: the anagram is laid out unseen in the same font, giving each
     // spot in it; the i's dot flies from its place on the i to the full stop's
-    let spots = [], homes = [], hop = null;
+    let spots = [], homes = [], hop = null, measured = false;
     const measure = () => {
+        measured = true;
         const ghost = document.createElement("span");
         ghost.className = "anagram-ghost";
         ghost.innerHTML = [...TARGET].map((ch) => `<span>${ch}</span>`).join("") + '<span class="baseline"></span>';
@@ -180,6 +181,7 @@
     // finishes its flight first
     const fly = () => {
         if (flights.some((anim) => anim.playState === "running")) return;
+        if (!measured) measure();
         flown = !flown;
         flights.forEach((anim) => anim.cancel());
         takeOff(flown);
@@ -193,14 +195,16 @@
     name.addEventListener("pointerleave", (event) => { if (event.pointerType === "mouse") left = event.timeStamp; });
     name.addEventListener("click", () => { if (pointer !== "mouse") fly(); });
 
-    // Measured again once the font has loaded and whenever the name's size changes; letters
-    // already in the anagram are set straight onto their new spots
+    // Measured on the first flight, and again on the next once the font has loaded or the
+    // name's size has changed (not while the page loads, where it would lay the page out for
+    // nothing); letters already in the anagram are set straight onto their new spots
     let width = 0;
     const settle = () => {
         flights.forEach((anim) => anim.cancel());
         flights = [];
-        measure();
+        measured = false;
         if (!flown) return;
+        measure();
         // letters in the anagram are set straight onto their spots, which they keep: the
         // start of a flight home
         takeOff(false);

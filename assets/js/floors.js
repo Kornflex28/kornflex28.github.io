@@ -939,42 +939,60 @@
     // floor's own border, kept for when there is no script, hides under it), the floor's name
     // in its stone, the plants and the thing on the line, if any, the fireflies. Drawn again for each castle and whenever
     // the floors or their names change size.
-    let seed = 1, sizes = [];
+    let seed = 1, sizes = [], boxes = null, k = 1;
     // (the castle's scale: 1 where it is drawn a pixel to a unit, less on narrow screens)
     const castleScale = () => Math.min(1, (document.querySelector(".skyline")?.getBoundingClientRect().width || 952) / 952);
     const measured = () => castleScale() + floors.map((floor) => {
         const title = floor.querySelector(".floor-title");
         return `${floor.clientWidth} ${title.offsetWidth} ${title.offsetHeight}`;
     }).join();
+    const prepare = () => {
+        // each floor's two drawings: the stone in a drawing of its own (.floor-stone) under the
+        // plants' and the things' (.floor-deco), painted once: with them moving over it every
+        // frame, its gouache would be painted again each time, which a phone cannot keep up with
+        floors.forEach((floor) => {
+            if (floor.querySelector(":scope > .floor-deco")) return;
+            const [wall, deco] = ["floor-stone", "floor-deco"].map((name) => {
+                const svg = document.createElementNS(NS, "svg");
+                svg.setAttribute("class", name);
+                svg.setAttribute("aria-hidden", "true");
+                svg.setAttribute("preserveAspectRatio", "none");
+                return svg;
+            });
+            floor.prepend(wall, deco);
+            watch.observe(deco);
+            boxes = null;
+        });
+        // every size read at once, before anything is drawn, so the page is laid out only once
+        // (read between the drawings, each read would lay out all the floors drawn before it):
+        // each floor's width, and its name's box, in its tablet under the line (its top at the
+        // line, as the CSS sets it once the drawing is there). Kept for the next castles, which
+        // leave them as they are: measured again only when the page resizes (below), so a new
+        // castle reads nothing until it is drawn.
+        if (!boxes) {
+            k = castleScale();
+            boxes = floors.map((floor) => {
+                const title = floor.querySelector(".floor-title");
+                return [floor.clientWidth, title.offsetLeft, title.offsetTop, title.offsetWidth, title.offsetHeight];
+            });
+            sizes = k + boxes.map(([w, , , tw, th]) => `${w} ${tw} ${th}`).join();
+        }
+    };
     const draw = (again) => {
+        prepare();
         // each floor its own kind of plant, shuffled for each castle
         random = seeded(seed);
-        const kinds = [...KINDS].sort(() => random() - 0.5), k = castleScale();
+        const kinds = [...KINDS].sort(() => random() - 0.5);
         floors.forEach((floor, i) => {
             random = seeded(seed ^ Math.imul(i + 1, 0x9e3779b1));
-            const w = floor.clientWidth, end = w - 8;
+            const [w, tx, ty, tw, th] = boxes[i], end = w - 8;
             scale = w < 520 ? 0.85 : 1;
-            // the stone in a drawing of its own (.floor-stone) under the plants' and the things'
-            // (.floor-deco), painted once: with them moving over it every frame, its gouache would
-            // be painted again each time, which a phone cannot keep up with
-            let deco = floor.querySelector(":scope > .floor-deco"), wall = floor.querySelector(":scope > .floor-stone");
-            if (!deco) {
-                [wall, deco] = ["floor-stone", "floor-deco"].map((name) => {
-                    const svg = document.createElementNS(NS, "svg");
-                    svg.setAttribute("class", name);
-                    svg.setAttribute("aria-hidden", "true");
-                    svg.setAttribute("preserveAspectRatio", "none");
-                    return svg;
-                });
-                floor.prepend(wall, deco);
-                watch.observe(deco);
-            }
+            const deco = floor.querySelector(":scope > .floor-deco"), wall = floor.querySelector(":scope > .floor-stone");
             [wall, deco].forEach((svg) => svg.setAttribute("viewBox", `0 0 ${w} ${HIGH}`));
-            // the floor's name, in its tablet under the line (its top at the line, as the CSS sets
-            // it once the drawing is there); what hangs under the line keeps clear of it
-            const title = floor.querySelector(".floor-title"), after = title.offsetLeft + title.offsetWidth;
+            // what hangs under the line keeps clear of the floor's name
+            const after = tx + tw;
             named = after;
-            const [stone, moss] = masonry(i, w, [title.offsetLeft, LINE + 2 + title.offsetTop, title.offsetWidth, title.offsetHeight], k);
+            const [stone, moss] = masonry(i, w, [tx, LINE + 2 + ty, tw, th], k);
             wall.style.setProperty("--k", k.toFixed(3));
             side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
             const make = () => OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" }, thing = LATER.has(floor.id) ? aside(make) : make();
@@ -1000,7 +1018,6 @@
                 watch.observe(deco);
             }
         });
-        sizes = measured();
     };
     // plants grow once their floor comes into view, and sway only while it is (.awake)
     const watch = new IntersectionObserver((entries) => entries.forEach((entry) => {
@@ -1015,13 +1032,19 @@
     });
     // (a name changes size when the page's font comes in)
     const resized = new ResizeObserver(() => {
-        if (sizes.length && measured() !== sizes) draw(false);
+        if (sizes.length && measured() !== sizes) {
+            boxes = null;
+            draw(false);
+        }
     });
     resized.observe(document.querySelector("main"));
     floors.forEach((floor) => resized.observe(floor.querySelector(".floor-title")));
     addEventListener("DOMContentLoaded", () => {
         if (!sizes.length) draw(false);
     });
+    // measured now, while the page is still light, before the castle is drawn: drawing the
+    // floors for it will then read nothing
+    prepare();
 
     // the things touched: the loudspeaker proclaims, the candle goes out (and lights again),
     // the bicycle's wheels spin, the street piano plays
