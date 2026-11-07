@@ -141,7 +141,11 @@
         const stir = (x, y, most) => `data-at="${f(x)} ${f(y)} ${most}"`, pivot = (x, y) => `transform-box: view-box; transform-origin: ${f(x)}px ${f(y)}px`;
         // some of the leaves and flowers sway, enough for the plant to look stirred (each one
         // swaying costs the browser a little, every frame)
-        const sway = (x, swing, share, drawn) => (random() < share * (coarse.matches ? 0.35 : 1) ? `<g class="sway" style="--amp: ${f(swing)}deg; animation-delay: -${f((span - x) / 110 + rand(0, 0.4))}s">${drawn}</g>` : drawn);
+        // (on the leaf or flower itself, as its class and style: one element for each, set where
+        // it leaves the stem (translate), grown (scale) and swayed (rotate) about that point by
+        // the CSS, turned by its own transform, so the page has a third as many to lay out and
+        // to paint)
+        const sway = (x, swing, share) => (random() < share * (coarse.matches ? 0.35 : 1) ? [" sway", `; --amp: ${f(swing)}deg; animation-delay: -${f((span - x) / 110 + rand(0, 0.4))}s`] : ["", ""]);
         // a leaf at (x, y), turned a degrees (0 up, 180 hanging down), of uneven size: some dry
         // (drooping, some curled up), some turning
         const leaf = (x, y, a, t = time(x)) => {
@@ -153,13 +157,15 @@
             const snow = snowy ? `<ellipse class="snow" cx="0" cy="${f(-l * 0.6)}" rx="${f(w * 0.7)}" ry="${f(l * 0.2)}" />` : "";
             const veins = kind.leaf === "pinnate" || l < 6 ? "" : `<path class="vein" d="M0 ${f(-l * 0.12)} V${f(-l * 0.85)}`
                 + [[0.38, 0.6, 0.16], [0.6, 0.45, 0.13]].map(([at, out, up]) => ` M0 ${f(-l * at)} l${f(w * out)} ${f(-l * up)} M0 ${f(-l * at)} l${f(-w * out)} ${f(-l * up)}`).join("") + '" />';
-            return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(dry ? rand(140, 220) : a)})${curl}">${sway(x, rand(3, 7), 0.45,
-                `<g class="leaf" style="${delay(t)}" data-at="${f(x)} ${f(y)}"><path class="${colour} outline ${kind.leaf === "pinnate" ? "wisp" : "hair"}" d="${LEAVES[kind.leaf](l, w)}" />${veins}${snow}</g>`)}</g>`;
+            const turn = `rotate(${f(dry ? rand(140, 220) : a)})${curl}`, [swaying, swung] = sway(x, rand(3, 7), 0.45);
+            return `<g class="leaf${swaying}" transform="${turn}" style="translate: ${f(x)}px ${f(y)}px; ${delay(t)}${swung}" data-at="${f(x)} ${f(y)}">`
+                + `<path class="${colour} outline ${kind.leaf === "pinnate" ? "wisp" : "hair"}" d="${LEAVES[kind.leaf](l, w)}" />${veins}${snow}</g>`;
         };
         // a flower at (x, y)
         const flower = (x, y, type, t = time(x)) => {
-            const drawn = `<g class="flower" style="${delay(t)}" data-at="${f(x)} ${f(y)}">${FLOWERS[type](type === "bud" ? pick(kind.greens) : pick(kind.colours))}</g>`;
-            return `<g transform="translate(${f(x)} ${f(y)})">${HANGING.has(type) ? sway(x, rand(6, 10), 1, drawn) : sway(x, rand(2, 4), 0.5, drawn)}</g>`;
+            const drawn = FLOWERS[type](type === "bud" ? pick(kind.greens) : pick(kind.colours));
+            const [swaying, swung] = HANGING.has(type) ? sway(x, rand(6, 10), 1) : sway(x, rand(2, 4), 0.5);
+            return `<g class="flower${swaying}" style="translate: ${f(x)}px ${f(y)}px; ${delay(t)}${swung}" data-at="${f(x)} ${f(y)}">${drawn}</g>`;
         };
         // a dead twig sticking out of the stem, forked
         const twig = (x, y) => {
@@ -896,11 +902,15 @@
         const p = [rand(0, 6), rand(0, 6)], lush = (x) => 0.5 + 0.5 * Math.sin(x / 47 + p[0]) * Math.sin(x / 19 + p[1]);
         const tuft = (x, y, hang) => {
             const up = hang ? 1 : -1;
-            let d = `M${f(x)} ${f(y)}`, at = x, tips = "", stalks = "";
+            let d = `M${f(x)} ${f(y)}`, at = x, stalks = "";
+            const tips = {};
             for (let n = int(2, 6); n > 0; n--) {
                 const r = rand(1.2, 3), h = r * rand(0.8, 1.4);
                 d += ` a${f(r)} ${f(h)} 0 0 ${hang ? 0 : 1} ${f(2 * r)} 0`;
-                if (random() < 0.8) tips += `<circle class="${pick(MOSS_LIGHT)}" cx="${f(at + r + rand(-0.5, 0.5))}" cy="${f(y + up * h * 0.6)}" r="${f(r * 0.48)}" />`;
+                if (random() < 0.8) {
+                    const colour = pick(MOSS_LIGHT), cx = at + r + rand(-0.5, 0.5), q = r * 0.48;
+                    tips[colour] = `${tips[colour] || ""}M${f(cx - q)} ${f(y + up * h * 0.6)} a${f(q)} ${f(q)} 0 1 0 ${f(2 * q)} 0 a${f(q)} ${f(q)} 0 1 0 ${f(-2 * q)} 0`;
+                }
                 if (!hang && r > 2.2 && random() < 0.15) {
                     const sx = at + r, sy = y - h, l = rand(2.5, 4.5), lean = rand(-1.2, 1.2);
                     stalks += `<path class="seta" d="M${f(sx)} ${f(sy)} q${f(lean * 0.3)} ${f(-l * 0.6)} ${f(lean)} ${f(-l)}" /><ellipse class="c-hedge-olive" cx="${f(sx + lean)}" cy="${f(sy - l)}" rx=".55" ry=".9" transform="rotate(${f(lean * 12)} ${f(sx + lean)} ${f(sy - l)})" />`;
@@ -908,7 +918,7 @@
                 at += 2 * r;
             }
             const wisp = hang && random() < 0.35 ? `<path class="beard" d="M${f((x + at) / 2)} ${f(y + 1.5)} q${f(rand(-1.5, 1.5))} ${f(rand(2, 4))} ${f(rand(-1, 1))} ${f(rand(4, 8))}" />` : "";
-            return `<g class="moss${hang ? " hang" : ""}" style="--d: ${f(0.1 + 1.6 * x / w)}s"><path class="${pick(MOSS)} moss-edge" d="${d} Z" />${tips}${stalks}${wisp}</g>`;
+            return `<g class="moss${hang ? " hang" : ""}" style="--d: ${f(0.1 + 1.6 * x / w)}s"><path class="${pick(MOSS)} moss-edge" d="${d} Z" />${Object.entries(tips).map(([colour, dots]) => `<path class="${colour}" d="${dots}" />`).join("")}${stalks}${wisp}</g>`;
         };
         let moss = tuft(px1 + 2, LOW + 3, true);
         for (let x = px0 + rand(1, 8); x < w - 6; x += rand(4, 20)) if (random() < lush(x)) moss += tuft(x, TOP + 0.6, false);
@@ -1103,9 +1113,9 @@
             // how near its way passed
             const ux = b.x - a.x, uy = b.y - a.y, t = Math.max(0, Math.min(1, ((x - a.x) * ux + (y - a.y) * uy) / (ux * ux + uy * uy || 1)));
             const d = Math.hypot(x - a.x - t * ux, y - a.y - t * uy);
-            if (d > 18 || el.getAnimations().length) return;
+            if (d > 18 || el.getAnimations().some((animation) => animation.id === "stir")) return;
             const swing = Math.min(most, speed / 40) * (1 - d / 18) * Math.sign(dx || 1);
-            el.animate([0, 1, -0.55, 0.3, -0.12, 0].map((k) => ({ transform: `rotate(${f(swing * k)}deg)` })), { duration: 1100, easing: "ease-out" });
+            el.animate([0, 1, -0.55, 0.3, -0.12, 0].map((k) => ({ rotate: `${f(swing * k)}deg` })), { id: "stir", duration: 1100, easing: "ease-out" });
         }));
     }, { passive: true });
 })();

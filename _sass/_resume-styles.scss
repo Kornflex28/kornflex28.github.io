@@ -594,8 +594,8 @@ main .floor:has(> .floor-deco) {
 
   .leaf,
   .flower {
-    transform: scale(0);
-    transition: transform .5s cubic-bezier(.2, .8, .3, 1) var(--d);
+    scale: 0;
+    transition: scale .5s cubic-bezier(.2, .8, .3, 1) var(--d);
   }
 
   // the moss on the stone, coming up in tufts (or down, under the course)
@@ -633,7 +633,8 @@ main .floor:has(> .floor-deco) {
 
   &.grown {
     .stem, .tendril { stroke-dashoffset: 0; }
-    .leaf, .flower, .moss { transform: none; }
+    .leaf, .flower { scale: 1; }
+    .moss { transform: none; }
   }
 
   // a light wind: each leaf and flower swings a few degrees about where it leaves the stem
@@ -903,8 +904,8 @@ main .floor:has(> .floor-deco) {
 :root[data-theme="night"] .floor-deco .candle-glow { opacity: 1; }
 
 @keyframes sway {
-  from { transform: rotate(calc(-1 * var(--amp))); }
-  to { transform: rotate(var(--amp)); }
+  from { rotate: calc(-1 * var(--amp)); }
+  to { rotate: var(--amp); }
 }
 
 @keyframes blare {
@@ -940,7 +941,8 @@ main .floor:has(> .floor-deco) {
 @media (prefers-reduced-motion: reduce) {
   .floor-deco {
     .stem, .tendril { stroke-dashoffset: 0; transition: none; }
-    .leaf, .flower, .moss { transform: none; transition: none; }
+    .leaf, .flower { scale: 1; transition: none; }
+    .moss { transform: none; transition: none; }
     .gear, .waves, .sway, .flame, .wheel, .crank, .roll, .note { animation: none !important; }
     .needle { transition: none; }
   }
@@ -953,7 +955,8 @@ main .floor:has(> .floor-deco) {
 @media print {
   .floor-deco {
     .stem, .tendril { stroke-dashoffset: 0; transition: none; }
-    .leaf, .flower, .moss { transform: none; transition: none; }
+    .leaf, .flower { scale: 1; transition: none; }
+    .moss { transform: none; transition: none; }
   }
 }
 
