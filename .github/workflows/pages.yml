@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -77,6 +78,42 @@ jobs:
           python3 -m http.server 8002 --directory _site > /dev/null 2>&1 &
           sleep 1
           python .github/scripts/gallery.py _site 24 http://localhost:8002
+      # The pages photographed as they are now, always under the same castle, and compared with
+      # the last publication's pictures: how much of each changed, and where (in red), are in
+      # the run's summary and its "changes" pictures. Only a look: it never stops a publication.
+      - name: Photograph the pages
+        continue-on-error: true
+        run: |
+          python3 -m http.server 8003 --directory _site > /dev/null 2>&1 &
+          sleep 1
+          python .github/scripts/visual.py shoot "$RUNNER_TEMP/pictures" http://localhost:8003
+      - name: Fetch the last publication's pictures
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: pages.yml
+          branch: master
+          workflow_conclusion: success
+          name: pictures
+          path: ${{ runner.temp }}/before
+          if_no_artifact_found: warn
+      - name: Compare the pages with the last publication
+        continue-on-error: true
+        run: |
+          echo "### Pages since the last publication" >> "$GITHUB_STEP_SUMMARY"
+          python .github/scripts/visual.py compare "$RUNNER_TEMP/before" "$RUNNER_TEMP/pictures" "$RUNNER_TEMP/changes" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pictures
+          path: ${{ runner.temp }}/pictures
+          retention-days: 30
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: changes
+          path: ${{ runner.temp }}/changes
+          retention-days: 30
+          if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v5
 
   deploy:
