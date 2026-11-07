@@ -11,7 +11,7 @@ from PIL import Image, ImageChops
 PAGES = [  # name, address, width, height, on a phone
     ("home", "/?castle=b2", 1400, 900, False),
     ("home-phone", "/?castle=b2", 412, 915, True),
-    ("frogs", "/frogs", 1400, 900, False),
+    ("frogs", "/frogs.html", 1400, 900, False),
     ("404", "/404.html", 1400, 900, False),
 ]
 

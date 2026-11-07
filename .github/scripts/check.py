@@ -8,7 +8,7 @@ from browser import Browser
 
 PAGES = [
     ("/", ["html[data-moment]", ".floor-deco", "#castle-id"]),
-    ("/frogs", ["canvas"]),
+    ("/frogs.html", ["canvas"]),
     ("/404.html", [".lost-ruins"]),
 ]
 
