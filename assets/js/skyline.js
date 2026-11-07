@@ -719,6 +719,14 @@
         + '<g class="giant-eyes"><ellipse cx="-5" cy="-27" rx="13" ry="15" fill="url(#window-light)" /><ellipse cx="12.4" cy="-27" rx="7" ry="13" fill="url(#window-light)" />'
         + '<g class="giant-look"><ellipse class="giant-eye" cx="-5" cy="-27.2" rx="4.6" ry="7.6" /><ellipse class="giant-eye" cx="12.4" cy="-27.3" rx="2" ry="7" /></g></g>'
         + "</g></g></g>";
+    // drawn only once it comes near the screen, at the foot of the page, so loading the page
+    // or drawing another castle doesn't wait for it (its ground, for elevator.js, is in the page)
+    let townSeed = null, townNear = false;
+    if (town) new IntersectionObserver(([entry]) => {
+        townNear = entry.isIntersecting;
+        if (townNear && townSeed !== null) drawTown(town, townSeed);
+        if (townNear) townSeed = null;
+    }, { rootMargin: "800px 0px" }).observe(town);
     const drawTown = (town, seed) => {
         state = (seed ^ 0x6a09e667) | 0;
         parts.length = 0;
@@ -1913,7 +1921,7 @@
             behind.push(turret.id);
         });
 
-        if (town) drawTown(town, seed);
+        if (town) townNear ? drawTown(town, seed) : (townSeed = seed);
         svg.dispatchEvent(new CustomEvent("castle-drawn", { bubbles: true, detail: seed }));
     };
 
