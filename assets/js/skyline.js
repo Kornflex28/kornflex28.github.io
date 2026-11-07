@@ -2103,7 +2103,8 @@
         copy: "M6 6 H12.5 V12.5 H6 Z M3.5 10 V3.5 H10",
         done: "M3 8.5 L6.5 12 L13 4.5",
     };
-    const tag = document.createElement("p");
+    // (its place kept in the page, so nothing moves when it comes)
+    const tag = document.querySelector(".castle-id") ?? document.createElement("p");
     tag.className = "castle-id";
     tag.innerHTML = '<button type="button" class="castle-cord" title="Pull: a new castle" aria-label="Draw a new castle">'
         + '<svg viewBox="0 0 18 46" aria-hidden="true" focusable="false">'
@@ -2276,7 +2277,7 @@
             status.textContent = "";
         }, 1600);
     });
-    svg.after(tag);
+    if (!tag.isConnected) svg.after(tag);
 
     // At night, now and then a window lights up or goes dark, while the castle is in view
     let inView = true;

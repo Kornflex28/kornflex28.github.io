@@ -40,7 +40,6 @@
         return stop;
     });
 
-    document.documentElement.classList.add("has-elevator");
     elevator.classList.add("is-ready");
 
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;

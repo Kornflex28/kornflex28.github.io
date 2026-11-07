@@ -187,6 +187,10 @@
   }
 }
 
+@media (scripting: none) {
+  .castle-id { display: none; }
+}
+
 // on a layer of its own: what changes around the castle (the sky turning, the bell pull) never
 // makes the browser paint its filter again (skyline.js)
 .skyline {
@@ -216,9 +220,12 @@
 }
 
 // The castle's ID (skyline.js): plain text that can be edited in place to draw another
-// castle, followed by two small tools: draw a new castle, copy a link to this one
+// castle, followed by two small tools: draw a new castle, copy a link to this one. Its row is
+// in the page from the start, its height kept, so nothing moves when skyline.js fills it in;
+// with no script, nothing comes to fill it, and it goes.
 .castle-id {
   display: flex;
+  min-height: 42px;
   justify-content: flex-end;
   align-items: center;
   gap: .25rem;
@@ -1678,17 +1685,21 @@ abbr[title] {
 }
 
 // Narrow screens: no room for the landings' names beside the page, so the shaft runs down
-// the page's left edge, the text moved aside for it, and the landings are plain marks that
-// still take a tap (their names stay for screen readers)
-@media (max-width: 1199.98px) {
-  .has-elevator .tower {
+// the page's left edge, the text moved aside for it (from the first paint, wherever scripts
+// run, so nothing moves when elevator.js comes), and the landings are plain marks that still
+// take a tap (their names stay for screen readers)
+@media (max-width: 1199.98px) and (scripting: enabled) {
+  .tower {
     --rail: max(2.25rem, 5.5vw + .5rem);
     padding-left: var(--rail);
   }
 
-  .has-elevator .castle {
+  .castle {
     margin-left: calc(-1 * var(--rail));
   }
+}
+
+@media (max-width: 1199.98px) {
 
   // the castle reaches the right edge of the screen too, its ID kept clear of it
   .castle {
