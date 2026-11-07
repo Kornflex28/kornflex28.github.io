@@ -1,0 +1,41 @@
+name: New publications from ORCID
+
+# Every Monday, the ORCID record read for works with a DOI the resume doesn't list yet: each is
+# described from its DOI (authors, title, venue) and added under its year, and a pull request
+# offers them, to check (titles may come in title case) before merging. Nothing new, nothing
+# opened. (Needs "Allow GitHub Actions to create and approve pull requests" in the repository's
+# Actions settings.)
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  orcid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - id: orcid
+        run: |
+          added="$(python3 .github/scripts/orcid.py 0000-0002-1467-9136 _data/publications.yml)"
+          echo "$added"
+          { echo "added<<END"; echo "$added"; echo "END"; } >> "$GITHUB_OUTPUT"
+      - if: steps.orcid.outputs.added != ''
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: orcid-publications
+          delete-branch: true
+          commit-message: "chore(publications): add new works from ORCID"
+          title: New publications from ORCID
+          body: |
+            Works on ORCID that the resume doesn't list yet, added to `_data/publications.yml`:
+
+            ```
+            ${{ steps.orcid.outputs.added }}
+            ```
+
+            Check the authors, the titles (sometimes in title case) and the venues before merging.
