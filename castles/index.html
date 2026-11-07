@@ -1,0 +1,41 @@
+---
+permalink: /castles/
+title: Castles
+description: Castles drawn at random by Louis Chauvet's resume site, photographed at its last publication. Each one opens the resume under it.
+---
+<!DOCTYPE html>
+
+<html lang="{{ site.lang }}">
+
+<head>
+    <!-- asset addresses carry the build time, so browsers never keep a stale copy -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-next-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/castles.css?v={{ site.time | date: '%s' }}">
+    {% seo %}
+{% include favicons.html %}
+    <script src="/assets/js/theme.js?v={{ site.time | date: '%s' }}"></script>
+</head>
+
+<body>
+    <!-- A gallery of castles: the publication draws a few dozen at random and photographs them
+         (.github/scripts/gallery.py), each one leading to the resume under it -->
+    <main class="gallery">
+        {% include theme-toggle.html %}
+        <h1>Castles</h1>
+        <p class="lead">Some of the castles the site draws, photographed at its last publication. Each one opens the resume under it.</p>
+        <ul class="castles"></ul>
+        <p class="none" hidden>No castles yet: they are photographed when the site is published.</p>
+        <a href="/" class="button">Back to the tower</a>
+    </main>
+    <script>
+        fetch("castles.json").then((reply) => reply.json()).then(({ castles }) => {
+            document.querySelector(".castles").innerHTML = castles.map((id) => `<li><a href="/?castle=${id}">`
+                + `<img src="${id}.webp" alt="Castle ${id}" width="714" height="203" loading="lazy"><span>${id}</span></a></li>`).join("");
+        }).catch(() => { document.querySelector(".none").hidden = false; });
+    </script>
+</body>
+
+</html>

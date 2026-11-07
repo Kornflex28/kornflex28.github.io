@@ -32,6 +32,12 @@ jobs:
       - run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+      # the Python the pictures below are taken and compared with
+      - name: Set up the picture tools
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow websocket-client
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
       # The pages opened as a visitor would, by a headless Chrome: the publication stops if a
       # script fails, or if what the scripts draw is not there (the castle and its sky, the
       # floors' drawings, the castle's ID, the frog)
@@ -61,10 +67,16 @@ jobs:
           sleep 1
           google-chrome --headless=new --hide-scrollbars --window-size=1200,630 \
             --virtual-time-budget=8000 --screenshot="$RUNNER_TEMP/card.png" http://localhost:8000/card.html
-          python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow
-          "$RUNNER_TEMP/venv/bin/python" -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').save(sys.argv[2], quality=88)" \
+          python -c "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').save(sys.argv[2], quality=88)" \
             "$RUNNER_TEMP/card.png" _site/images/social-card.jpg
+      # A gallery of castles at each publication (castles/index.html): two dozen drawn at random
+      # and photographed, and an animation going through them for the README
+      - name: Photograph a gallery of castles
+        continue-on-error: true
+        run: |
+          python3 -m http.server 8002 --directory _site > /dev/null 2>&1 &
+          sleep 1
+          python .github/scripts/gallery.py _site 24 http://localhost:8002
       - uses: actions/upload-pages-artifact@v5
 
   deploy:
