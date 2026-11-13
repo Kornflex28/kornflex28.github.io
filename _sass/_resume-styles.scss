@@ -270,6 +270,11 @@
   .pennants .fall { display: none; }
 }
 
+// the palace clock's face (skyline.js), pale under the moon by night, and its hands over it
+.clock-face { fill: #f6eedb; }
+:root[data-theme="night"] .clock-face { fill: #8790c0; }
+.clock-hands { fill: var(--line); }
+
 // fireflies, at dusk and by night: drifting slowly about, glowing on and off
 .firefly {
   display: none;

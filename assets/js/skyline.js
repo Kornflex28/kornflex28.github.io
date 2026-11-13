@@ -303,6 +303,22 @@
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(top)}" x2="${f(cx)}" y2="${f(top - 6)}" />`);
     };
 
+    // The palace clock, on the column: a gilt ring, a pale face with its hours marked, a gilt
+    // drop under it. Its hands are over the drawing (.clock-hands), where they tell the
+    // visitor's time without the drawing being painted again (clockAt: where its face is)
+    let clockAt = null;
+    const clock = (cx, cy, r) => {
+        const face = r * 0.78, tick = (k) => {
+            const a = k * Math.PI / 6, r0 = face * (k % 3 ? 0.8 : 0.66);
+            return `<line x1="${f(cx + r0 * Math.sin(a))}" y1="${f(cy - r0 * Math.cos(a))}" x2="${f(cx + face * 0.92 * Math.sin(a))}" y2="${f(cy - face * 0.92 * Math.cos(a))}" />`;
+        };
+        add(`<circle class="c-gold outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" />`);
+        add(`<circle class="clock-face outline fine" cx="${f(cx)}" cy="${f(cy)}" r="${f(face)}" />`);
+        add(`<g class="outline fine">${Array.from({ length: 12 }, (_, k) => tick(k)).join("")}</g>`);
+        add(`<circle class="c-gold outline thin" cx="${f(cx)}" cy="${f(cy + r + 2)}" r="${f(r / 8)}" />`);
+        clockAt = { x: cx, y: cy, r: face };
+    };
+
     // An arched door, its sill at base
     const door = (cx, base, w = 8, h = 14) => {
         const r = w / 2;
@@ -1531,11 +1547,22 @@
         return html;
     };
 
+    // the clock's hands at the visitor's time, set again every half minute
+    const setClock = () => {
+        const now = new Date(), minutes = now.getMinutes() + now.getSeconds() / 60;
+        pennants.querySelectorAll(".clock-hands").forEach((hands) => {
+            hands.querySelector(".hour").setAttribute("transform", `rotate(${f((now.getHours() % 12 + minutes / 60) * 30)})`);
+            hands.querySelector(".minute").setAttribute("transform", `rotate(${f(minutes * 6)})`);
+        });
+    };
+    setInterval(setClock, 30000);
+
     // --- Composition -----------------------------------------------------------------
 
     // Draws the castle of a seed in place of the current drawing
     const draw = (seed) => {
         state = seed | 0;
+        clockAt = null;
         const moment = live ? nowMoment() : momentOf(seed);
         const lot = (salt, n) => mix(seed, salt) % n === 0;
         snowing = weatherAsked === "snow" || (weatherAsked !== "rain" && (Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || seasonNow() === "winter"));
@@ -1636,6 +1663,7 @@
             faceTop = highest;
         });
 
+        let clockRoom = null;
         // A few touches on the column, after the palace's great tower: now and then a cornice
         // curving round it over its shadow, a few tall windows above the face's flights, and
         // sometimes a balcony with its door. Drawn from a draw of its own, so the rest of each
@@ -1660,6 +1688,8 @@
             for (let i = 0; i + 1 < bounds.length; i++) {
                 const low = bounds[i] - 4, high = bounds[i + 1] + 10, room = low - high;
                 if (room < 22) continue;
+                // the highest stretch is also the palace clock's (drawn once the turrets hang)
+                if (i + 2 === bounds.length) clockRoom = [high, low];
                 if (balcony && room >= 30 && high > 10 && low < tTop - 60) {
                     balcony = false;
                     const floor = low - 4, bw = colW * 0.3;
@@ -1672,7 +1702,10 @@
                     add(`<path class="outline thin" fill="none" d="M${f(cx - bw)} ${f(floor - 6)} Q${f(cx)} ${f(floor - 6 + 2 * sag * 0.6)} ${f(cx + bw)} ${f(floor - 6)}" />`);
                     continue;
                 }
-                if (chance(0.6)) window_(cx, high + (room - 12) / 2, Math.min(8, colW / 2 - 1), 5, 12);
+                if (chance(0.6)) {
+                    window_(cx, high + (room - 12) / 2, Math.min(8, colW / 2 - 1), 5, 12);
+                    if (clockRoom) clockRoom.push(high + (room - 12) / 2);
+                }
             }
             state = kept;
         });
@@ -1860,6 +1893,21 @@
             for (let k = 0; k < here; k++) cluster(out, int(4, 8), [top + k * band, top + (k + 1) * band]);
         });
 
+        // the palace clock in the column's highest stretch, as near its middle as neither its
+        // window nor a turret hides it (a turret's roof reaching up to twice its width above it)
+        if (clockRoom) {
+            const r = Math.min(17, colW * 0.32), cx = colX + colW / 2, [high, low, win] = clockRoom, mid = (high + low) / 2;
+            const hidden = (y) => y - r < 8 || (win !== undefined && y + r + 4 > win - 4 && y - r - 4 < win + 16)
+                || turrets.some((t) => hits(box(t.x, t.yt - 2 * t.w, t.x + t.w, t.yt + t.h + t.w * 0.6), box(cx - r, y - r - 4, cx + r, y + r + 4)));
+            for (let d = 0; d <= (low - high) / 2 - r - 8; d += 3) {
+                const y = [mid - d, mid + d].find((y) => !hidden(y));
+                if (y !== undefined) {
+                    on(COLUMN, () => clock(cx, y, r));
+                    break;
+                }
+            }
+        }
+
         // nearer turrets (lower) drawn last
         on(TURRETS, () => turrets.sort((a, b) => (a.yt + a.h) - (b.yt + b.h)).forEach((t) => {
             const { x, yt, w, h } = t;
@@ -2023,7 +2071,10 @@
             // in autumn, a few leaves blown across the castle with the wind, tumbling (.fall)
             + (season === "autumn" ? Array.from({ length: 7 }, () => `<svg class="fall" viewBox="-3 -2 6 4" style="left: ${(Math.random() * 90).toFixed(1)}%; top: ${(5 + Math.random() * 55).toFixed(1)}%; width: 1.2%;`
                 + ` animation-duration: ${(8 + Math.random() * 8).toFixed(1)}s, ${(1.4 + Math.random() * 1.6).toFixed(1)}s; animation-delay: -${(Math.random() * 16).toFixed(1)}s, 0s">`
-                + `<path class="${["c-hedge-light", "c-hedge-sage", "c-hedge-olive"][Math.floor(Math.random() * 3)]}" d="M-3 0 Q0 -2.2 3 0 Q0 2.2 -3 0 Z" /></svg>`).join("") : "");
+                + `<path class="${["c-hedge-light", "c-hedge-sage", "c-hedge-olive"][Math.floor(Math.random() * 3)]}" d="M-3 0 Q0 -2.2 3 0 Q0 2.2 -3 0 Z" /></svg>`).join("") : "")
+            + (clockAt ? `<svg class="clock-hands" viewBox="-1 -1 2 2" style="left: ${pct(clockAt.x - clockAt.r, W)}; top: ${pct(clockAt.y - clockAt.r, H)}; width: ${pct(2 * clockAt.r, W)}">`
+                + '<path class="hour" d="M-.07 .12 L0 -.5 L.07 .12 Z" /><path class="minute" d="M-.05 .14 L0 -.82 L.05 .14 Z" /><circle r=".09" /></svg>' : "");
+        setClock();
         svg.innerHTML = `<defs>${shading}<filter id="gouache" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency="0.7 0.35" numOctaves="3" seed="${seed % 1000}" result="fine" />
             <feColorMatrix in="fine" type="saturate" values="0" result="fineGrey" />
