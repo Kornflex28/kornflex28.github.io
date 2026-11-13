@@ -244,6 +244,32 @@
   }
 }
 
+// spring blossom on the shrubs (skyline.js), and autumn's leaves blown across the castle
+.blossom { fill: #ee9fb4; }
+.blossom.white { fill: #fbf3ee; }
+:root[data-theme="night"] .blossom { fill: #8f8bb0; }
+
+.pennants .fall {
+  animation: fall linear infinite, tumble ease-in-out infinite;
+  will-change: transform, translate, opacity;
+}
+
+@keyframes fall {
+  from { translate: 0 0; opacity: 0; }
+  10%, 85% { opacity: 1; }
+  to { translate: calc(var(--wind, 1) * 3000%) 2200%; opacity: 0; }
+}
+
+@keyframes tumble {
+  from { transform: rotate(0) scaleY(1); }
+  50% { transform: rotate(180deg) scaleY(-.5); }
+  to { transform: rotate(360deg) scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pennants .fall { display: none; }
+}
+
 // fireflies, at dusk and by night: drifting slowly about, glowing on and off
 .firefly {
   display: none;

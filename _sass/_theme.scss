@@ -163,6 +163,30 @@
   @include night;
 }
 
+// The seasons (skyline.js sets data-season). In autumn the leaves turn, each green its own way,
+// the deepest staying green; in spring they are fresher
+:root[data-season="autumn"] {
+  --hedge: #6f7a3e;
+  --hedge-deep: #4f5a33;
+  --hedge-light: #c98a3a;
+  --hedge-sage: #a9522f;
+  --hedge-olive: #bd9a3c;
+}
+
+:root[data-season="autumn"][data-theme="night"] {
+  --hedge: #3a4230;
+  --hedge-deep: #263124;
+  --hedge-light: #5a4436;
+  --hedge-sage: #4e3134;
+  --hedge-olive: #55493a;
+}
+
+:root[data-season="spring"]:not([data-theme="night"]) {
+  --hedge: #63944f;
+  --hedge-light: #82b260;
+  --hedge-sage: #649a6c;
+}
+
 // The lower town lies underground, as in the film. By day it sits in the castle's shade
 // (.ground), so its colours are dimmer and cooler and its windows and lanterns are lit. At
 // night it keeps the night's colours.

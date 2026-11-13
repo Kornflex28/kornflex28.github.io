@@ -22,6 +22,11 @@
     // castle the page opens on (not on those drawn after it)
     let weatherAsked = new URLSearchParams(location.search).get("weather");
     let snowing = false;
+    // The season: where the visitor is, on the castle of now; else from the seed, one castle in
+    // four each (?season= brings one); winter where it snows. Spring blossoms on the shrubs,
+    // autumn turns the leaves and blows a few of them away; summer and winter are as they were.
+    let seasonAsked = new URLSearchParams(location.search).get("season"), season = "summer";
+    const SEASONS = ["winter", "spring", "summer", "autumn"];
     // Rain falls on about one castle in eight that has no snow (?weather=rain brings it), with
     // a rainbow on one in two of them by day; mist lies at dawn on one castle in three, and on
     // one rainy castle in two. All from the seed apart from the drawing's draws, as the snow
@@ -167,10 +172,8 @@
         if (!night) return momentAt(u < 0.5 ? 0.97 : 0.04, false);
         return { ...MOMENTS[u < 0.5 ? 5 : 0], at: [0, 1, 2].map(() => 170 - 160 * u), r: 20 };
     };
-    const isWinter = () => {
-        const month = new Date().getMonth();
-        return whereAmI()[0] < 0 ? month >= 5 && month <= 7 : month === 11 || month <= 1;
-    };
+    // (three months each from December, half a year on in the south)
+    const seasonNow = () => SEASONS[Math.floor(((new Date().getMonth() + (whereAmI()[0] < 0 ? 7 : 1)) % 12) / 3)];
     const isNight = () => {
         const date = Date.now(), [rise, set] = sunTimes(new Date(date), whereAmI());
         return date < rise || date > set;
@@ -752,6 +755,16 @@
                 (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el).after(snow);
             });
         }
+        // Spring: blossom on the shrubs, a few pale flowers scattered over each (.blossom)
+        if (season === "spring") root.querySelectorAll('[data-snow][class*="c-hedge"]').forEach((el) => {
+            const b = el.getBBox();
+            const dots = Array.from({ length: 3 + Math.floor(b.width / 4) }, () => {
+                const a = Math.random() * 2 * Math.PI, d = Math.sqrt(Math.random()) * 0.38;
+                return `<circle cx="${f(b.x + b.width * (0.5 + d * Math.cos(a)))}" cy="${f(b.y + b.height * (0.5 + d * Math.sin(a)))}" r="${f(1 + Math.random() * 0.6)}" />`;
+            }).join("");
+            (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el)
+                .insertAdjacentHTML("afterend", `<g class="blossom${Math.random() < 0.5 ? " white" : ""}">${dots}</g>`);
+        });
         // Rain: the roofs wet, darker (a copy of each over its shading, .wet)
         if (raining) {
             root.querySelectorAll("[data-eaves]").forEach((el) => {
@@ -1525,9 +1538,11 @@
         state = seed | 0;
         const moment = live ? nowMoment() : momentOf(seed);
         const lot = (salt, n) => mix(seed, salt) % n === 0;
-        snowing = weatherAsked === "snow" || (weatherAsked !== "rain" && (Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || isWinter()));
+        snowing = weatherAsked === "snow" || (weatherAsked !== "rain" && (Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || seasonNow() === "winter"));
         raining = !snowing && (weatherAsked === "rain" || (!weatherAsked && lot(0x3c6ef372, 8)));
         misty = (moment.name === "dawn" && lot(0x2b992ddf, 3)) || (raining && lot(0x1b873593, 2));
+        season = snowing ? "winter" : SEASONS.includes(seasonAsked) ? seasonAsked : live ? seasonNow() : SEASONS[mix(seed, 0x4cf5ad43) % 4];
+        document.documentElement.dataset.season = season;
         if (snowing || raining) document.documentElement.dataset.weather = snowing ? "snow" : "rain";
         else delete document.documentElement.dataset.weather;
         document.documentElement.dataset.moment = moment.name;
@@ -2004,7 +2019,11 @@
                 const drift = (n) => `${((Math.random() - 0.5) * n).toFixed(0)}`;
                 return `<svg class="firefly" viewBox="-6 -6 12 12" style="left: ${pct(x - 6, W)}; top: ${pct(y - 6, H)}; width: ${pct(12, W)}; --dx: ${drift(260)}%; --dy: ${drift(160)}%; animation-duration: ${(5 + Math.random() * 5).toFixed(1)}s, ${(6 + Math.random() * 5).toFixed(1)}s; animation-delay: -${(Math.random() * 8).toFixed(1)}s, -${(Math.random() * 10).toFixed(1)}s">`
                     + '<circle r="6" fill="url(#firefly-glow)" /><circle class="firefly-core" r="0.9" /></svg>';
-            }).join("") + weatherOver("castle");
+            }).join("") + weatherOver("castle")
+            // in autumn, a few leaves blown across the castle with the wind, tumbling (.fall)
+            + (season === "autumn" ? Array.from({ length: 7 }, () => `<svg class="fall" viewBox="-3 -2 6 4" style="left: ${(Math.random() * 90).toFixed(1)}%; top: ${(5 + Math.random() * 55).toFixed(1)}%; width: 1.2%;`
+                + ` animation-duration: ${(8 + Math.random() * 8).toFixed(1)}s, ${(1.4 + Math.random() * 1.6).toFixed(1)}s; animation-delay: -${(Math.random() * 16).toFixed(1)}s, 0s">`
+                + `<path class="${["c-hedge-light", "c-hedge-sage", "c-hedge-olive"][Math.floor(Math.random() * 3)]}" d="M-3 0 Q0 -2.2 3 0 Q0 2.2 -3 0 Z" /></svg>`).join("") : "");
         svg.innerHTML = `<defs>${shading}<filter id="gouache" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency="0.7 0.35" numOctaves="3" seed="${seed % 1000}" result="fine" />
             <feColorMatrix in="fine" type="saturate" values="0" result="fineGrey" />
@@ -2273,7 +2292,7 @@
         const id = input.value.trim().toLowerCase();
         input.setAttribute("aria-invalid", String(!ID.test(id)));
         if (!ID.test(id)) return;
-        weatherAsked = null;
+        weatherAsked = seasonAsked = null;
         show(id);
         history.replaceState(null, "", `?castle=${id}${location.hash}`);
     });
