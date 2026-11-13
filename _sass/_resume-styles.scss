@@ -121,6 +121,96 @@
   display: block;
 }
 
+// The northern lights (skyline.js), by night only, behind the castle, lighting the sky they
+// lie on; each part painted once, then only faded and swayed
+.clouds > .aurora {
+  display: none;
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+
+  :root[data-theme="night"] & { display: block; }
+
+  > * {
+    position: absolute;
+    will-change: opacity, transform;
+  }
+
+  // the red glow low over the horizon, swelling and dimming slowly
+  .glow {
+    bottom: 12%;
+    width: 70%;
+    height: 80%;
+    background: radial-gradient(ellipse 50% 75% at 50% 100%, rgb(232 70 108 / .8), rgb(205 60 125 / .38) 45%, transparent 78%);
+    animation: aurora-breathe 14s ease-in-out infinite alternate;
+  }
+
+  // the light they cast on the sky under them, faint and wide
+  .wash {
+    aspect-ratio: 3 / 1;
+    translate: 0 -50%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(90 210 150 / .16), rgb(70 160 150 / .07) 60%, transparent);
+  }
+
+  // the slices of the arc and the curtains: a wave running along them, and a brightening
+  // running along them faster (skyline.js sets each one's beat); the curtains' blurred rays
+  // reach past their slice
+  .wave {
+    top: 0;
+    height: 100%;
+    animation: aurora-wave 6s ease-in-out infinite alternate, aurora-flicker 4s ease-in-out infinite alternate;
+  }
+
+  &.arc { --swell: 1.6%; }
+
+  &.curtain {
+    --swell: 2.5%;
+    animation: aurora-sway 18s ease-in-out infinite alternate;
+
+    .wave { overflow: visible; }
+  }
+
+  &.pulsating > i {
+    aspect-ratio: 2 / 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(110 240 170 / .7), rgb(90 230 160 / .28) 55%, transparent);
+    animation: aurora-pulse ease-in-out infinite;
+  }
+}
+
+@keyframes aurora-breathe {
+  from { opacity: .55; }
+  to { opacity: 1; }
+}
+
+@keyframes aurora-sway {
+  from { transform: translateX(-1.5%) skewX(-3deg); }
+  to { transform: translateX(1.5%) skewX(3deg); }
+}
+
+@keyframes aurora-wave {
+  from { transform: translateY(calc(-1 * var(--swell))); }
+  to { transform: translateY(var(--swell)); }
+}
+
+@keyframes aurora-flicker {
+  0% { opacity: .6; }
+  35% { opacity: .95; }
+  60% { opacity: .75; }
+  100% { opacity: 1; }
+}
+
+@keyframes aurora-pulse {
+  0%, 100% { opacity: 0; }
+  12%, 45% { opacity: 1; }
+  60% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clouds > .aurora, .clouds > .aurora * { animation: none !important; }
+}
+
 // after the rain, a rainbow behind the castle, by day only
 .clouds > .rainbow {
   inset: 0;

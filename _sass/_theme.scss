@@ -187,6 +187,20 @@
   --hedge-sage: #649a6c;
 }
 
+// before the northern lights (skyline.js), the clouds catch their green, or the great
+// storm's red glow
+:root[data-theme="night"][data-aurora] {
+  --cloud: #1a3346;
+  --cloud-warm: #1f3044;
+  --cloud-bright: #244458;
+}
+
+:root[data-theme="night"][data-aurora="glow"] {
+  --cloud: #2c1f42;
+  --cloud-warm: #35203f;
+  --cloud-bright: #3a2850;
+}
+
 // The lower town lies underground, as in the film. By day it sits in the castle's shade
 // (.ground), so its colours are dimmer and cooler and its windows and lanterns are lit. At
 // night it keeps the night's colours.
