@@ -856,7 +856,7 @@ main .floor:has(> .floor-deco) {
     opacity: 0;
   }
 
-  .snuffed .smoke { animation: smoke 1.6s ease-out; }
+  .snuffed .smoke { animation: snuff 1.6s ease-out; }
 
   // the wheels (the bicycle's, the street piano's cart's), the bicycle's frame drawn in its
   // paint over its outline, its grips and cranks; brushed, its wheels turn; touched, its bell
@@ -930,7 +930,7 @@ main .floor:has(> .floor-deco) {
   100% { transform: scale(1.03, .95) skewX(-2deg); }
 }
 
-@keyframes smoke {
+@keyframes snuff {
   from { opacity: .8; transform: translateY(0); }
   to { opacity: 0; transform: translateY(-6px); }
 }
