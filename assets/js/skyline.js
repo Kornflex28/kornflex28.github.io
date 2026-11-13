@@ -20,8 +20,21 @@
     // Snow lies on about one castle in fifteen (from its seed, apart from its drawing), and on
     // the castle of now only in winter where the visitor is; ?weather=snow brings it on the
     // castle the page opens on (not on those drawn after it)
-    let snowAsked = new URLSearchParams(location.search).get("weather") === "snow";
+    let weatherAsked = new URLSearchParams(location.search).get("weather");
     let snowing = false;
+    // Rain falls on about one castle in eight that has no snow (?weather=rain brings it), with
+    // a rainbow on one in two of them by day; mist lies at dawn on one castle in three, and on
+    // one rainy castle in two. All from the seed apart from the drawing's draws, as the snow
+    // (see weatherOver)
+    let raining = false, misty = false;
+    // a number drawn from the seed and a salt, its bits well mixed (multiplying alone would leave
+    // its last bits those of the seed), for the weather's lots
+    const mix = (seed, salt) => {
+        let h = Math.imul(seed ^ salt, 0x9e3779b1);
+        h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+        h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+        return (h ^ (h >>> 16)) >>> 0;
+    };
 
     // --- Seeded randomness -----------------------------------------------------------
 
@@ -275,7 +288,7 @@
 
     const cone = (x, yt, w, h, cls, needle) => {
         const cx = x + w / 2;
-        add(`<path class="${cls} outline" data-shade="cyl" data-snow="-.3" d="M${f(x - 3)} ${f(yt)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(cx)} ${f(yt - h)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(x + w + 3)} ${f(yt)} Z" />`);
+        add(`<path class="${cls} outline" data-shade="cyl" data-snow="-.3" data-eaves d="M${f(x - 3)} ${f(yt)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(cx)} ${f(yt - h)} Q${f(cx)} ${f(yt - h * 0.3)} ${f(x + w + 3)} ${f(yt)} Z" />`);
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(yt - h)}" x2="${f(cx)}" y2="${f(yt - h - needle)}" />`);
         if (w >= 18) tips.push({ x: cx, y: yt - h - needle });
     };
@@ -283,7 +296,7 @@
     const onion = (x, yt, w, cls) => {
         const cx = x + w / 2;
         const top = yt - w * 1.15;
-        add(`<path class="${cls} outline" data-shade="sphere" data-snow=".45" d="M${f(x - 2)} ${f(yt)} C${f(x - w * 0.2)} ${f(yt - w * 0.6)} ${f(cx)} ${f(yt - w * 0.7)} ${f(cx)} ${f(top)} C${f(cx)} ${f(yt - w * 0.7)} ${f(x + w * 1.2)} ${f(yt - w * 0.6)} ${f(x + w + 2)} ${f(yt)} Z" />`);
+        add(`<path class="${cls} outline" data-shade="sphere" data-snow=".45" data-eaves d="M${f(x - 2)} ${f(yt)} C${f(x - w * 0.2)} ${f(yt - w * 0.6)} ${f(cx)} ${f(yt - w * 0.7)} ${f(cx)} ${f(top)} C${f(cx)} ${f(yt - w * 0.7)} ${f(x + w * 1.2)} ${f(yt - w * 0.6)} ${f(x + w + 2)} ${f(yt)} Z" />`);
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(top)}" x2="${f(cx)}" y2="${f(top - 6)}" />`);
     };
 
@@ -623,7 +636,7 @@
                     add(`<rect class="c-cream outline" x="${f(x - 2)}" y="${f(top)}" width="${w + 4}" height="4" />`);
                     if (domed) onion(x, top, w, pick(DOMES));
                     else {
-                        add(`<path class="${pick(DOMES)} outline" data-shade="sphere" data-snow=".5" d="M${f(x)} ${f(top)} Q${f(x)} ${f(top - dome)} ${f(x + w / 2)} ${f(top - dome)} Q${f(x + w)} ${f(top - dome)} ${f(x + w)} ${f(top)} Z" />`);
+                        add(`<path class="${pick(DOMES)} outline" data-shade="sphere" data-snow=".5" data-eaves d="M${f(x)} ${f(top)} Q${f(x)} ${f(top - dome)} ${f(x + w / 2)} ${f(top - dome)} Q${f(x + w)} ${f(top - dome)} ${f(x + w)} ${f(top)} Z" />`);
                         add(`<line class="outline thin" x1="${f(x + w / 2)}" y1="${f(top - dome)}" x2="${f(x + w / 2)}" y2="${f(top - dome - 8)}" />`);
                     }
                 },
@@ -712,6 +725,7 @@
             shade.setAttribute("fill", `url(#${el.dataset.shade})`);
             shade.removeAttribute("data-shade");
             shade.removeAttribute("data-snow");
+            shade.removeAttribute("data-eaves");
             shade.removeAttribute("id");
             el.after(shade);
         });
@@ -734,10 +748,32 @@
                 const snow = el.cloneNode();
                 snow.setAttribute("class", "snow outline");
                 snow.setAttribute("clip-path", `url(#${clip.id})`);
-                ["data-shade", "data-snow", "id"].forEach((a) => snow.removeAttribute(a));
+                ["data-shade", "data-snow", "data-eaves", "id"].forEach((a) => snow.removeAttribute(a));
                 (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el).after(snow);
             });
         }
+        // Rain: the roofs wet, darker (a copy of each over its shading, .wet)
+        if (raining) {
+            root.querySelectorAll("[data-eaves]").forEach((el) => {
+                const wet = el.cloneNode();
+                wet.setAttribute("class", "wet");
+                ["data-shade", "data-snow", "data-eaves", "id"].forEach((a) => wet.removeAttribute(a));
+                (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el).after(wet);
+            });
+        }
+    };
+
+    // In the rain, water dripping now and then from the eaves of some of the roofs (.eaves), in
+    // the layer over the drawing, where it falls without painting the drawing again
+    const eaves = (root, over) => {
+        const o = over.getBoundingClientRect();
+        if (!raining || !o.width) return;
+        const roofs = [...root.querySelectorAll("[data-eaves]")].sort(() => Math.random() - 0.5).slice(0, 10);
+        over.insertAdjacentHTML("beforeend", '<div class="eaves">' + roofs.map((el) => {
+            const r = el.getBoundingClientRect(), x = Math.random() < 0.5 ? r.left + 1 : r.right - 1;
+            return `<i style="left: ${(100 * (x - o.left) / o.width).toFixed(2)}%; top: ${(100 * (r.bottom - o.top) / o.height).toFixed(2)}%;`
+                + ` animation-duration: ${(1.8 + Math.random() * 2).toFixed(2)}s; animation-delay: -${(Math.random() * 4).toFixed(2)}s"></i>`;
+        }).join("") + "</div>");
     };
 
     // --- The lower town ----------------------------------------------------------------
@@ -816,14 +852,14 @@
             const apex = x + w / 2 + rand(-0.06, 0.06) * w;
             const edge = (t) => [x - 3 + (apex - x + 3) * t, x + w + 3 - (x + w + 3 - apex) * t];   // the roof's sides at height t
             if (thatch) {
-                add(`<path class="c-thatch outline" data-shade="lit" data-snow=".45" d="M${f(x - 5)} ${f(top + 2)} Q${f(x - 4)} ${f(top - rise * 0.6)} ${f(apex)} ${f(top - rise - 2)} Q${f(x + w + 4)} ${f(top - rise * 0.6)} ${f(x + w + 5)} ${f(top + 2)} Z" />`);
+                add(`<path class="c-thatch outline" data-shade="lit" data-snow=".45" data-eaves d="M${f(x - 5)} ${f(top + 2)} Q${f(x - 4)} ${f(top - rise * 0.6)} ${f(apex)} ${f(top - rise - 2)} Q${f(x + w + 4)} ${f(top - rise * 0.6)} ${f(x + w + 5)} ${f(top + 2)} Z" />`);
                 add('<g class="joint">');
                 for (let sx = x - 2; sx < x + w + 3; sx += rand(2.5, 4)) add(`<line x1="${f(sx)}" y1="${f(top + 1.5)}" x2="${f(sx + rand(-0.8, 0.8))}" y2="${f(top - rand(3, 6))}" />`);
                 add(`<path fill="none" d="M${f(x - 1)} ${f(top - rise * 0.45)} Q${f(apex)} ${f(top - rise * 0.62)} ${f(x + w + 1)} ${f(top - rise * 0.45)}" />`);
                 add("</g>");
             } else {
                 const cls = pick(TILES);
-                add(`<path class="${cls} outline" data-shade="lit" data-snow=".45" d="M${f(x - 3)} ${f(top)} L${f(apex)} ${f(top - rise)} L${f(x + w + 3)} ${f(top)} Z" />`);
+                add(`<path class="${cls} outline" data-shade="lit" data-snow=".45" data-eaves d="M${f(x - 3)} ${f(top)} L${f(apex)} ${f(top - rise)} L${f(x + w + 3)} ${f(top)} Z" />`);
                 add('<g class="joint">');
                 (cls === "c-slate" ? [0.25, 0.5, 0.75] : [0.33, 0.66]).forEach((t) => {
                     const [l, r] = edge(t);
@@ -1204,6 +1240,9 @@
                 + '<rect class="c-slate outline fine" x="-3.5" y="15" width="7" height="2" /></g></g>').join("")
             + `<g class="smoke">${smoke}</g>`;
         finish(town);
+        town.parentElement.querySelector(":scope > .weather")?.remove();
+        town.insertAdjacentHTML("afterend", `<div class="weather" aria-hidden="true">${weatherOver("town")}</div>`);
+        eaves(town, town.nextElementSibling);
         // fitted once the page is laid out with everything the new castle redraws (the floors'
         // too), rather than laying it out here for this alone (until then, the view box the page
         // gives it keeps it about its height)
@@ -1464,14 +1503,32 @@
         });
     }
 
+    // The weather laid over a drawing (the castle, or the lower town): rain falling, slanting with
+    // the wind, in two sheets at two paces; banks of mist at its foot, drifting with the wind. Each
+    // a picture painted once and moved whole, so nothing is painted again as they go
+    const weatherOver = (place) => {
+        let html = raining ? '<div class="rain"><i class="far"></i><i class="near"></i></div>' : "";
+        if (misty) {
+            html += '<div class="mist">' + Array.from({ length: place === "town" ? 5 : 4 }, () => {
+                const w = 35 + Math.random() * 35, top = place === "town" ? 45 + Math.random() * 35 : 66 + Math.random() * 22;
+                return `<i style="left: ${(Math.random() * (100 - w / 2) - w / 4).toFixed(1)}%; top: ${top.toFixed(1)}%; width: ${w.toFixed(1)}%;`
+                    + ` animation-duration: ${(18 + Math.random() * 20).toFixed(1)}s; animation-delay: -${(Math.random() * 30).toFixed(1)}s"></i>`;
+            }).join("") + "</div>";
+        }
+        return html;
+    };
+
     // --- Composition -----------------------------------------------------------------
 
     // Draws the castle of a seed in place of the current drawing
     const draw = (seed) => {
         state = seed | 0;
         const moment = live ? nowMoment() : momentOf(seed);
-        snowing = snowAsked || ((Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || isWinter()));
-        if (snowing) document.documentElement.dataset.weather = "snow";
+        const lot = (salt, n) => mix(seed, salt) % n === 0;
+        snowing = weatherAsked === "snow" || (weatherAsked !== "rain" && (Math.imul(seed ^ 0x6b43a9b5, 0x9e3779b1) >>> 0) % 15 === 0 && (!live || isWinter()));
+        raining = !snowing && (weatherAsked === "rain" || (!weatherAsked && lot(0x3c6ef372, 8)));
+        misty = (moment.name === "dawn" && lot(0x2b992ddf, 3)) || (raining && lot(0x1b873593, 2));
+        if (snowing || raining) document.documentElement.dataset.weather = snowing ? "snow" : "rain";
         else delete document.documentElement.dataset.weather;
         document.documentElement.dataset.moment = moment.name;
         today = moment;
@@ -1492,7 +1549,7 @@
         // a few faint clouds, each drifting slowly to and fro (.clouds)
         const sky = [], gardens = [];                   // gardens: the shrubs' boxes, for the fireflies
         cloudState = (seed ^ 0x7f4a7c15) | 0;
-        cloudSky = SKIES[["fair", "fair", "fair", "streaked", "high", "mackerel"][(Math.imul(seed ^ 0x2c1b3c6d, 0x297a2d39) >>> 0) % 6]];
+        cloudSky = raining ? SKIES.streaked : SKIES[["fair", "fair", "fair", "streaked", "high", "mackerel"][(Math.imul(seed ^ 0x2c1b3c6d, 0x297a2d39) >>> 0) % 6]];
         for (let i = 0, n = int(3, 6); i < n; i++) sky.push(cloud(rand(10, W - 170), rand(30, 150), rand(90, 160)));
 
         // the elevator's station on the terrace, and the groove its shaft runs down in the wall
@@ -1925,6 +1982,16 @@
                 + ` animation-duration: ${crossing.toFixed(0)}s, ${bobbing.toFixed(1)}s; animation-delay: -${(Math.random() * crossing).toFixed(0)}s, -${(Math.random() * bobbing).toFixed(1)}s">`
                 + `${pieces}</div>`;
         }).join("");
+        // after the rain, on one rainy castle in two, a rainbow behind it, on the side away from
+        // the sun (by day only: .rainbow)
+        if (raining && lot(0x68e31da4, 2)) {
+            const cx = moment.side > 0 ? W * 0.26 : W * 0.74, r = 250;
+            clouds.insertAdjacentHTML("beforeend", `<svg class="rainbow" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><filter id="rainbow-soft"><feGaussianBlur stdDeviation="1.6" /></filter>`
+                + `<linearGradient id="rainbow-fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></linearGradient>`
+                + `<mask id="rainbow-mask"><rect width="${W}" height="${H}" fill="url(#rainbow-fade)" /></mask></defs><g filter="url(#rainbow-soft)" mask="url(#rainbow-mask)">`
+                + ["#d9534f", "#e8913a", "#e9c84a", "#7fb069", "#5c8fc4", "#6e6bb3", "#9b6bb0"].map((colour, k) =>
+                    `<circle cx="${f(cx)}" cy="${H + 70}" r="${r - k * 4}" fill="none" stroke="${colour}" stroke-width="4" />`).join("") + "</g></svg>");
+        }
 
         // two to four pennants flying from some of the highest needles in sight (.pennants)
         const highest = tips.filter((t) => t.y > 8).sort((a, b) => a.y - b.y).slice(0, 8);
@@ -1937,7 +2004,7 @@
                 const drift = (n) => `${((Math.random() - 0.5) * n).toFixed(0)}`;
                 return `<svg class="firefly" viewBox="-6 -6 12 12" style="left: ${pct(x - 6, W)}; top: ${pct(y - 6, H)}; width: ${pct(12, W)}; --dx: ${drift(260)}%; --dy: ${drift(160)}%; animation-duration: ${(5 + Math.random() * 5).toFixed(1)}s, ${(6 + Math.random() * 5).toFixed(1)}s; animation-delay: -${(Math.random() * 8).toFixed(1)}s, -${(Math.random() * 10).toFixed(1)}s">`
                     + '<circle r="6" fill="url(#firefly-glow)" /><circle class="firefly-core" r="0.9" /></svg>';
-            }).join("");
+            }).join("") + weatherOver("castle");
         svg.innerHTML = `<defs>${shading}<filter id="gouache" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency="0.7 0.35" numOctaves="3" seed="${seed % 1000}" result="fine" />
             <feColorMatrix in="fine" type="saturate" values="0" result="fineGrey" />
@@ -1962,6 +2029,7 @@
             </filter></defs><g filter="url(#gouache)">${drawing}</g>`;
 
         finish(svg);
+        eaves(svg, pennants);
 
         // Cast shadows: each turret throws its shadow away from the light, long when the sun is
         // low, onto the column and the turrets behind it only, through a mask made of
@@ -2024,10 +2092,9 @@
         const b = sun.getBoundingClientRect();
         return Math.hypot(event.clientX - b.left - b.width / 2, event.clientY - b.top - b.height / 2) < b.width / 6 * 1.4;
     };
-    // each moment's sky colours, read from the CSS, as [r, g, b]. In the snow, whose overcast
-    // sky the CSS gives every moment alike, the clear sky's colours, dulled, set off from the
-    // overcast one as far as they are from those of the castle's own moment: the day still goes
-    // round, greyed, and comes back to the overcast sky it left.
+    // each moment's sky colours, read from the CSS, as [r, g, b]. In the rain or the snow, the
+    // overcast sky's: the moment's own where the CSS tints it (dawn, the golden hour, dusk),
+    // else the one it gives every moment alike.
     const rgb = (value) => (value.trim().match(/[0-9a-f]{2}/gi) || []).map((h) => parseInt(h, 16));
     // (read straight from the style sheets' rule for each moment, not by setting the page to each
     // moment in turn, which would style the whole page again each time)
@@ -2037,20 +2104,17 @@
             try { rules = sheet.cssRules; } catch { continue; }
             for (const rule of rules) if (rule.selectorText && test(rule.selectorText) && rule.style.getPropertyValue("--sky")) return rule.style;
         }
-        return getComputedStyle(root);
+        return null;
     };
     const paletteOf = () => {
-        const kept = root.dataset.moment, weather = root.dataset.weather;
-        const read = (style) => TINTS.map((p) => rgb(style.getPropertyValue(p)));
-        let colours = MOMENTS.map(({ name }) => read(ruleFor((selector) => selector.includes(`data-moment="${name}"`) && !selector.includes("weather"))));
-        const overcast = read(ruleFor((selector) => selector.includes('data-weather="snow"') && selector.includes("data-moment")));
-        if (!colours.every((m) => m.every((c) => c.length === 3)) || overcast.some((c) => c.length !== 3)) return null;
-        if (weather === "snow") {
-            const dull = (c) => { const l = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]; return c.map((v) => v + (l - v) * 0.7); };
-            const own = colours[Math.max(0, MOMENTS.findIndex((m) => m.name === kept))].map(dull);
-            colours = colours.map((m) => m.map((c, i) => dull(c).map((v, j) => Math.max(0, Math.min(255, overcast[i][j] + 0.75 * (v - own[i][j]))))));
-        }
-        return colours;
+        const weather = root.dataset.weather, sky = `data-weather="${weather}"`;
+        const overcast = weather && ruleFor((selector) => selector.includes(sky) && selector.includes("[data-moment]"));
+        const colours = MOMENTS.map(({ name }) => {
+            const moment = `data-moment="${name}"`;
+            const style = weather ? ruleFor((selector) => selector.includes(sky) && selector.includes(moment)) || overcast : ruleFor((selector) => selector.includes(moment) && !selector.includes("weather"));
+            return style ? TINTS.map((p) => rgb(style.getPropertyValue(p))) : [];
+        });
+        return colours.every((m) => m.length === TINTS.length && m.every((c) => c.length === 3)) ? colours : null;
     };
     // the two moments around the sun at an angle on a course (which: wide, narrow, on its side),
     // and how far it has gone from the first to the second: by day, and from dusk to dawn across
@@ -2209,7 +2273,7 @@
         const id = input.value.trim().toLowerCase();
         input.setAttribute("aria-invalid", String(!ID.test(id)));
         if (!ID.test(id)) return;
-        snowAsked = false;
+        weatherAsked = null;
         show(id);
         history.replaceState(null, "", `?castle=${id}${location.hash}`);
     });

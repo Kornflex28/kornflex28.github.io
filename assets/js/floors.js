@@ -840,6 +840,12 @@
         el.after(clip, snow);
     });
 
+    // In the rain, water dripping now and then from under the line's stone, here and there past
+    // the floor's name (.drip), a thin streak as the rain's, each at its own pace
+    const drips = (from, to) => Array.from({ length: Math.max(2, Math.round((to - from) / 200)) }, () =>
+        `<g transform="translate(${f(from + 10 + Math.random() * (to - from - 20))} ${LOW})"><path class="drip" d="M0 0 V5"`
+        + ` style="animation-duration: ${(1.6 + Math.random() * 1.6).toFixed(2)}s; animation-delay: -${(Math.random() * 3).toFixed(2)}s" /></g>`).join("");
+
     const MOSS = ["c-hedge", "c-hedge", "c-hedge-olive", "c-hedge-sage"], MOSS_LIGHT = ["c-hedge-light", "c-hedge-sage"];
     // The floor's line, a course of the stone the castle's terrace is walled with, drawn as the
     // terrace is, at the castle's scale (k): sand-coloured, its courses and stones as tall and
@@ -1014,6 +1020,7 @@
             wall.innerHTML = stone;
             deco.innerHTML = `${moss}${ground}${fireflies(end)}${grown.climb}`;
             if (document.documentElement.dataset.weather === "snow") snowOn(deco, i);
+            if (document.documentElement.dataset.weather === "rain") deco.insertAdjacentHTML("beforeend", drips(after, end));
             // the leaves, flowers and branches, where they leave the stem and how far they can
             // swing, for the pointer to stir
             deco.parts = [...deco.querySelectorAll("[data-at]")].map((el) => {

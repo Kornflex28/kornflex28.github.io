@@ -317,6 +317,8 @@ a {
 :root[data-theme="night"] { --snow: #cdd3e6; }
 
 .snow { fill: var(--snow); }
+// the roofs wet in the rain (skyline.js)
+.wet { fill: #1c2433; opacity: .16; }
 
 :root[data-weather="snow"]:not([data-theme="night"])[data-moment] {
   --sky: #c3c8d1;
@@ -327,6 +329,33 @@ a {
 
 // (by day only: the moon, by night, shines through)
 :root[data-weather="snow"]:not([data-theme="night"]) .sun { opacity: .45; }
+
+// Rain (skyline.js): a lower, greyer sky, the sun hardly seen through it
+:root[data-weather="rain"]:not([data-theme="night"])[data-moment] {
+  --sky: #a7afba;
+  --sky-low: #d2d4d6;
+  --sun: #e6e2da;
+  --light: #e9e7e3;
+}
+
+:root[data-weather="rain"]:not([data-theme="night"]) .sun { opacity: .3; }
+
+// at dawn, in the golden hour and at dusk, the overcast sky still takes a little of their
+// colours (skyline.js reads these too, for the sun's turn)
+:root[data-weather="rain"]:not([data-theme="night"]) {
+  &[data-moment="dawn"] { --sky: #acb4c6; --sky-low: #dfd4cf; --sun: #f0dbca; --light: #f1e9e4; }
+  &[data-moment="golden"] { --sky: #b0b7c7; --sky-low: #e0d5c2; --sun: #efdeba; --light: #f0e8db; }
+  &[data-moment="dusk"] { --sky: #9ea3b9; --sky-low: #dec5bc; --sun: #edc8b1; --light: #ede0db; }
+}
+:root[data-weather="snow"]:not([data-theme="night"]) {
+  &[data-moment="dawn"] { --sky: #bec4d5; --sky-low: #e9dcd4; --sun: #f7e2d0; --light: #f7f0eb; }
+  &[data-moment="golden"] { --sky: #c3c7d6; --sky-low: #e9ddc8; --sun: #f7e5c1; --light: #f7eee2; }
+  &[data-moment="dusk"] { --sky: #b0b4c8; --sky-low: #e8cdc1; --sun: #f4d0b7; --light: #f3e7e2; }
+}
+
+// the mist's white, and by night its faint blue
+:root { --mist: rgb(250 248 243 / .85); }
+:root[data-theme="night"] { --mist: rgb(170 178 214 / .3); }
 
 // on the bare trees' branches, and on the elevator's cabin
 .snow-line {
