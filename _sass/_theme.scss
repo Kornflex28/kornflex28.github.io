@@ -376,13 +376,18 @@ a {
   opacity: calc(.24 * var(--shade-strength));
 }
 
-// Faint clouds, in a few whites just off the sky's
+// Faint clouds, in a few whites just off the sky's, the high thin wisps fainter still
 .cloud {
   fill: var(--cloud);
 
   &.warm { fill: var(--cloud-warm); }
   &.bright { fill: var(--cloud-bright); }
+  &.thin { opacity: .7; }
 }
+
+// The wind, blowing one way or the other as each castle has it (skyline.js): the clouds cross
+// with it, the pennants fly with it, the town's smoke drifts with it
+:root[data-wind="left"] { --wind: -1; }
 
 // Each cloud crosses the sky with the wind, fading in on one side and out on the other, and
 // rises and sinks a little on its way; pennants flutter, and now and then a bird crosses the
@@ -397,6 +402,19 @@ a {
 @keyframes cloud-bob {
   from { transform: translateY(6%); }
   to { transform: translateY(-6%); }
+}
+
+// a small loop gone round at an even pace, without stopping at either end
+@keyframes billow {
+  0% { transform: translate(calc(var(--dx) * 0.000), calc(var(--dy) * 0.000)) scale(calc(1 + var(--s) * 0.000)); }
+  12.5% { transform: translate(calc(var(--dx) * 0.707), calc(var(--dy) * -0.146)) scale(calc(1 + var(--s) * 0.707)); }
+  25% { transform: translate(calc(var(--dx) * 1.000), calc(var(--dy) * -0.500)) scale(calc(1 + var(--s) * 1.000)); }
+  37.5% { transform: translate(calc(var(--dx) * 0.707), calc(var(--dy) * -0.854)) scale(calc(1 + var(--s) * 0.707)); }
+  50% { transform: translate(calc(var(--dx) * 0.000), calc(var(--dy) * -1.000)) scale(calc(1 + var(--s) * 0.000)); }
+  62.5% { transform: translate(calc(var(--dx) * -0.707), calc(var(--dy) * -0.854)) scale(calc(1 + var(--s) * -0.707)); }
+  75% { transform: translate(calc(var(--dx) * -1.000), calc(var(--dy) * -0.500)) scale(calc(1 + var(--s) * -1.000)); }
+  87.5% { transform: translate(calc(var(--dx) * -0.707), calc(var(--dy) * -0.146)) scale(calc(1 + var(--s) * -0.707)); }
+  100% { transform: translate(calc(var(--dx) * 0.000), calc(var(--dy) * 0.000)) scale(calc(1 + var(--s) * 0.000)); }
 }
 
 @keyframes flutter {
@@ -425,7 +443,7 @@ a {
 @keyframes smoke {
   from { opacity: 0; transform: translate(0, 0) scale(.6); }
   20% { opacity: .75; }
-  to { opacity: 0; transform: translate(7px, -24px) scale(1.7); }
+  to { opacity: 0; transform: translate(calc(7px * var(--wind, 1)), -24px) scale(1.7); }
 }
 
 @keyframes twinkle {

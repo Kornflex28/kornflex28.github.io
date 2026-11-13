@@ -68,11 +68,23 @@
 
   // each on a layer of its own, so it glides by fractions of a pixel instead of stepping:
   // crossing the sky, and rising and sinking a little on the way (skyline.js sets the pace)
-  > svg {
+  > svg,
+  > .drift {
     position: absolute;
     height: auto;
     will-change: transform, translate, opacity;
     animation: cross linear infinite, cloud-bob ease-in-out infinite alternate;
+  }
+
+  // a cloud's pieces, each painted once on a layer of its own, swelling and shifting a little
+  // at its own pace (skyline.js), so the cloud's outline changes slowly with nothing painted
+  // again
+  > .drift > svg {
+    position: absolute;
+    height: auto;
+    overflow: visible;
+    will-change: transform;
+    animation: billow linear infinite;
   }
 
   // the sun keeps still, and moves inside the drawing's middle where only that shows (skyline.js)
@@ -134,6 +146,9 @@
   .pennant {
     transform-origin: left center;
     animation: flutter ease-in-out infinite alternate;
+
+    // flying the other way when the wind blows to the left
+    :root[data-wind="left"] & { scale: -1 1; }
   }
 }
 

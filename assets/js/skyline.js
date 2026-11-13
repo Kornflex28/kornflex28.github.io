@@ -185,17 +185,62 @@
     // --- Building blocks -------------------------------------------------------------
 
     // A faint cloud, kept out of the drawing in a picture of its own so it can cross the sky
-    // without the castle being repainted: its shapes and their bounds
+    // without the castle being repainted: its shapes and their bounds. Of a few kinds: the usual
+    // puff on a flat base; a heaped cumulus; long flat streaks; high thin wisps; a flock of small
+    // puffs; the kinds a castle's sky allows (cloudSky, below). (Its place, size and tone come from the castle's draws as they always have; its
+    // kind, from a draw of its own, cloudState, so each castle stays the one its seed gives.)
+    // One sky for all of a castle's clouds, as the weather makes it: fair (puffs and heaped
+    // cumulus together), streaked, high wisps, or a mackerel sky of small puffs
+    const SKIES = { fair: ["puff", "puff", "heap"], streaked: ["streak"], high: ["wisps"], mackerel: ["flock"] };
+    let cloudState = 0, cloudSky = SKIES.fair;
+    const ellipse = (cx, cy, rx, ry) => `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx)}" ry="${f(ry)}" />`;
+    const CLOUDS = {
+        // its domes in a row along a flat base, the highest in the middle
+        heap: (x, y, w) => {
+            const parts = [[x + w / 2, y, w / 2, w * 0.05]];
+            for (let i = 0, n = int(4, 5); i < n; i++) {
+                const u = i / (n - 1), r = w * (0.1 + 0.08 * Math.sin(Math.PI * u)) * rand(0.9, 1.1);
+                parts.push([x + w * (0.18 + 0.64 * u) + rand(-3, 3), y - r * rand(0.55, 0.75), r, r * 0.95]);
+            }
+            return parts;
+        },
+        streak: (x, y, w) => Array.from({ length: int(2, 3) }, (_, i) => {
+            const l = w * rand(0.55, 1);
+            return [x + w * rand(0.25, 0.75), y - i * rand(3, 6), l / 2, w * rand(0.015, 0.028)];
+        }),
+        // small puffs in loose rows, as a mackerel sky has
+        flock: (x, y, w) => Array.from({ length: int(6, 9) }, (_, i) => {
+            const r = rand(7, 11);
+            return [x + w * rand(0.05, 0.95), y - (i % 3) * rand(7, 10), r, r * rand(0.5, 0.65)];
+        }),
+    };
+    // (its pieces, each its shape and its bounds, the base marked: drawn one by one, so each can
+    // move on its own as the cloud goes, below)
     const cloud = (x, y, w) => {
         const h = w * 0.14;
-        let shapes = `<ellipse cx="${f(x + w / 2)}" cy="${f(y)}" rx="${f(w / 2)}" ry="${f(h / 2)}" />`;
-        let top = y - h / 2;
+        let parts = [[ellipse(x + w / 2, y, w / 2, h / 2), x, y - h / 2, x + w, y + h / 2, true]];
         for (let i = 0, n = int(2, 3); i < n; i++) {
-            const r = rand(0.12, 0.2) * w * 0.6, cy = y - r * 0.58;
-            shapes += `<circle cx="${f(x + w * rand(0.25, 0.75))}" cy="${f(cy)}" r="${f(r)}" />`;
-            top = Math.min(top, cy - r);
+            const r = rand(0.12, 0.2) * w * 0.6, cy = y - r * 0.58, cx = x + w * rand(0.25, 0.75);
+            parts.push([`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" />`, cx - r, cy - r, cx + r, cy + r]);
         }
-        return { x: x - 2, y: top - 2, w: w + 4, h: y + h / 2 - top + 4, shapes, tone: pick(["", "warm", "bright"]) };
+        const tone = pick(["", "warm", "bright"]), kept = state;
+        state = cloudState;
+        const kind = pick(cloudSky);
+        if (kind === "wisps") {
+            // a few thin tapering strands, each bowed and rising a little to one end
+            parts = Array.from({ length: int(3, 4) }, (_, i) => {
+                const a = x + w * rand(0, 0.3), b = x + w * rand(0.7, 1), ya = y - i * rand(4, 7), yb = ya - rand(4, 12), t = rand(2, 3.5);
+                return [`<path d="M${f(a)} ${f(ya)} Q${f((a + b) / 2)} ${f((ya + yb) / 2 - t)} ${f(b)} ${f(yb)} Q${f((a + b) / 2)} ${f((ya + yb) / 2 + t * 0.4)} ${f(a)} ${f(ya)} Z" />`,
+                    a, yb - t, b, ya + t];
+            });
+        } else if (kind !== "puff") {
+            parts = CLOUDS[kind](x, y, w).map(([cx, cy, rx, ry], k) => [ellipse(cx, cy, rx, ry), cx - rx, cy - ry, cx + rx, cy + ry, kind === "heap" && k === 0]);
+        }
+        cloudState = state;
+        state = kept;
+        const x0 = Math.min(...parts.map((p) => p[1])) - 2, y0 = Math.min(...parts.map((p) => p[2])) - 2;
+        const x1 = Math.max(...parts.map((p) => p[3])) + 2, y1 = Math.max(...parts.map((p) => p[4])) + 2;
+        return { x: x0, y: y0, w: x1 - x0, h: y1 - y0, parts, tone: kind === "wisps" ? `${tone} thin` : tone };
     };
 
     // A window; at night some are lit, their light spilling softly on the wall around them
@@ -1446,6 +1491,8 @@
 
         // a few faint clouds, each drifting slowly to and fro (.clouds)
         const sky = [], gardens = [];                   // gardens: the shrubs' boxes, for the fireflies
+        cloudState = (seed ^ 0x7f4a7c15) | 0;
+        cloudSky = SKIES[["fair", "fair", "fair", "streaked", "high", "mackerel"][(Math.imul(seed ^ 0x2c1b3c6d, 0x297a2d39) >>> 0) % 6]];
         for (let i = 0, n = int(3, 6); i < n; i++) sky.push(cloud(rand(10, W - 170), rand(30, 150), rand(90, 160)));
 
         // the elevator's station on the terrace, and the groove its shaft runs down in the wall
@@ -1853,15 +1900,30 @@
                 : "";
             return `<circle${twinkle} cx="${f(Math.random() * W)}" cy="${f(Math.random() * H * 0.55)}" r="${f(0.5 + Math.random() * 0.7)}" />`;
         }).join("");
-        // each cloud crosses the whole sky with the wind, from just off its left edge to just off
-        // its right one (--from, --to, in its own widths), at its own slow pace; a random start
-        // puts it anywhere on its way when the page opens
+        // each cloud crosses the whole sky with the wind, from just off one edge to just off the
+        // other (--from, --to, in its own widths), at its own slow pace; a random start puts it
+        // anywhere on its way when the page opens. The wind blows one way or the other, as each
+        // castle has it (its seed, apart from the drawing's draws); the pennants and the town's
+        // smoke go with it (data-wind)
+        const leftward = (Math.imul(seed ^ 0x165667b1, 0x27d4eb2f) >>> 0) % 2 === 1;
+        document.documentElement.dataset.wind = leftward ? "left" : "right";
         clouds.innerHTML = `<svg class="stars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${stars}</svg>` + sun + sky.map((c) => {
             const crossing = (W + c.w) / (5 + Math.random() * 4), bobbing = 7 + Math.random() * 6;
-            return `<svg viewBox="${f(c.x)} ${f(c.y)} ${f(c.w)} ${f(c.h)}" style="left: ${pct(c.x, W)}; top: ${pct(c.y, H)}; width: ${pct(c.w, W)};`
-                + ` --from: ${f(-100 * (c.x + c.w) / c.w)}%; --to: ${f(100 * (W - c.x) / c.w)}%;`
+            const [start, end] = [f(-100 * (c.x + c.w) / c.w), f(100 * (W - c.x) / c.w)];
+            // its pieces, each painted once in a picture of its own, swelling and shifting a little
+            // at its own slow pace (--dx, --dy, --s), the base least: the cloud's outline changes
+            // as it goes, and only the pieces move, never painted again
+            const pieces = c.parts.map(([shape, x0, y0, x1, y1, base]) => {
+                const px = x0 - 1.5, py = y0 - 1.5, pw = x1 - x0 + 3, ph = y1 - y0 + 3, reach = base ? 0.35 : 1, swing = (n) => f((Math.random() * 2 - 1) * n * reach);
+                return `<svg viewBox="${f(px)} ${f(py)} ${f(pw)} ${f(ph)}" style="left: ${pct(px - c.x, c.w)}; top: ${pct(py - c.y, c.h)}; width: ${pct(pw, c.w)};`
+                    + ` --dx: ${swing(12)}%; --dy: ${swing(18)}%; --s: ${((Math.random() * 2 - 1) * 0.16 * reach).toFixed(3)};`
+                    + ` animation-duration: ${(14 + Math.random() * 12).toFixed(1)}s; animation-delay: -${(Math.random() * 26).toFixed(1)}s">`
+                    + `<g class="cloud ${c.tone}" filter="url(#gouache)">${shape}</g></svg>`;
+            }).join("");
+            return `<div class="drift" style="left: ${pct(c.x, W)}; top: ${pct(c.y, H)}; width: ${pct(c.w, W)}; aspect-ratio: ${f(c.w)} / ${f(c.h)};`
+                + ` --from: ${leftward ? end : start}%; --to: ${leftward ? start : end}%;`
                 + ` animation-duration: ${crossing.toFixed(0)}s, ${bobbing.toFixed(1)}s; animation-delay: -${(Math.random() * crossing).toFixed(0)}s, -${(Math.random() * bobbing).toFixed(1)}s">`
-                + `<g class="cloud ${c.tone}" filter="url(#gouache)">${c.shapes}</g></svg>`;
+                + `${pieces}</div>`;
         }).join("");
 
         // two to four pennants flying from some of the highest needles in sight (.pennants)
