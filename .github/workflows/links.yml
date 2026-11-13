@@ -3,8 +3,9 @@ name: Check the links
 # Every Monday, every link of the built site tried (the articles, the profiles, the pages
 # themselves): those that no longer answer are listed in an issue, opened, or brought up to
 # date if one is already open, and closed once they all answer again. Sites that turn robots
-# away (403, 429, LinkedIn's 999) count as answering; slow ones get two minutes (the IPGP
-# data repository takes over a minute to answer).
+# away (403, 429, LinkedIn's 999) count as answering; slow ones get two minutes. The datasets'
+# DOIs (10.18715) are left out: they resolve at once, but to the IPGP data repository, which
+# takes from half a minute to over two to answer, so they would always look broken.
 on:
   schedule:
     - cron: "41 6 * * 1"
@@ -35,6 +36,7 @@ jobs:
             --root-dir ${{ github.workspace }}/_site
             --fallback-extensions html
             --exclude-path _site/card.html
+            --exclude '^https://doi\.org/10\.18715/'
             '_site/**/*.html'
           output: ${{ runner.temp }}/links.md
           fail: false
