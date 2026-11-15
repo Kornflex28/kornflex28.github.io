@@ -1906,6 +1906,11 @@ abbr[title] {
   bottom: 0;
   left: calc(var(--dock-x, 1.25rem) - var(--shaft-x));
   width: 13rem;
+
+  // not printed: its shaft would run down through the text
+  @media print {
+    display: none;
+  }
 }
 
 .stops {
