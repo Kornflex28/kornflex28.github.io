@@ -127,7 +127,6 @@
   display: none;
   position: absolute;
   inset: 0;
-  mix-blend-mode: screen;
 
   :root[data-theme="night"] & { display: block; }
 
@@ -136,12 +135,13 @@
     will-change: opacity, transform;
   }
 
-  // the red glow low over the horizon, swelling and dimming slowly
+  // the red glow low over the horizon, swelling and dimming slowly; it rises from the foot of
+  // the drawing, behind the terrace, so no edge of it shows
   .glow {
-    bottom: 12%;
+    bottom: 0;
     width: 70%;
-    height: 80%;
-    background: radial-gradient(ellipse 50% 75% at 50% 100%, rgb(232 70 108 / .8), rgb(205 60 125 / .38) 45%, transparent 78%);
+    height: 100%;
+    background: radial-gradient(ellipse 50% 95% at 50% 100%, rgb(232 70 108 / .8), rgb(205 60 125 / .38) 50%, transparent 80%);
     animation: aurora-breathe 14s ease-in-out infinite alternate;
   }
 
@@ -159,7 +159,7 @@
   .wave {
     top: 0;
     height: 100%;
-    animation: aurora-wave 6s ease-in-out infinite alternate, aurora-flicker 4s ease-in-out infinite alternate;
+    animation: aurora-wave 6s ease-in-out infinite alternate, aurora-flicker 8s ease-in-out infinite alternate;
   }
 
   &.arc { --swell: 1.6%; }
@@ -169,13 +169,6 @@
     animation: aurora-sway 18s ease-in-out infinite alternate;
 
     .wave { overflow: visible; }
-  }
-
-  &.pulsating > i {
-    aspect-ratio: 2 / 1;
-    border-radius: 50%;
-    background: radial-gradient(closest-side, rgb(110 240 170 / .7), rgb(90 230 160 / .28) 55%, transparent);
-    animation: aurora-pulse ease-in-out infinite;
   }
 }
 
@@ -195,16 +188,10 @@
 }
 
 @keyframes aurora-flicker {
-  0% { opacity: .6; }
-  35% { opacity: .95; }
-  60% { opacity: .75; }
+  0% { opacity: .75; }
+  35% { opacity: .97; }
+  60% { opacity: .85; }
   100% { opacity: 1; }
-}
-
-@keyframes aurora-pulse {
-  0%, 100% { opacity: 0; }
-  12%, 45% { opacity: 1; }
-  60% { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

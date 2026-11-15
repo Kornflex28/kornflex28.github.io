@@ -1574,17 +1574,16 @@
             + hand("second", '<path d="M-.025 .26 V-.86 H.025 V.26 Z" /><circle r=".1" />') + "</div>";
     };
 
-    // The northern lights (.aurora), of four kinds, each painted once and only faded and swayed:
+    // The northern lights (.aurora), of three kinds, each painted once and only faded and swayed:
     // - glow: the red glow low over the horizon that a great storm brings as far south as here;
     // - arc: a quiet, even green arc across the sky, red along its top;
     // - curtain: rayed curtains, green at their foot, red to violet above, flickering;
-    // - pulsating: patches of green going out and coming back, each at its own beat.
     // The arc and the curtains are close upright rays of uneven strength, green at their foot,
     // red above, run together sideways by a blur so only a fine streak shows. They lie in
     // narrow slices (.wave), each rising and sinking a little a beat after the one before it,
     // so a wave runs along their foot, and a brightening runs along them faster; a faint wash
     // of their light lies on the sky under them.
-    const AURORAS = ["glow", "arc", "curtain", "pulsating"];
+    const AURORAS = ["glow", "arc", "curtain"];
     const aurora = (kind) => {
         const rayed = (foot, length, opacity, blur) => {
             const n = 40, rays = Array.from({ length: n }, () => []);
@@ -1596,12 +1595,12 @@
                 + '<linearGradient id="aurora-ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a6fe0" stop-opacity="0" /><stop offset=".35" stop-color="#c9577f" stop-opacity=".22" />'
                 + '<stop offset=".72" stop-color="#62dc9a" stop-opacity=".75" /><stop offset=".94" stop-color="#b9f5d2" stop-opacity=".95" /><stop offset="1" stop-color="#b9f5d2" stop-opacity="0" /></linearGradient></defs>';
             return rays.map((r, k) => `<svg class="wave" viewBox="${f(k * W / n)} 0 ${f(W / n)} ${H}" preserveAspectRatio="none" style="left: ${(100 * k / n).toFixed(1)}%; width: ${(100 / n).toFixed(1)}%;`
-                + ` animation-delay: -${(k / n * W / 600 * 12).toFixed(2)}s, -${(k / n * W / 250 * 8).toFixed(2)}s">${k ? "" : defs}<g filter="url(#aurora-blur)" fill="url(#aurora-ray)">${r.join("")}</g></svg>`).join("");
+                + ` animation-delay: -${(k / n * W / 600 * 12).toFixed(2)}s, -${(k / n * W / 250 * 16).toFixed(2)}s">${k ? "" : defs}<g filter="url(#aurora-blur)" fill="url(#aurora-ray)">${r.join("")}</g></svg>`).join("");
         };
         const wash = (x, y, w) => `<i class="wash" style="left: ${(100 * (x - w / 2) / W).toFixed(1)}%; top: ${(100 * y / H).toFixed(1)}%; width: ${(100 * w / W).toFixed(1)}%"></i>`;
         const p = Math.random() * 6;
         let html = "";
-        if (kind === "glow") html = `<i class="glow" style="left: ${(10 + Math.random() * 30).toFixed(1)}%"></i>`;
+        if (kind === "glow") html = `<i class="glow" style="left: ${(Math.random() * 25).toFixed(1)}%"></i>`;
         // the arc: a low bow across the sky, of short, even rays
         if (kind === "arc") {
             const y0 = H * (0.5 + Math.random() * 0.1), y1 = H * (0.2 + Math.random() * 0.12), mx = W * (0.35 + Math.random() * 0.3), tilt = (Math.random() - 0.5) * 0.06;
@@ -1613,9 +1612,6 @@
             html = wash(W / 2, base - 70, W * 1.1) + rayed((x) => base + 22 * Math.sin(x / 95 + p) + 9 * Math.sin(x / 33 + 2 * p),
                 (x) => 70 + 35 * Math.sin(x / 140 + p) + 25 * Math.random(), () => 0.3 + Math.random() * 0.5, "2.6 1.2");
         }
-        if (kind === "pulsating") html = Array.from({ length: 9 + Math.floor(Math.random() * 4) }, () =>
-            `<i style="left: ${(Math.random() * 90).toFixed(1)}%; top: ${(10 + Math.random() * 45).toFixed(1)}%; width: ${(6 + Math.random() * 8).toFixed(1)}%;`
-            + ` animation-duration: ${(4 + Math.random() * 8).toFixed(1)}s; animation-delay: -${(Math.random() * 10).toFixed(1)}s"></i>`).join("");
         return `<div class="aurora ${kind}" aria-hidden="true">${html}</div>`;
     };
 
@@ -2090,7 +2086,7 @@
         // smoke go with it (data-wind)
         const leftward = (Math.imul(seed ^ 0x165667b1, 0x27d4eb2f) >>> 0) % 2 === 1;
         document.documentElement.dataset.wind = leftward ? "left" : "right";
-        const auroraKind = AURORAS.includes(auroraAsked) ? auroraAsked : !raining && !snowing && lot(0x5bd1e995, 4) ? AURORAS[mix(seed, 0x7feb352d) % 4] : null;
+        const auroraKind = AURORAS.includes(auroraAsked) ? auroraAsked : !raining && !snowing && lot(0x5bd1e995, 4) ? AURORAS[mix(seed, 0x7feb352d) % 3] : null;
         // the clouds take on the light of the aurora behind them (theme)
         if (auroraKind) document.documentElement.dataset.aurora = auroraKind;
         else delete document.documentElement.dataset.aurora;
