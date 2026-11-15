@@ -763,8 +763,11 @@
         // up from their foot)
         if (snowing) {
             const ns = "http://www.w3.org/2000/svg", name = root === svg ? "castle" : "town";
-            root.querySelectorAll("[data-snow]").forEach((el, k) => {
-                const b = el.getBBox(), share = parseFloat(el.dataset.snow), x0 = b.x - 4, x1 = b.x + b.width + 4;
+            // (every box read before anything is added: each addition would make the next read
+            // lay the whole drawing out again)
+            const roofs = [...root.querySelectorAll("[data-snow]")].map((el) => [el, el.getBBox()]);
+            roofs.forEach(([el, b], k) => {
+                const share = parseFloat(el.dataset.snow), x0 = b.x - 4, x1 = b.x + b.width + 4;
                 const edge = b.y + b.height * (share < 0 ? 1 + share : share), far = share < 0 ? b.y + b.height + 12 : b.y - 12;
                 let d = `M${f(x0)} ${f(far)} H${f(x1)} V${f(edge)}`;
                 for (let x = x1; x > x0; x -= 2.5) d += ` L${f(x)} ${f(edge + 1.3 * Math.sin(x * 0.9 + k) + (Math.sin(x * 0.37 + 2 * k) > 0.85 ? 2.2 : 0))}`;
@@ -780,8 +783,7 @@
             });
         }
         // Spring: blossom on the shrubs, a few pale flowers scattered over each (.blossom)
-        if (season === "spring") root.querySelectorAll('[data-snow][class*="c-hedge"]').forEach((el) => {
-            const b = el.getBBox();
+        if (season === "spring") [...root.querySelectorAll('[data-snow][class*="c-hedge"]')].map((el) => [el, el.getBBox()]).forEach(([el, b]) => {
             const dots = Array.from({ length: 2 + Math.floor(b.width / 8) }, () => {
                 const a = Math.random() * 2 * Math.PI, d = Math.sqrt(Math.random()) * 0.38;
                 return `<circle cx="${f(b.x + b.width * (0.5 + d * Math.cos(a)))}" cy="${f(b.y + b.height * (0.5 + d * Math.sin(a)))}" r="${f(2 + Math.random() * 0.6)}" />`;
@@ -803,8 +805,9 @@
     // In the rain, water dripping now and then from the eaves of some of the roofs (.eaves), in
     // the layer over the drawing, where it falls without painting the drawing again
     const eaves = (root, over) => {
+        if (!raining) return;
         const o = over.getBoundingClientRect();
-        if (!raining || !o.width) return;
+        if (!o.width) return;
         const roofs = [...root.querySelectorAll("[data-eaves]")].sort(() => Math.random() - 0.5).slice(0, 10);
         over.insertAdjacentHTML("beforeend", '<div class="eaves">' + roofs.map((el) => {
             const r = el.getBoundingClientRect(), x = Math.random() < 0.5 ? r.left + 1 : r.right - 1;
@@ -1512,20 +1515,24 @@
         let a0 = 0, s0 = 0, since = 0, push = 0, pending = false, playing = [], askew = 0;
         // hung a little askew, as each castle has it (its seed, apart from the drawing's own
         // draws), each chain as long as it takes for its nail to stay on the ground line:
-        // shorter where the sheet rises, longer where it drops
-        const hang = () => {
-            const chain = getComputedStyle(chains[0]), half = poster.offsetWidth / 2 - parseFloat(chain.left) - parseFloat(chain.width) / 2;
-            chains.forEach((c, i) => c.style.setProperty("--rise", `${((i ? half : -half) * Math.sin(askew * Math.PI / 180)).toFixed(2)}px`));
-        };
+        // shorter where the sheet rises, longer where it drops (half: how far each chain is from
+        // the sheet's middle, read only when the sheet changes size, when the page is laid out
+        // already: read at each castle, it would lay the whole page out again)
+        let half = 0;
+        const hang = () => chains.forEach((c, i) => c.style.setProperty("--rise", `${((i ? half : -half) * Math.sin(askew * Math.PI / 180)).toFixed(2)}px`));
         svg.addEventListener("castle-drawn", ({ detail: seed }) => {
             const h = Math.imul(seed ^ 0x2545f491, 0x9e3779b1) >>> 0;
             askew = (0.4 + 0.7 * (h % 1000) / 999) * (h & 0x10000 ? 1 : -1);
             poster.style.setProperty("--tilt", `${askew.toFixed(2)}deg`);
             playing.forEach((animation) => animation.cancel());
             [a0, s0, playing] = [0, 0, []];
-            requestAnimationFrame(hang);
+            hang();
         });
-        new ResizeObserver(hang).observe(poster);
+        new ResizeObserver(() => {
+            const chain = getComputedStyle(chains[0]);
+            half = poster.offsetWidth / 2 - parseFloat(chain.left) - parseFloat(chain.width) / 2;
+            hang();
+        }).observe(poster);
         // the angle and its speed, t seconds after the last push
         const swingAt = (t) => {
             const b = (s0 + DECAY * a0) / FREE, e = Math.exp(-DECAY * t), c = Math.cos(FREE * t), s = Math.sin(FREE * t);

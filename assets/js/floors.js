@@ -825,9 +825,10 @@
 
     // In the snow, snow lying on the things along the lines: over each piece marked data-snow
     // (the share of its height it covers from its top), a copy of it in snow, cut off by a soft,
-    // uneven edge, as on the castle's roofs
-    const snowOn = (deco, i) => deco.querySelectorAll("[data-snow]").forEach((el, k) => {
-        const b = el.getBBox(), edge = b.y + b.height * parseFloat(el.dataset.snow), x0 = b.x - 2, x1 = b.x + b.width + 2;
+    // uneven edge, as on the castle's roofs (every box read before anything is added: each
+    // addition would make the next read lay the drawing out again)
+    const snowOn = (deco, i) => [...deco.querySelectorAll("[data-snow]")].map((el) => [el, el.getBBox()]).forEach(([el, b], k) => {
+        const edge = b.y + b.height * parseFloat(el.dataset.snow), x0 = b.x - 2, x1 = b.x + b.width + 2;
         let d = `M${f(x0)} ${f(b.y - 6)} H${f(x1)} V${f(edge)}`;
         for (let x = x1; x > x0; x -= 1.5) d += ` L${f(x)} ${f(edge + 0.5 * Math.sin(x * 1.3 + k) + (Math.sin(x * 0.5 + 2 * k) > 0.8 ? 0.8 : 0))}`;
         const clip = document.createElementNS(NS, "clipPath");
