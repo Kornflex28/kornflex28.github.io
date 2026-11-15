@@ -267,9 +267,10 @@
     // the floor's plants along each stretch of its line left free: its kind, and on longer
     // stretches sometimes another twining with it for a while, half a turn behind it, so the
     // two wind round the line together; each floor's with their own vigour, a few leaves on a
-    // thin stem on some floors, lush on others, so the floors do not all look alike
-    const plants = (stretches, span, support, over, kind) => {
-        const other = pick(KINDS.filter((k) => k !== kind)), winding = windingOf(span, over), vigour = rand(0.45, 1);
+    // thin stem on some floors, lush on others, so the floors do not all look alike; never
+    // lusher than the floor's text calls for (most), a short floor not hidden under its plants
+    const plants = (stretches, span, support, over, kind, most = 1) => {
+        const other = pick(KINDS.filter((k) => k !== kind)), winding = windingOf(span, over), vigour = rand(0.45, 1) * most;
         let main = "", climb = "";
         stretches.forEach(([x0, x1], k) => {
             const grown = plant(kind, x0, x1, span, winding, 0, vigour, k === 0 ? support : null);
@@ -991,7 +992,7 @@
             k = castleScale();
             boxes = floors.map((floor) => {
                 const title = floor.querySelector(".floor-title");
-                return [floor.clientWidth, title.offsetLeft, title.offsetTop, title.offsetWidth, title.offsetHeight];
+                return [floor.clientWidth, title.offsetLeft, title.offsetTop, title.offsetWidth, title.offsetHeight, floor.offsetHeight];
             });
             sizes = k + boxes.map(([w, , , tw, th]) => `${w} ${tw} ${th}`).join();
         }
@@ -1000,7 +1001,8 @@
     let kinds = KINDS;
     const drawFloor = (floor, i, again) => {
         random = seeded(seed ^ Math.imul(i + 1, 0x9e3779b1));
-        const [w, tx, ty, tw, th] = boxes[i], end = w - 8;
+        // (the floor's height, h: half as lush at most under 250 pixels, as lush as can be from 500)
+        const [w, tx, ty, tw, th, h] = boxes[i], end = w - 8, most = Math.max(0.5, Math.min(1, h / 500));
         scale = w < 520 ? 0.85 : 1;
         const deco = floor.querySelector(":scope > .floor-deco"), wall = floor.querySelector(":scope > .floor-stone");
         [wall, deco].forEach((svg) => svg.setAttribute("viewBox", `0 0 ${w} ${HIGH}`));
@@ -1012,7 +1014,7 @@
         side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
         const make = () => OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" }, thing = LATER.has(floor.id) ? aside(make) : make();
         const stretches = thing.gap ? [[6, thing.gap[0]], [thing.gap[1], end]] : [[6, end]];
-        const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length]);
+        const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length], most);
         // over the stone: its moss, the plants in front of the thing or behind it, the
         // fireflies, what the plants climb
         const ground = thing.behind ? thing.markup + grown.main : grown.main + thing.markup;
