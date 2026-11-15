@@ -363,7 +363,36 @@
 // the palace clock's face (skyline.js), pale under the moon by night, and its hands over it
 .clock-face { fill: #f6eedb; }
 :root[data-theme="night"] .clock-face { fill: #8790c0; }
-.clock-hands { fill: var(--line); }
+
+.clock-hands {
+  position: absolute;
+  aspect-ratio: 1;
+  fill: var(--line);
+
+  > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+    animation: clock-turn linear infinite;
+  }
+
+  > .second {
+    fill: #a8352b;
+    animation-timing-function: steps(60);
+  }
+}
+
+@keyframes clock-turn {
+  to { transform: rotate(1turn); }
+}
+
+// without motion, the hands stand still at the time the castle was drawn
+@media (prefers-reduced-motion: reduce) {
+  .clock-hands > svg { rotate: var(--at); }
+  .clock-hands > .second { display: none; }
+}
 
 // fireflies, at dusk and by night: drifting slowly about, glowing on and off
 .firefly {

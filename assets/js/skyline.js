@@ -305,20 +305,26 @@
         add(`<line class="outline thin" x1="${f(cx)}" y1="${f(top)}" x2="${f(cx)}" y2="${f(top - 6)}" />`);
     };
 
-    // The palace clock, on the column: a gilt ring, a pale face with its hours marked, a gilt
-    // drop under it. Its hands are over the drawing (.clock-hands), where they tell the
-    // visitor's time without the drawing being painted again (clockAt: where its face is)
+    // The palace clock, on a post on the terrace like a street lamp's: a gilt ring, a pale face
+    // with its hours marked, and over it a lantern lit at night (.lamp, .lamp-glow). Its hands
+    // are over the drawing (.clock-hands), where they tell the visitor's time without the
+    // drawing being painted again (clockAt: where its face is)
     let clockAt = null;
-    const clock = (cx, cy, r) => {
-        const face = r * 0.78, tick = (k) => {
+    const clockPost = (x, base) => {
+        const r = 14, cy = base - 68, face = r * 0.8, top = cy - r - 1, tick = (k) => {
             const a = k * Math.PI / 6, r0 = face * (k % 3 ? 0.8 : 0.66);
-            return `<line x1="${f(cx + r0 * Math.sin(a))}" y1="${f(cy - r0 * Math.cos(a))}" x2="${f(cx + face * 0.92 * Math.sin(a))}" y2="${f(cy - face * 0.92 * Math.cos(a))}" />`;
+            return `<line x1="${f(x + r0 * Math.sin(a))}" y1="${f(cy - r0 * Math.cos(a))}" x2="${f(x + face * 0.92 * Math.sin(a))}" y2="${f(cy - face * 0.92 * Math.cos(a))}" />`;
         };
-        add(`<circle class="c-gold outline thin" data-shade="sphere" cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" />`);
-        add(`<circle class="clock-face outline fine" cx="${f(cx)}" cy="${f(cy)}" r="${f(face)}" />`);
+        add(`<rect class="c-slate outline thin" x="${f(x - 5)}" y="${f(base - 6)}" width="10" height="6" />`);
+        add(`<rect class="c-slate outline thin" x="${f(x - 1.8)}" y="${f(cy + r - 1)}" width="3.6" height="${f(base - 6 - cy - r + 1)}" />`);
+        add(`<circle class="c-gold outline thin" data-shade="sphere" cx="${f(x)}" cy="${f(cy)}" r="${r}" />`);
+        add(`<circle class="clock-face outline fine" cx="${f(x)}" cy="${f(cy)}" r="${f(face)}" />`);
         add(`<g class="outline fine">${Array.from({ length: 12 }, (_, k) => tick(k)).join("")}</g>`);
-        add(`<circle class="c-gold outline thin" cx="${f(cx)}" cy="${f(cy + r + 2)}" r="${f(r / 8)}" />`);
-        clockAt = { x: cx, y: cy, r: face };
+        add(`<path class="lamp outline thin" d="M${f(x - 4)} ${f(top)} L${f(x - 5.5)} ${f(top - 10)} H${f(x + 5.5)} L${f(x + 4)} ${f(top)} Z" />`);
+        add(`<line class="outline thin" x1="${f(x)}" y1="${f(top)}" x2="${f(x)}" y2="${f(top - 10)}" />`);
+        cone(x - 4.5, top - 10, 9, 7, "c-slate", 3);
+        on(GROUND, () => add(`<circle class="lamp-glow" cx="${f(x)}" cy="${f(top - 5)}" r="34" fill="url(#glow)" />`));
+        clockAt = { x, y: cy, r: face };
     };
 
     // An arched door, its sill at base
@@ -1549,15 +1555,24 @@
         return html;
     };
 
-    // the clock's hands at the visitor's time, set again every half minute
-    const setClock = () => {
-        const now = new Date(), minutes = now.getMinutes() + now.getSeconds() / 60;
-        pennants.querySelectorAll(".clock-hands").forEach((hands) => {
-            hands.querySelector(".hour").setAttribute("transform", `rotate(${f((now.getHours() % 12 + minutes / 60) * 30)})`);
-            hands.querySelector(".minute").setAttribute("transform", `rotate(${f(minutes * 6)})`);
-        });
+    // the clock's hands, each turning on a layer of its own, started at the visitor's time: the
+    // hour and minute hands creeping round, the second hand ticking, with a cap over their pin;
+    // painted like the drawing (#gouache), in its units (r: the face's radius in them)
+    // (--at: how far round each hand is, for the reduced motion's still hands, set again every
+    // minute)
+    const secondsToday = () => { const now = new Date(); return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000; };
+    const PERIODS = { hour: 43200, minute: 3600, second: 60 };
+    setInterval(() => pennants.querySelectorAll(".clock-hands > svg").forEach((hand) => {
+        const period = PERIODS[hand.classList[0]];
+        hand.style.setProperty("--at", `${(secondsToday() % period / period).toFixed(5)}turn`);
+    }), 60000);
+    const clockHands = (style, r) => {
+        const at = secondsToday();
+        const hand = (cls, d) => `<svg class="${cls}" viewBox="${f(-r)} ${f(-r)} ${f(2 * r)} ${f(2 * r)}" style="--at: ${(at % PERIODS[cls] / PERIODS[cls]).toFixed(5)}turn; animation-duration: ${PERIODS[cls]}s; animation-delay: -${(at % PERIODS[cls]).toFixed(3)}s">`
+            + `<g filter="url(#gouache)"><g transform="scale(${f(r)})">${d}</g></g></svg>`;
+        return `<div class="clock-hands" style="${style}">` + hand("hour", '<path d="M-.07 .12 L0 -.5 L.07 .12 Z" />') + hand("minute", '<path d="M-.05 .14 L0 -.82 L.05 .14 Z" />')
+            + hand("second", '<path d="M-.025 .26 V-.86 H.025 V.26 Z" /><circle r=".1" />') + "</div>";
     };
-    setInterval(setClock, 30000);
 
     // The northern lights (.aurora), of four kinds, each painted once and only faded and swayed:
     // - glow: the red glow low over the horizon that a great storm brings as far south as here;
@@ -1643,7 +1658,9 @@
 
         // the elevator's station on the terrace, and the groove its shaft runs down in the wall
         on(BACK, () => use(pavilion(DOCK, tTop)));
+        const lampParts = [parts.length];
         on(TURRETS, () => use(lamp(DOCK + PAVILION + 8, tTop)));
+        lampParts.push(parts.length);
         on(RAIL, () => add(`<rect class="c-arch outline thin" x="${DOCK - 5}" y="${tTop}" width="10" height="${H - tTop}" />`));
 
         // the great pale column, rising from the terrace to the top of the page
@@ -1710,7 +1727,6 @@
             faceTop = highest;
         });
 
-        let clockRoom = null;
         // A few touches on the column, after the palace's great tower: now and then a cornice
         // curving round it over its shadow, a few tall windows above the face's flights, and
         // sometimes a balcony with its door. Drawn from a draw of its own, so the rest of each
@@ -1735,8 +1751,6 @@
             for (let i = 0; i + 1 < bounds.length; i++) {
                 const low = bounds[i] - 4, high = bounds[i + 1] + 10, room = low - high;
                 if (room < 22) continue;
-                // the highest stretch is also the palace clock's (drawn once the turrets hang)
-                if (i + 2 === bounds.length) clockRoom = [high, low];
                 if (balcony && room >= 30 && high > 10 && low < tTop - 60) {
                     balcony = false;
                     const floor = low - 4, bw = colW * 0.3;
@@ -1749,10 +1763,7 @@
                     add(`<path class="outline thin" fill="none" d="M${f(cx - bw)} ${f(floor - 6)} Q${f(cx)} ${f(floor - 6 + 2 * sag * 0.6)} ${f(cx + bw)} ${f(floor - 6)}" />`);
                     continue;
                 }
-                if (chance(0.6)) {
-                    window_(cx, high + (room - 12) / 2, Math.min(8, colW / 2 - 1), 5, 12);
-                    if (clockRoom) clockRoom.push(high + (room - 12) / 2);
-                }
+                if (chance(0.6)) window_(cx, high + (room - 12) / 2, Math.min(8, colW / 2 - 1), 5, 12);
             }
             state = kept;
         });
@@ -1783,6 +1794,27 @@
                     break;
                 }
             }
+        });
+
+        // the palace clock on its post, where phones and tablets still show the drawing (up to
+        // x = 730): right of the column if there is room between its buildings, else left of it,
+        // the lamp by the lift then taken away (its post is a lamp too). Set before the shrubs
+        // and the turrets, which keep clear of it, and from a draw of its own.
+        on(BACK, () => {
+            const kept = state;
+            state = (seed ^ 0x1b873593) | 0;
+            const left = [tx0 + 20, colX - 40];
+            for (const span of [[colX + colW + 40, Math.min(tx1 - 6, 730)], left]) {
+                const [x0, x1] = span;
+                const b = Array.from({ length: 30 }, () => rand(x0 + 20, x1 - 20)).map((x) => box(x - 20, tTop - 104, x + 20, tTop)).find((b) => b.x0 >= x0 && b.x1 <= x1 && isFree(b));
+                if (b) {
+                    use(b);
+                    clockPost(b.x0 + 20, tTop);
+                    if (span === left) parts.slice(...lampParts).forEach((p) => { p[2] = ""; });
+                    break;
+                }
+            }
+            state = kept;
         });
 
         // trimmed shrubs along the terrace
@@ -1939,21 +1971,6 @@
             const top = 10, bottom = floorY - 50, band = (bottom - top) / Math.max(1, here);
             for (let k = 0; k < here; k++) cluster(out, int(4, 8), [top + k * band, top + (k + 1) * band]);
         });
-
-        // the palace clock in the column's highest stretch, as near its middle as neither its
-        // window nor a turret hides it (a turret's roof reaching up to twice its width above it)
-        if (clockRoom) {
-            const r = Math.min(17, colW * 0.32), cx = colX + colW / 2, [high, low, win] = clockRoom, mid = (high + low) / 2;
-            const hidden = (y) => y - r < 8 || (win !== undefined && y + r + 4 > win - 4 && y - r - 4 < win + 16)
-                || turrets.some((t) => hits(box(t.x, t.yt - 2 * t.w, t.x + t.w, t.yt + t.h + t.w * 0.6), box(cx - r, y - r - 4, cx + r, y + r + 4)));
-            for (let d = 0; d <= (low - high) / 2 - r - 8; d += 3) {
-                const y = [mid - d, mid + d].find((y) => !hidden(y));
-                if (y !== undefined) {
-                    on(COLUMN, () => clock(cx, y, r));
-                    break;
-                }
-            }
-        }
 
         // nearer turrets (lower) drawn last
         on(TURRETS, () => turrets.sort((a, b) => (a.yt + a.h) - (b.yt + b.h)).forEach((t) => {
@@ -2123,9 +2140,7 @@
             + (season === "autumn" ? Array.from({ length: 7 }, () => `<svg class="fall" viewBox="-3 -2 6 4" style="left: ${(Math.random() * 90).toFixed(1)}%; top: ${(5 + Math.random() * 55).toFixed(1)}%; width: 1.2%;`
                 + ` animation-duration: ${(8 + Math.random() * 8).toFixed(1)}s, ${(1.4 + Math.random() * 1.6).toFixed(1)}s; animation-delay: -${(Math.random() * 16).toFixed(1)}s, 0s">`
                 + `<path class="${["c-hedge-light", "c-hedge-sage", "c-hedge-olive"][Math.floor(Math.random() * 3)]}" d="M-3 0 Q0 -2.2 3 0 Q0 2.2 -3 0 Z" /></svg>`).join("") : "")
-            + (clockAt ? `<svg class="clock-hands" viewBox="-1 -1 2 2" style="left: ${pct(clockAt.x - clockAt.r, W)}; top: ${pct(clockAt.y - clockAt.r, H)}; width: ${pct(2 * clockAt.r, W)}">`
-                + '<path class="hour" d="M-.07 .12 L0 -.5 L.07 .12 Z" /><path class="minute" d="M-.05 .14 L0 -.82 L.05 .14 Z" /><circle r=".09" /></svg>' : "");
-        setClock();
+            + (clockAt ? clockHands(`left: ${pct(clockAt.x - clockAt.r, W)}; top: ${pct(clockAt.y - clockAt.r, H)}; width: ${pct(2 * clockAt.r, W)}`, clockAt.r) : "");
         svg.innerHTML = `<defs>${shading}<filter id="gouache" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency="0.7 0.35" numOctaves="3" seed="${seed % 1000}" result="fine" />
             <feColorMatrix in="fine" type="saturate" values="0" result="fineGrey" />
