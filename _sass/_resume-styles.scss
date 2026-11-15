@@ -527,8 +527,18 @@
 }
 
 .castle-tool {
+  position: relative;
   display: inline-flex;
   padding: .2rem;
+
+  // a larger target than the small icon (about 34 by 40px), reaching little to its left, where
+  // the castle's ID is typed
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -.6rem -.75rem -.6rem -.15rem;
+  }
+
   border: 0;
   border-radius: 50%;
   background: none;
@@ -669,6 +679,9 @@
 
 .icon-link {
   display: block;
+  // a target as large as a fingertip (44px) round the 28px icon, the layout unchanged
+  margin: -.5rem;
+  padding: .5rem;
   color: var(--ink);
   text-decoration: none;
 
@@ -1995,10 +2008,11 @@ abbr[title] {
       }
     }
 
+    // (a fingertip's 44px each)
     a {
-      width: 2rem;
-      height: 2rem;
-      margin-left: calc(var(--shaft-x) - 1rem);
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-left: calc(var(--shaft-x) - 1.375rem);
       overflow: hidden;
       font-size: 0;
     }
