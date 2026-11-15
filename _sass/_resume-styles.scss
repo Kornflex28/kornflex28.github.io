@@ -736,6 +736,16 @@
   }
 }
 
+// running text kept to about 72 characters a line, the comfortable measure (in this face a
+// "ch", a zero's width, is wider than its average letter: 36rem, not 70ch); the names, the
+// dates and the floors' tablets keep the whole width
+.intro p,
+.entry :is(p, ul),
+.lines p,
+.pub-list {
+  max-width: 36rem;
+}
+
 // Floors
 
 .floor {
@@ -1515,6 +1525,18 @@ abbr[title] {
   }
 }
 
+// the titles, all links, underlined more lightly than the page's other links so a year's
+// list does not read as a block of orange; the full underline comes back under the pointer
+.pub-list a {
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in oklab, var(--ochre) 65%, transparent);
+
+  &:hover {
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--ochre);
+  }
+}
+
 .pub-type {
   color: var(--ink-soft);
   font-size: .75rem;
@@ -1709,7 +1731,7 @@ abbr[title] {
   margin-left: max(0px, var(--origin));
   padding: 1.35rem 1.25rem 1.6rem;
   color: var(--ink);
-  font-size: .75rem;
+  font-size: .8125rem;
   line-height: 1.35;
 
   @media (max-width: 599.98px) {
@@ -1758,7 +1780,7 @@ abbr[title] {
   @media (max-width: 599.98px) {
     padding: .6rem .55rem .45rem;
     outline-offset: -.3rem;
-    font-size: .6875rem;
+    font-size: .75rem;
 
     .crown { width: 2.2rem; }
     .seal { width: 1.9rem; }
