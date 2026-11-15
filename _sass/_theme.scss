@@ -41,7 +41,9 @@
   --ink: #2b2a33;
   --ink-soft: #57545f;
   --ochre: #c98b3c;
-  --brick: #a4513b;
+  // (the text's red, a little deeper than the drawings' so the dates read on the paper's
+  // darker patches too: 5.6:1 on the plain paper, 4.7:1 on its stains)
+  --brick: #934632;
   --red: #a4513b;
   --blue: #6c8ca6;
   --blue-pale: #c9d3da;
