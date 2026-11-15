@@ -1987,22 +1987,21 @@
             add('</g>');
         }));
 
-        // More of the palace's terrace (TERRACE): one to three of its pieces, each one once,
-        // away from the column like the buildings, standing behind the low shrubs if they must;
-        // and when the terrace runs on over a viaduct, along it, what is no building: a statue,
-        // an urn, a fountain, a pole of loudspeakers, street lamps, shrubs. Drawn last and from a
-        // draw of their own, so the rest of each castle stays the one its seed has always given.
+        // More of the palace's terrace (TERRACE): one to three of its pieces, each one once, away
+        // from the column like the buildings and clear of the shrubs; and when the terrace runs on
+        // over a viaduct, along it, what is no building: a statue, an urn, a fountain, a pole of
+        // loudspeakers, street lamps, shrubs. Drawn last and from a draw of their own, so the rest
+        // of each castle stays the one its seed has always given.
         on(BACK, () => {
             const kept = state;
             state = (seed ^ 0x510e527f) | 0;
-            const room = (b) => used.every((u) => gardens.includes(u) || !hits(u, b));
             const place = (piece, x0, x1, near) => {
                 for (let i = 0; i < 40; i++) {
                     const x = rand(x0, x1 - piece.w);
                     if (!near && x + piece.w > colX - 70 && x < colX + colW + 70) continue;
                     if (opening && x + piece.w > opening[0] - 8 && x < opening[1] + 8) continue;
                     const b = box(x - 6, tTop - piece.h, x + piece.w + 6, tTop);
-                    if (!room(b)) continue;
+                    if (!isFree(b)) continue;
                     use(b);
                     piece.draw(x, tTop);
                     return true;
