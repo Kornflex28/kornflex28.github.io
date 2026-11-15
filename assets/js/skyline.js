@@ -1305,8 +1305,22 @@
     // knot keeps its speed minus what the air takes (keep is the share left after a second),
     // falls under gravity and drifts with the wind. Then every link is pulled back to its
     // length, light knots giving more than heavy ones (give(i) is 0 for a fixed or held knot).
+    // Verlet keeps each knot's speed as how far it moved over the step before: a step longer
+    // than the last (the page busy drawing a castle, the pointer stirring it) would fling the
+    // rope. So each frame's time is cut into equal steps of about STEP, the same from frame to
+    // frame, each knot's speed scaled to the step's length (swing); and of a long frame, no
+    // more than two frames' time is worked through: the rope takes up its swing where it was,
+    // where catching up all at once would show it jump.
+    const STEP = 1 / 120;
+    const stepper = () => (elapsed, run) => {
+        const time = Math.min(elapsed, 1 / 30), steps = Math.max(1, Math.round(time / STEP));
+        for (let k = 0; k < steps; k++) run(time / steps);
+    };
     const swing = (knots, give, link, dt, gravity, keep, wind = 0) => {
-        const kept = Math.pow(keep, dt);
+        // (its speed over this step, from how far it went over the last, which may have been
+        // a little longer or shorter)
+        const kept = Math.pow(keep, dt) * dt / (knots.dt || dt);
+        knots.dt = dt;
         knots.forEach((k, i) => {
             if (!give(i)) return;
             const vx = (k.x - k.px) * kept, vy = (k.y - k.py) * kept;
@@ -1366,8 +1380,8 @@
     // second), more when they are near and light, so a slow brush sways a rope and a quick one
     // flings it. Everything is in the rope's own units. Returns whether any knot was touched.
     const brush = (knots, give, a, b, vx, vy, reach) => {
-        const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, most = reach * 0.5;
-        const wx = Math.max(-most, Math.min(most, vx / 60)), wy = Math.max(-most, Math.min(most, vy / 60));
+        const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, most = reach * 0.25;
+        const wx = Math.max(-most, Math.min(most, vx * STEP)), wy = Math.max(-most, Math.min(most, vy * STEP));
         let touched = false;
         knots.forEach((k, i) => {
             const g = give(i);
@@ -1376,7 +1390,7 @@
             const d = Math.hypot(k.x - a.x - dx * t, k.y - a.y - dy * t);
             if (d > reach) return;
             const pull = 0.5 * (1 - d / reach) * Math.min(1, g * 1.5);
-            const ux = k.x - k.px, uy = k.y - k.py;             // its speed, per frame
+            const ux = k.x - k.px, uy = k.y - k.py;             // its speed, per step
             const px = (wx - ux) * pull, py = (wy - uy) * pull;
             k.px -= px;
             k.py -= py;
@@ -1410,20 +1424,21 @@
         });
         held = null;
     };
+    const lanternSteps = stepper();
     const sway = (now) => {
-        const dt = Math.min(1 / 30, (now - swayed) / 1000 || 1 / 60);
+        const elapsed = (now - swayed) / 1000;
         swayed = now;
+        lanternSteps(elapsed, (dt) => lamps.forEach((lamp) => swing(lamp.knots, held?.lamp === lamp ? heldGive : lanternGive, lamp.link, dt, 320, 0.3)));
         let moving = 0;
         lamps.forEach((lamp) => {
-            const { knots, link, chain, lantern } = lamp;
-            swing(knots, held?.lamp === lamp ? heldGive : lanternGive, link, dt, 320, 0.3);
+            const { knots, chain, lantern } = lamp;
             chain.setAttribute("d", strand(knots));
             const tip = knots[LINKS_DOWN];
             lantern.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(hanging(knots))})`);
             knots.forEach((k) => { moving = Math.max(moving, Math.abs(k.x - k.px) + Math.abs(k.y - k.py)); });
         });
         // still for half a second, not merely at the end of a swing
-        still = moving > 0.003 || held ? 0 : still + 1;
+        still = moving > 0.0015 || held ? 0 : still + 1;
         if (still < 30) requestAnimationFrame(sway);
         else swaying = false;
     };
@@ -2454,18 +2469,19 @@
     // again, straight down from its anchor (slow alone is not still: at the end of each
     // swing it stops a moment, askew): then it rests, a new gust coming a while later (blow)
     let awake = false;
+    const ropeSteps = stepper();
     const atRest = () => !grip && gust <= 0 && Math.abs(stretch - 1) < 0.002 && Math.abs(spring) < 0.02
-        && knots.every((k) => Math.abs(k.x - ANCHOR.x) < 0.15 && Math.abs(k.x - k.px) + Math.abs(k.y - k.py) < 0.02);
+        && knots.every((k) => Math.abs(k.x - ANCHOR.x) < 0.15 && Math.abs(k.x - k.px) + Math.abs(k.y - k.py) < 0.01);
     const tick = (now) => {
         if (!inView) {
             awake = false;
             return;
         }
-        // (waking, one frame's time: a longer first step would make the rope jump)
-        const dt = last ? Math.min(1 / 30, (now - last) / 1000) : 1 / 60;
+        ropeSteps(last ? (now - last) / 1000 : STEP, (dt) => {
+            time += dt;
+            step(dt);
+        });
         last = now;
-        time += dt;
-        step(dt);
         paint();
         if (atRest()) {
             awake = false;
@@ -2537,8 +2553,8 @@
             return;
         }
         spring += 6;
-        tip.py -= 3;
-        tip.px -= (Math.random() - 0.5) * 3;
+        tip.py -= 1.5;
+        tip.px -= (Math.random() - 0.5) * 1.5;
         wake();
         ring();
     });
