@@ -33,12 +33,20 @@ jobs:
       - run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+      # The site's own scripts made small (esbuild, its version pinned): their comments and
+      # spaces are a third of what a visitor fetches. The libraries stay as they come.
+      - name: Minify the scripts
+        run: npx --yes esbuild@0.25.0 _site/assets/js/*.js --minify --outdir=_site/assets/js --allow-overwrite --log-level=warning
       # the Python the pictures below are taken and compared with
       - name: Set up the picture tools
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --quiet pillow websocket-client
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      # each stylesheet's and script's address stamped with its content, once they are final,
+      # so only what changed is fetched again after a publication (scripts/stamp.py)
+      - name: Stamp the assets' addresses
+        run: python .github/scripts/stamp.py _site
       # The pages opened as a visitor would, by a headless Chrome (scripts/check.py): the
       # publication stops if a script fails, or if what the scripts draw is not there
       - name: Check the pages draw
