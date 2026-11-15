@@ -4,7 +4,6 @@
 # IPGP
 - company: IPGP &mdash; Paris Institute of Globe Physics
   url: https://www.ipgp.fr/en/
-  logo: images/ipgp-logo.svg
   roles:
     - position: Head of Space Magnetometry Data Processing &mdash; Research Engineer (permanent)
       duration: Dec 2024 &mdash; Now
@@ -31,7 +30,6 @@
 - company: ONERA &mdash; The French Aerospace Lab &amp; CESBIO
   earlier: true
   url: https://www.onera.fr/en
-  logo: images/onera-logo.png
   roles:
     - position: End-of-study Research Intern, Optics Department (<abbr title="Département Optique et Techniques Associées">DOTA</abbr>), Toulouse
       duration: Apr 2020 &mdash; Oct 2020
@@ -43,7 +41,6 @@
 # Vocalyx
 - company: CAPANOVI &mdash; Vocalyx
   earlier: true
-  logo: images/vocalyx-logo.png
   roles:
     - position: Software Developer Intern
       duration: Sep 2018 &mdash; Mar 2019
