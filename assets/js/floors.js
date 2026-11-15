@@ -47,8 +47,8 @@
     // Climbing plants creeping along the line, after the gardens of the King's palace. Each
     // floor grows one or two, each kind with its own leaves (drawn pointing up from their base,
     // at 0 0: length l, half width w), flowers and stem. A part comes out a little after the one
-    // to its left (--d) once its floor is in view, then sways in a light wind, the gusts running
-    // along the line from left to right.
+    // to its left (--d) once its floor is in view, then sways when a gust of a light wind runs
+    // along the line from left to right, and rests until the next (gust, below).
     const pointed = (l, w) => `M0 0 Q${f(w)} ${f(-l * 0.45)} 0 ${f(-l)} Q${f(-w)} ${f(-l * 0.45)} 0 0Z`;
     const LEAVES = {
         pointed,
@@ -140,12 +140,13 @@
         // what the pointer stirs: where it is, how far it swings at most; and what it swings about
         const stir = (x, y, most) => `data-at="${f(x)} ${f(y)} ${most}"`, pivot = (x, y) => `transform-box: view-box; transform-origin: ${f(x)}px ${f(y)}px`;
         // some of the leaves and flowers sway, enough for the plant to look stirred (each one
-        // swaying costs the browser a little, every frame)
+        // swaying costs the browser a little, every frame), each a little after the one to its
+        // left, as the gust reaches it
         // (on the leaf or flower itself, as its class and style: one element for each, set where
         // it leaves the stem (translate), grown (scale) and swayed (rotate) about that point by
         // the CSS, turned by its own transform, so the page has a third as many to lay out and
         // to paint)
-        const sway = (x, swing, share) => (random() < share * (coarse.matches ? 0.35 : 1) ? [" sway", `; --amp: ${f(swing)}deg; animation-delay: -${f((span - x) / 110 + rand(0, 0.4))}s`] : ["", ""]);
+        const sway = (x, swing, share) => (random() < share * (coarse.matches ? 0.35 : 1) ? [" sway", `; --amp: ${f(swing)}deg; animation-delay: ${f(x / 260 + rand(0, 0.4))}s`] : ["", ""]);
         // a leaf at (x, y), turned a degrees (0 up, 180 hanging down), of uneven size: some dry
         // (drooping, some curled up), some turning
         const leaf = (x, y, a, t = time(x)) => {
@@ -1037,10 +1038,27 @@
             }
         });
     };
-    // plants grow once their floor comes into view, and sway only while it is (.awake)
+    // plants grow once their floor comes into view, and are stirred only while it is (.awake):
+    // a gust of wind runs along them for a few seconds (.gust), then they rest for a while.
+    // Between gusts nothing in the drawing moves and the browser rests: what moves inside a
+    // drawing is worked out by the page itself, every frame, with all its other animations.
+    // (it lasts until the last part has swung: the gust reaches it once it has crossed the
+    // floor, a unit every 1/260 s and up to 0.4 s later (sway), and it swings for up to 4.6 s)
+    const gust = (deco) => {
+        deco.classList.add("gust");
+        deco.wind = setTimeout(() => {
+            deco.classList.remove("gust");
+            deco.wind = setTimeout(() => gust(deco), 9000 + Math.random() * 9000);
+        }, 1000 * (deco.viewBox.baseVal.width / 260 + 0.4 + 4.6) + 200);
+    };
     const watch = new IntersectionObserver((entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add("grown");
-        entry.target.classList.toggle("awake", entry.isIntersecting);
+        const deco = entry.target;
+        if (entry.isIntersecting) deco.classList.add("grown");
+        deco.classList.toggle("awake", entry.isIntersecting);
+        clearTimeout(deco.wind);
+        deco.classList.remove("gust");
+        // (the first gust once the plants have grown)
+        if (entry.isIntersecting && !reducedMotion.matches) deco.wind = setTimeout(() => gust(deco), 2500 + Math.random() * 2500);
     }), { rootMargin: "0px 0px -12% 0px" });
 
     addEventListener("castle-drawn", ({ detail }) => {

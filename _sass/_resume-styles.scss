@@ -888,11 +888,12 @@ main .floor:has(> .floor-deco) {
     .moss { transform: none; }
   }
 
-  // a light wind: each leaf and flower swings a few degrees about where it leaves the stem
-  // (--amp), the gusts running along the line (floors.js staggers them), each plant at its
-  // own pace (--wind), only while the floor is in view (.awake)
-  &.awake .sway {
-    animation: sway var(--wind, 4s) ease-in-out infinite alternate;
+  // a light wind, in gusts (.gust, from floors.js, a few seconds now and then while the floor
+  // is in view): each leaf and flower swings a few degrees about where it leaves the stem
+  // (--amp) as the gust reaches it (its delay), each plant at its own pace (--wind), and
+  // comes back to rest
+  &.gust .sway {
+    animation: sway var(--wind, 4s) ease-in-out both;
   }
 
   // the fireflies (by night, as over the castle's gardens) rest while the floor is out of view
@@ -1155,8 +1156,10 @@ main .floor:has(> .floor-deco) {
 :root[data-theme="night"] .floor-deco .candle-glow { opacity: 1; }
 
 @keyframes sway {
-  from { rotate: calc(-1 * var(--amp)); }
-  to { rotate: var(--amp); }
+  0%, 100% { rotate: 0deg; }
+  28% { rotate: var(--amp); }
+  62% { rotate: calc(-.55 * var(--amp)); }
+  85% { rotate: calc(.2 * var(--amp)); }
 }
 
 @keyframes blare {
