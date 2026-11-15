@@ -2411,11 +2411,13 @@
 
     // The bell pull: a rope of a few links hanging from the drawing's foot, simulated (Verlet
     // integration) so it bends and swings like a real one, pulled down by gravity, its tassel
-    // heavier than the rope, stirred by a light, shifting breeze and by the pointer brushing
-    // through it. Pulled by its tassel, the rope follows the hand, bending, and beyond its length
-    // stretches, ever harder, then springs back. Pulled far enough, or simply clicked (or
-    // tapped), it rings for a new castle. It moves every frame, so it has no gouache filter:
-    // Safari would repaint the filter each time, along with the castle beside it.
+    // heavier than the rope, stirred now and then by a gust of a light, shifting breeze, and by
+    // the pointer brushing through it. Pulled by its tassel, the rope follows the hand, bending,
+    // and beyond its length stretches, ever harder, then springs back. Pulled far enough, or
+    // simply clicked (or tapped), it rings for a new castle. While it moves it is drawn every
+    // frame, so it has no gouache filter (Safari would repaint the filter each time, along with
+    // the castle beside it); once it hangs still it sleeps until the next gust or touch, as every
+    // frame it asks for makes the browser work through the whole page's animations.
     const cord = tag.querySelector(".castle-cord");
     const rope = cord.querySelector(".rope"), tassel = cord.querySelector(".tassel");
     const ring = () => {
@@ -2428,12 +2430,14 @@
         return { x: ANCHOR.x, y, px: ANCHOR.x, py: y };
     });
     const tip = knots[LINKS];
-    let stretch = 1, spring = 0, grip = null, dragged = false, time = 0, last = 0;
+    let stretch = 1, spring = 0, grip = null, dragged = false, time = 0, last = 0, gust = 0, lull = 0;
     // how easily each knot moves: the anchor not at all, the tassel heavy, and while held, not at all
     const give = (i) => (i === 0 || (grip && i === LINKS) ? 0 : i === LINKS ? 0.35 : 1);
 
     const step = (dt) => {
-        const breeze = 60 * Math.sin(0.7 * time) + 25 * Math.sin(1.9 * time + 1);
+        // (the gust rising over its first second and dying down over its last)
+        const breeze = gust > 0 ? Math.min(1, gust, GUST - gust) * (60 * Math.sin(0.7 * time) + 25 * Math.sin(1.9 * time + 1)) : 0;
+        gust -= dt;
         // the rope's length: a stiff, bouncy spring, stretched only by a pull
         if (!grip) {
             spring += (-260 * (stretch - 1) - 9 * spring) * dt;
@@ -2446,26 +2450,43 @@
         rope.setAttribute("d", strand(knots));
         tassel.setAttribute("transform", `translate(${f(tip.x)} ${f(tip.y)}) rotate(${f(hanging(knots))})`);
     };
-    // it moves only while the castle is in view (inView, below)
+    // it moves only while the castle is in view (inView, below), and until it hangs still
+    // again, straight down from its anchor (slow alone is not still: at the end of each
+    // swing it stops a moment, askew): then it rests, a new gust coming a while later (blow)
     let awake = false;
+    const atRest = () => !grip && gust <= 0 && Math.abs(stretch - 1) < 0.002 && Math.abs(spring) < 0.02
+        && knots.every((k) => Math.abs(k.x - ANCHOR.x) < 0.15 && Math.abs(k.x - k.px) + Math.abs(k.y - k.py) < 0.02);
     const tick = (now) => {
         if (!inView) {
             awake = false;
             return;
         }
-        const dt = Math.min(1 / 30, (now - last) / 1000 || 1 / 60);
+        // (waking, one frame's time: a longer first step would make the rope jump)
+        const dt = last ? Math.min(1 / 30, (now - last) / 1000) : 1 / 60;
         last = now;
         time += dt;
         step(dt);
         paint();
+        if (atRest()) {
+            awake = false;
+            clearTimeout(lull);
+            lull = setTimeout(blow, 15000 + Math.random() * 10000);
+            return;
+        }
         requestAnimationFrame(tick);
     };
     const wake = () => {
         if (awake || reducedMotion.matches) return;
         awake = true;
+        last = 0;
         requestAnimationFrame(tick);
     };
-    wake();
+    const GUST = 4;         // seconds
+    const blow = () => {
+        gust = GUST;
+        wake();
+    };
+    blow();
 
     // where the pointer is, in the cord's picture
     const local = (event) => {
@@ -2478,7 +2499,7 @@
         if (grip || event.pointerType === "touch") return;
         const r = cord.querySelector("svg").getBoundingClientRect();
         const at = (p) => ({ x: p.x - r.left, y: p.y - r.top });
-        brush(knots, give, at(pointer.from), at(pointer.to), pointer.vx, pointer.vy, 7);
+        if (brush(knots, give, at(pointer.from), at(pointer.to), pointer.vx, pointer.vy, 7)) wake();
     });
 
     // pulled by the tassel: it follows the pointer, the rope stretching less and less beyond
@@ -2489,6 +2510,7 @@
         grip = { x: tip.x - at.x, y: tip.y - at.y, from: at };
         dragged = false;
         cord.setPointerCapture(event.pointerId);
+        wake();
     });
     cord.addEventListener("pointermove", (event) => {
         if (!grip) return;
@@ -2517,6 +2539,7 @@
         spring += 6;
         tip.py -= 3;
         tip.px -= (Math.random() - 0.5) * 3;
+        wake();
         ring();
     });
 
