@@ -782,9 +782,9 @@
         // Spring: blossom on the shrubs, a few pale flowers scattered over each (.blossom)
         if (season === "spring") root.querySelectorAll('[data-snow][class*="c-hedge"]').forEach((el) => {
             const b = el.getBBox();
-            const dots = Array.from({ length: 3 + Math.floor(b.width / 4) }, () => {
+            const dots = Array.from({ length: 2 + Math.floor(b.width / 8) }, () => {
                 const a = Math.random() * 2 * Math.PI, d = Math.sqrt(Math.random()) * 0.38;
-                return `<circle cx="${f(b.x + b.width * (0.5 + d * Math.cos(a)))}" cy="${f(b.y + b.height * (0.5 + d * Math.sin(a)))}" r="${f(1 + Math.random() * 0.6)}" />`;
+                return `<circle cx="${f(b.x + b.width * (0.5 + d * Math.cos(a)))}" cy="${f(b.y + b.height * (0.5 + d * Math.sin(a)))}" r="${f(2 + Math.random() * 0.6)}" />`;
             }).join("");
             (el.nextElementSibling?.classList.contains("shade") ? el.nextElementSibling : el)
                 .insertAdjacentHTML("afterend", `<g class="blossom${Math.random() < 0.5 ? " white" : ""}">${dots}</g>`);
