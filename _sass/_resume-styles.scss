@@ -735,6 +735,12 @@ main .floor {
   border-top: 2px solid var(--ink);
 }
 
+// a floor more than a screen away keeps its drawings out of the page (floors.js): the page's
+// colours changing with each castle's sky would otherwise work them all out again
+main .floor.far > :is(.floor-deco, .floor-stone) {
+  display: none;
+}
+
 // where floors.js draws the line itself, with the plants, the border hides under it
 main .floor:has(> .floor-deco) {
   border-top-color: transparent;

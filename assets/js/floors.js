@@ -996,48 +996,103 @@
             sizes = k + boxes.map(([w, , , tw, th]) => `${w} ${tw} ${th}`).join();
         }
     };
+    // One floor's drawing, from draws of its own (so the floors can be drawn in any order)
+    let kinds = KINDS;
+    const drawFloor = (floor, i, again) => {
+        random = seeded(seed ^ Math.imul(i + 1, 0x9e3779b1));
+        const [w, tx, ty, tw, th] = boxes[i], end = w - 8;
+        scale = w < 520 ? 0.85 : 1;
+        const deco = floor.querySelector(":scope > .floor-deco"), wall = floor.querySelector(":scope > .floor-stone");
+        [wall, deco].forEach((svg) => svg.setAttribute("viewBox", `0 0 ${w} ${HIGH}`));
+        // what hangs under the line keeps clear of the floor's name
+        const after = tx + tw;
+        named = after;
+        const [stone, moss] = masonry(i, w, [tx, LINE + 2 + ty, tw, th], k);
+        wall.style.setProperty("--k", k.toFixed(3));
+        side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
+        const make = () => OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" }, thing = LATER.has(floor.id) ? aside(make) : make();
+        const stretches = thing.gap ? [[6, thing.gap[0]], [thing.gap[1], end]] : [[6, end]];
+        const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length]);
+        // over the stone: its moss, the plants in front of the thing or behind it, the
+        // fireflies, what the plants climb
+        const ground = thing.behind ? thing.markup + grown.main : grown.main + thing.markup;
+        wall.innerHTML = stone;
+        deco.innerHTML = `${moss}${ground}${fireflies(end)}${grown.climb}`;
+        if (document.documentElement.dataset.weather === "snow") snowOn(deco, i);
+        if (document.documentElement.dataset.weather === "rain") deco.insertAdjacentHTML("beforeend", drips(after, end));
+        // the leaves, flowers and branches, where they leave the stem and how far they can
+        // swing, for the pointer to stir
+        deco.parts = [...deco.querySelectorAll("[data-at]")].map((el) => {
+            const [x, y, most = 30] = el.dataset.at.split(" ").map(Number);
+            return [x, y, most, el];
+        });
+        // a new castle: the plants grow again once their floor is in view, as on arriving
+        // (watched afresh, it is seen at once if it is in view)
+        if (again) {
+            deco.classList.remove("grown");
+            watch.unobserve(deco);
+            watch.observe(deco);
+        }
+    };
+    // Which floors are drawn when: only those in view or within a screen of it (close), one a
+    // frame as they come near, so no frame waits for several; for a new castle, the castle
+    // comes first, then its close floors the same way (their plants growing again anyway, a
+    // frame or two later goes unseen); all of them before the page is printed. When the page
+    // is laid out again (a resize), the close ones at once.
+    // A floor further away keeps its drawings out of the page (.far): with thousands of parts,
+    // they would be worked out again each time the castle's sky, wind or weather changes the
+    // page's colours, though nobody sees them.
+    let waiting = [];
+    const afterFrame = (run) => requestAnimationFrame(() => setTimeout(run));
+    const close = new Set();
+    const drawWaiting = (which = () => true) => {
+        const now = waiting.filter(which);
+        waiting = waiting.filter((floor) => !now.includes(floor));
+        now.forEach(([floor, i, again]) => drawFloor(floor, i, again));
+    };
+    // the close floors still waiting, one a frame, the nearest the middle of the screen first
+    // (read after the frame is drawn, when the page is laid out already)
+    let pumping = false;
+    const offCentre = (floor) => {
+        const box = floor.getBoundingClientRect();
+        return Math.abs(box.top + box.height / 2 - innerHeight / 2);
+    };
+    const pump = () => {
+        if (pumping) return;
+        pumping = true;
+        const next = () => {
+            const [first] = waiting.filter(([floor]) => close.has(floor)).sort(([a], [b]) => offCentre(a) - offCentre(b));
+            if (!first) {
+                pumping = false;
+                return;
+            }
+            drawWaiting((floor) => floor === first);
+            afterFrame(next);
+        };
+        afterFrame(next);
+    };
     const draw = (again) => {
         prepare();
         // each floor its own kind of plant, shuffled for each castle
         random = seeded(seed);
-        const kinds = [...KINDS].sort(() => random() - 0.5);
-        floors.forEach((floor, i) => {
-            random = seeded(seed ^ Math.imul(i + 1, 0x9e3779b1));
-            const [w, tx, ty, tw, th] = boxes[i], end = w - 8;
-            scale = w < 520 ? 0.85 : 1;
-            const deco = floor.querySelector(":scope > .floor-deco"), wall = floor.querySelector(":scope > .floor-stone");
-            [wall, deco].forEach((svg) => svg.setAttribute("viewBox", `0 0 ${w} ${HIGH}`));
-            // what hangs under the line keeps clear of the floor's name
-            const after = tx + tw;
-            named = after;
-            const [stone, moss] = masonry(i, w, [tx, LINE + 2 + ty, tw, th], k);
-            wall.style.setProperty("--k", k.toFixed(3));
-            side = seeded(seed ^ Math.imul(i + 13, 0xc2b2ae35));
-            const make = () => OBJECTS[floor.id]?.(i, w, after) ?? { markup: "" }, thing = LATER.has(floor.id) ? aside(make) : make();
-            const stretches = thing.gap ? [[6, thing.gap[0]], [thing.gap[1], end]] : [[6, end]];
-            const grown = plants(stretches.filter(([a, b]) => b - a > 20), end, thing.support, thing.over, kinds[i % kinds.length]);
-            // over the stone: its moss, the plants in front of the thing or behind it, the
-            // fireflies, what the plants climb
-            const ground = thing.behind ? thing.markup + grown.main : grown.main + thing.markup;
-            wall.innerHTML = stone;
-            deco.innerHTML = `${moss}${ground}${fireflies(end)}${grown.climb}`;
-            if (document.documentElement.dataset.weather === "snow") snowOn(deco, i);
-            if (document.documentElement.dataset.weather === "rain") deco.insertAdjacentHTML("beforeend", drips(after, end));
-            // the leaves, flowers and branches, where they leave the stem and how far they can
-            // swing, for the pointer to stir
-            deco.parts = [...deco.querySelectorAll("[data-at]")].map((el) => {
-                const [x, y, most = 30] = el.dataset.at.split(" ").map(Number);
-                return [x, y, most, el];
-            });
-            // a new castle: the plants grow again once their floor is in view, as on arriving
-            // (watched afresh, it is seen at once if it is in view)
-            if (again) {
-                deco.classList.remove("grown");
-                watch.unobserve(deco);
-                watch.observe(deco);
-            }
-        });
+        kinds = [...KINDS].sort(() => random() - 0.5);
+        waiting = floors.map((floor, i) => [floor, i, again]);
+        if (again) pump();
+        else drawWaiting(([floor]) => close.has(floor));
     };
+    const near = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            close[entry.isIntersecting ? "add" : "delete"](entry.target);
+            entry.target.classList.toggle("far", !entry.isIntersecting);
+        });
+        pump();
+    }, { rootMargin: "100% 0px" });
+    floors.forEach((floor) => near.observe(floor));
+    addEventListener("beforeprint", () => {
+        floors.forEach((floor) => floor.classList.remove("far"));
+        drawWaiting();
+    });
+    addEventListener("afterprint", () => floors.forEach((floor) => floor.classList.toggle("far", !close.has(floor))));
     // plants grow once their floor comes into view, and are stirred only while it is (.awake):
     // a gust of wind runs along them for a few seconds (.gust), then they rest for a while.
     // Between gusts nothing in the drawing moves and the browser rests: what moves inside a
@@ -1126,7 +1181,7 @@
         // the floors' drawings it passed over, its way across each, from a to b (all read before
         // any stirs)
         const near = floors.map((floor) => floor.querySelector(":scope > .floor-deco"))
-            .filter((deco) => deco?.parts && deco.classList.contains("grown"))
+            .filter((deco) => deco?.parts && deco.classList.contains("grown") && !deco.parentNode.classList.contains("far"))
             .filter((deco) => {
                 const box = deco.getBoundingClientRect();
                 return Math.max(last.y, from.y) > box.top - 18 && Math.min(last.y, from.y) < box.bottom + 18;
