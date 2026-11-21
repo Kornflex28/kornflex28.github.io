@@ -2402,7 +2402,7 @@
         + '<path class="outline fine" fill="none" d="M-2.8 15.5 V18.3 M0 16.3 V19 M2.8 15.5 V18.3" />'
         + '</g></svg></button>'
         + '<label for="castle-id">castle id</label>'
-        + '<input id="castle-id" type="text" maxlength="7" spellcheck="false" autocomplete="off" title="Type another ID to draw its castle" aria-label="Castle ID, type another to draw its castle">'
+        + '<input id="castle-id" type="text" maxlength="7" spellcheck="false" autocomplete="off" autocapitalize="none" autocorrect="off" enterkeyhint="done" title="Type another ID to draw its castle" aria-label="Castle ID, type another to draw its castle">'
         + `<button type="button" class="castle-tool" data-tool="copy" title="Copy a link to this castle" aria-label="Copy a link to this castle">${icon(ICONS.copy)}</button>`
         + '<span class="visually-hidden" role="status"></span>';
     const input = tag.querySelector("input");
@@ -2429,6 +2429,11 @@
         weatherAsked = seasonAsked = auroraAsked = null;
         show(id);
         history.replaceState(null, "", `?castle=${id}${location.hash}`);
+    });
+    // the castle comes as the ID is typed: Enter only closes a phone's keyboard (not while a
+    // word is being composed, as with an input method for Japanese or Chinese)
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.isComposing && event.keyCode !== 229) input.blur();
     });
 
     // The bell pull: a rope of a few links hanging from the drawing's foot, simulated (Verlet
