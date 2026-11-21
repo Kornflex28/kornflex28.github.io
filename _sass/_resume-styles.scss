@@ -1359,8 +1359,15 @@ main .floor:has(> .floor-deco) > .floor-title {
 
 // Collapsible blocks: publication years, earlier experience
 
+// A fold (a year's publications, the earlier experience): its marker a small drawn triangle
+// in the dates' red, pointing at its title, turning down once open; the content sliding open
+// and shut where the browser can size it to its content (elsewhere it opens at once). Still a
+// <details>, so what it hides is found by the browser's search.
 .fold {
   > summary {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
     padding: .5rem 0;
     font-size: 1.25rem;
     font-weight: 700;
@@ -1372,16 +1379,37 @@ main .floor:has(> .floor-deco) > .floor-title {
     }
 
     &::before {
-      content: "\25B8";
-      display: inline-block;
-      width: 1.25rem;
-      color: var(--brick);
-      transition: transform 150ms ease;
+      content: "";
+      flex-shrink: 0;
+      width: .55rem;
+      height: .65rem;
+      background: var(--brick);
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: rotate 200ms ease;
+      }
     }
   }
 
   &[open] > summary::before {
-    transform: rotate(90deg);
+    rotate: 90deg;
+  }
+
+  &::details-content {
+    interpolate-size: allow-keywords;
+    overflow: clip;
+    contain: layout;
+  }
+
+  &:not([open])::details-content {
+    block-size: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    &::details-content {
+      transition: block-size 300ms ease-in-out, content-visibility 300ms allow-discrete;
+    }
   }
 
   > .entry {
