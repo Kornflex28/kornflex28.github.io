@@ -227,28 +227,40 @@
   overflow: hidden;
 }
 
-// rain in two sheets at two paces, slanting with the wind, fading in and out at the top and
-// the foot of the drawing
+// rain in three sheets of drops strewn at random (skyline.js), falling at three paces,
+// slanting with the wind, each swelling and easing off and leaning a little more or less at its
+// own pace, fading in and out at the top and the foot of the drawing. Each sheet reaches a whole
+// tile further up than it needs (--tile), the length it falls before starting again where it
+// was: its drops cover the drawing all the way down, at every moment.
 .rain {
   mask-image: linear-gradient(transparent, #000 12%, #000 82%, transparent);
 
   i {
-    --tile: 160px;
     position: absolute;
-    inset: -60% -30%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cpath d='M8 10v18M31 70v22M52 120v16M70 35v20M88 95v18M105 5v22M20 130v15M44 40v17M96 140v14' stroke='%23eef2f7' stroke-width='1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 120px var(--tile);
+    inset: calc(-60% - var(--tile)) -30% -60%;
     rotate: calc(var(--wind, 1) * -12deg);
-    opacity: .5;
-    animation: rain .55s linear infinite;
-    will-change: transform;
+    opacity: var(--strength);
+    animation: rain linear infinite, rain-swell ease-in-out infinite, rain-lean ease-in-out infinite;
+    will-change: transform, opacity;
   }
+}
 
-  .far {
-    --tile: 107px;
-    background-size: 80px var(--tile);
-    opacity: .3;
-    animation-duration: .85s;
-  }
+// (uneven, so no two sheets' swells nor a sheet's own come back the same)
+@keyframes rain-swell {
+  0%, 100% { opacity: calc(var(--strength) * .75); }
+  17% { opacity: var(--strength); }
+  31% { opacity: calc(var(--strength) * .85); }
+  46% { opacity: calc(var(--strength) * .95); }
+  64% { opacity: calc(var(--strength) * .7); }
+  83% { opacity: calc(var(--strength) * .9); }
+}
+
+@keyframes rain-lean {
+  0%, 100% { rotate: calc(var(--wind, 1) * -11deg); }
+  22% { rotate: calc(var(--wind, 1) * -14deg); }
+  40% { rotate: calc(var(--wind, 1) * -9deg); }
+  61% { rotate: calc(var(--wind, 1) * -13deg); }
+  79% { rotate: calc(var(--wind, 1) * -10deg); }
 }
 
 // water dripping from the eaves (skyline.js), a streak as pale as the rain's

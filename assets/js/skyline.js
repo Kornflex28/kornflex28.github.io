@@ -1563,10 +1563,38 @@
     }
 
     // The weather laid over a drawing (the castle, or the lower town): rain falling, slanting with
-    // the wind, in two sheets at two paces; banks of mist at its foot, drifting with the wind. Each
-    // a picture painted once and moved whole, so nothing is painted again as they go
+    // the wind; banks of mist at its foot, drifting with the wind. Each a picture painted once and
+    // moved whole, so nothing is painted again as they go.
+    // The rain in three sheets, far to near, each its drops strewn at random over a large tile
+    // (its own size, so the three never line up), of uneven length and strength, a drop crossing
+    // the tile's foot drawn again at its top so the tile repeats unseen (a tile taller than the
+    // drawing, so a sheet's drops come back no sooner than every 3 to 6 seconds), a thin grey
+    // edge beside each so it shows on pale walls too; the near sheet falls fastest. Each swells
+    // and eases off and leans a little more or less with the wind, unevenly, over some twenty
+    // seconds at its own pace (the CSS): showers, not a pattern.
+    const RAIN = [   // tile width and height, drops, their length, pixels a second, strength
+        { w: 230, h: 731, n: 168, len: [5, 12], speed: 125, strength: 0.38 },
+        { w: 290, h: 853, n: 143, len: [9, 18], speed: 200, strength: 0.48 },
+        { w: 350, h: 947, n: 109, len: [14, 27], speed: 310, strength: 0.6 },
+    ];
+    const rainSheet = ({ w, h, n, len, speed, strength }) => {
+        const tones = [[], [], []];
+        for (let k = 0; k < n; k++) {
+            const x = Math.random() * w, y = Math.random() * h, l = len[0] + (len[1] - len[0]) * Math.random() ** 1.5;
+            const drop = (y0) => `M${x.toFixed(1)} ${y0.toFixed(1)}v${l.toFixed(1)}`;
+            tones[Math.floor(Math.random() * 3)].push(drop(y) + (y + l > h ? drop(y - h) : ""));
+        }
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>`
+            // (each drop pale, with a thin grey edge beside it, so it shows on the pale walls by
+            // day as on the dark sky by night)
+            + tones.map((d, k) => `<path d='${d.join("")}' stroke='%23646f80' stroke-opacity='${[0.2, 0.28, 0.35][k]}' stroke-width='1' stroke-linecap='round' transform='translate(1 0)'/>`
+                + `<path d='${d.join("")}' stroke='%23eef2f7' stroke-opacity='${[0.6, 0.8, 1][k]}' stroke-width='1' stroke-linecap='round'/>`).join("") + "</svg>";
+        return `<i style="--tile: ${h}px; --strength: ${strength}; background-image: url(&quot;data:image/svg+xml,${svg.replace(/</g, "%3C").replace(/>/g, "%3E")}&quot;); background-size: ${w}px ${h}px;`
+            + ` animation-duration: ${(h / speed).toFixed(2)}s, ${(17 + Math.random() * 9).toFixed(1)}s, ${(21 + Math.random() * 10).toFixed(1)}s;`
+            + ` animation-delay: 0s, -${(Math.random() * 26).toFixed(1)}s, -${(Math.random() * 31).toFixed(1)}s"></i>`;
+    };
     const weatherOver = (place) => {
-        let html = raining ? '<div class="rain"><i class="far"></i><i class="near"></i></div>' : "";
+        let html = raining ? `<div class="rain">${RAIN.map(rainSheet).join("")}</div>` : "";
         if (misty) {
             html += '<div class="mist">' + Array.from({ length: place === "town" ? 5 : 4 }, () => {
                 const w = 35 + Math.random() * 35, top = place === "town" ? 45 + Math.random() * 35 : 66 + Math.random() * 22;
