@@ -305,6 +305,12 @@ a {
   }
 }
 
+// text selected in the page's ochre, the ink unchanged on it, by day and by night
+::selection {
+  background: color-mix(in oklab, var(--ochre) 40%, transparent);
+  color: inherit;
+}
+
 :focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 3px;
