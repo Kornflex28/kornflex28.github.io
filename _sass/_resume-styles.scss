@@ -1478,14 +1478,15 @@ main .floor:has(> .floor-deco) > .floor-title {
 }
 
 
-// Acronyms, spelt out on hover, or beside them once tapped (acronyms.js)
+// Acronyms, spelt out on hover, or beside them once tapped, or while they have the keyboard's
+// focus (acronyms.js)
 abbr[title] {
   border-bottom: 0;
   text-decoration: underline dotted;
   text-underline-offset: .15em;
   cursor: help;
 
-  &.is-open::after {
+  &:is(.is-open, :focus-visible)::after {
     content: "(" attr(title) ")";
     display: inline-block;   // keeps the dotted underline off the meaning
     margin-left: .25em;

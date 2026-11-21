@@ -1,5 +1,5 @@
 # ISAE
-- degree: Diplôme d'Études Supérieures
+- degree: <span lang="fr">Diplôme d'Études Supérieures</span>
   uni: ISAE-Supaero
   year: 2019 &mdash; 2020
   summary: Space systems, orbital systems and satellite telecommunications.
@@ -9,7 +9,7 @@
       url: files/VLEO_constellation_sizing.pdf
 
 # IMT Atlantique
-- degree: Diplôme d'Ingénieur
+- degree: <span lang="fr">Diplôme d'Ingénieur</span>
   uni: IMT Atlantique
   year: 2016 &mdash; 2020
   summary: Signal and image processing, machine learning, computer science and telecommunications.

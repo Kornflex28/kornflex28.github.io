@@ -31,7 +31,7 @@
   earlier: true
   url: https://www.onera.fr/en
   roles:
-    - position: End-of-study Research Intern, Optics Department (<abbr title="Département Optique et Techniques Associées">DOTA</abbr>), Toulouse
+    - position: End-of-study Research Intern, Optics Department (<abbr lang="fr" title="Département Optique et Techniques Associées">DOTA</abbr>), Toulouse
       duration: Apr 2020 &mdash; Oct 2020
       summary: Estimated tree biophysical and biochemical properties (leaf pigments, leaf area index, water content) of a Californian woodland savanna from airborne hyperspectral images, to assess the future HYPXIM (CNES) and <abbr title="Surface Biology and Geology">SBG</abbr> (NASA) missions at 8 m and 30 m resolution (<a href="files/2020_CESBIO_ONERA_CHAUVET_Louis.pdf" target="_blank">report</a>).
       highlights:
